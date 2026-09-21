@@ -1,0 +1,1823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Droid Tycoon Tracker — Web</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230b0f0d'/%3E%3Ctext x='50' y='70' font-size='58' text-anchor='middle' fill='%235ef2a6'%3E%E2%9F%B3%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0b0f0d;
+    --panel: #121815;
+    --panel2: #161d19;
+    --line: #26332c;
+    --line-bright: #38493f;
+    --text: #dfe8e2;
+    --text-dim: #8fa199;
+    --accent: #5ef2a6;
+    --accent-dim: #2c6b4a;
+    --amber: #f2b95e;
+    --red: #ef5b5b;
+
+    --r-base: #9aa39d;
+    --r-gold: #e8c04a;
+    --r-diamond: #4fd3e8;
+    --r-rainbow1: #ff6ec7;
+    --r-rainbow2: #6ecbff;
+    --r-beskar: #b9c2cc;
+    --r-galactic: #c96bf2;
+    --r-stellar: #e08a3c;
+
+    /* Event-timer accent colors, kept separate from the --r-* rarity-ladder
+       colors above even though two names overlap (Stellar/Galactic) — these
+       are the in-game blueprint-drop timers, a different axis from the
+       Base->Stellar variant colors a droid can be owned in, and the source
+       Electron overlay (timers.html) uses different exact hex values for
+       each so a Stellar *timer* card doesn't get confused with a Stellar
+       *rarity* badge. The mission timer intentionally reuses --accent
+       (already #5ef2a6, same value timers.html hardcodes for it) rather
+       than duplicating it under another name.
+       --rarity-mythic is a third, separate axis again: a droid's fixed
+       RARITY CLASS (Legendary/Mythic/etc, independent of which colorway of
+       it you own), used only by Safe to Retire below to color its two
+       tier-groups and reused here for the Mythic Blueprint timer card too
+       since the source app happens to pick the same color for both. */
+    --timer-stellar: #edb142;
+    --timer-galactic: #d95cf2;
+    --rarity-mythic: #ff4d6d;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;}
+  body{
+    background-image:
+      radial-gradient(ellipse at 20% -10%, rgba(94,242,166,0.07), transparent 45%),
+      radial-gradient(ellipse at 100% 0%, rgba(94,150,242,0.05), transparent 40%);
+    padding-bottom:60px;
+  }
+  .wrap{max-width:980px;margin:0 auto;padding:14px 20px 0;position:relative;z-index:2;}
+
+  #bgLayer{
+    position:fixed;inset:0;z-index:0;
+    background-size:cover;background-position:center center;background-repeat:no-repeat;
+  }
+  #bgScrim{
+    position:fixed;inset:0;z-index:1;
+    background:rgba(11,15,13,0.72);
+    transition:background-color .2s ease;
+  }
+  .bg-controls{display:flex;align-items:center;gap:8px;}
+  .bg-controls[hidden]{display:none;}
+  .bg-controls input[type="range"]{
+    width:90px;accent-color:var(--accent);vertical-align:middle;cursor:pointer;
+  }
+  .bg-dim-label{font-size:11px;color:var(--text-dim);font-family:'IBM Plex Mono',monospace;white-space:nowrap;}
+
+  .mini-nav{
+    display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;
+    max-width:980px;margin:0 auto;padding:16px 20px 0;position:relative;z-index:2;
+    font-family:'Rajdhani',sans-serif;font-weight:600;font-size:14px;
+  }
+  .mini-nav a{color:var(--text-dim);text-decoration:none;}
+  .mini-nav a:hover{color:var(--accent);}
+
+  header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:18px;}
+  .title-block h1{
+    font-family:'Rajdhani',sans-serif;font-weight:700;font-size:34px;letter-spacing:0.5px;
+    margin:0 0 5px 0; color:var(--text); display:flex; align-items:center; gap:11px;
+  }
+  .title-block h1 .glyph{color:var(--accent); font-size:27px; transform:translateY(-1px); display:inline-block;}
+  .title-block h1 .app-version{
+    font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:600;
+    color:var(--text-dim); background:var(--panel2); border:1px solid var(--line);
+    border-radius:999px; padding:2px 9px; letter-spacing:0.02em;
+  }
+  .title-block p{margin:0;color:var(--text-dim);font-size:14.5px;max-width:56ch;line-height:1.45;}
+  .storage-note{margin:8px 0 0;color:var(--text-dim);font-size:12px;line-height:1.45;max-width:56ch;}
+  .overall{text-align:right;min-width:180px;}
+  .overall .num{font-family:'IBM Plex Mono',monospace;font-size:28px;color:var(--accent);font-weight:600;}
+  .overall .lbl{font-size:11.5px;color:var(--text-dim);letter-spacing:.03em;}
+  .bar{height:7px;border-radius:4px;background:var(--panel2);overflow:hidden;margin-top:7px;border:1px solid var(--line);}
+  .bar > div{height:100%;background:linear-gradient(90deg,var(--accent-dim),var(--accent));transition:width .35s ease;}
+
+  .legend{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px;font-size:12.5px;color:var(--text-dim);align-items:center;position:sticky;top:0;background:var(--bg);z-index:5;padding:9px 0;}
+  .legend .item{display:flex;align-items:center;gap:6px;}
+  .legend .dot{width:10px;height:10px;border-radius:3px;flex:0 0 10px;}
+
+  .toolbar{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-bottom:16px;}
+  .spacer{flex:1;}
+  .searchbox{position:relative;flex:1;min-width:180px;max-width:320px;}
+  .searchbox input{
+    background:var(--panel);border:1px solid var(--line);color:var(--text);border-radius:7px;
+    padding:9px 14px 9px 33px;font-size:15px;width:100%;font-family:'Inter',sans-serif;
+  }
+  .searchbox input:focus{outline:none;border-color:var(--accent-dim);}
+  .searchbox::before{content:'⌕';position:absolute;left:11px;top:7px;color:var(--text-dim);font-size:16px;}
+
+  .btn{
+    background:var(--panel);border:1px solid var(--line);color:var(--text-dim);border-radius:7px;
+    padding:9px 14px;font-size:14px;cursor:pointer;font-family:'Inter',sans-serif;transition:.15s;white-space:nowrap;
+  }
+  .btn:hover{color:var(--text);border-color:var(--line-bright);}
+  .btn.on{color:var(--accent);border-color:var(--accent-dim);background:rgba(94,242,166,0.08);}
+  .btn[hidden]{display:none;}
+
+  /* ---- content row: main list + optional rebirth-requirements side panel ---- */
+  .content-row{display:flex;gap:22px;align-items:flex-start;}
+  .content-row .main-col{flex:1;min-width:0;}
+  .wrap.with-rebirth{max-width:1300px;}
+
+  .rebirth-panel{
+    display:none;flex:0 0 300px;background:var(--panel);border:1px solid var(--line);
+    border-radius:10px;padding:14px;
+    position:sticky;top:58px;max-height:calc(100vh - 78px);overflow-y:auto;
+  }
+  .rebirth-panel.show{display:block;}
+  .rebirth-panel-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px;}
+  .rebirth-panel-head h3{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:17px;margin:0;color:var(--accent);letter-spacing:.02em;}
+  .rebirth-panel-head .btn{padding:4px 9px;font-size:12px;}
+  .rebirth-cycle-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+  .rebirth-cycle-row label{font-size:11.5px;color:var(--text-dim);font-family:'IBM Plex Mono',monospace;letter-spacing:.03em;}
+  .rb-cycle-select{
+    background:var(--panel2);border:1px solid var(--line);color:var(--text);
+    border-radius:6px;padding:5px 9px;font-size:13.5px;font-family:'Rajdhani',sans-serif;
+    font-weight:600;cursor:pointer;flex:1;
+  }
+  .rb-cycle-select:focus{outline:none;border-color:var(--accent-dim);}
+  .rebirth-sub{font-size:11.5px;color:var(--text-dim);line-height:1.45;margin:0 0 14px;}
+  .rebirth-tier-block{margin-bottom:16px;}
+  .rebirth-tier-block:last-child{margin-bottom:0;}
+  .rebirth-tier-label{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;
+    letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px;
+  }
+  .rebirth-tier-label.B{color:var(--r-base);}
+  .rebirth-tier-label.G{color:var(--r-gold);}
+  .rebirth-tier-label.D{color:var(--r-diamond);}
+  .rebirth-tier-label.R{color:var(--r-rainbow2);}
+  .rebirth-tier-label.K{color:var(--r-beskar);}
+  .rebirth-tier-label.X{color:var(--r-galactic);}
+  .rebirth-tier-label.S{color:var(--r-stellar);}
+  /* Safe to Retire reuses this same tier-block/tier-label pattern, but
+     grouped by rarity CLASS (Legendary/Mythic) rather than by B..S code. */
+  .rebirth-tier-label.legendary{color:var(--r-gold);}
+  .rebirth-tier-label.mythic{color:var(--rarity-mythic);}
+  .rebirth-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+  .rb-cell{display:flex;flex-direction:column;align-items:center;gap:5px;padding:7px 4px;border-radius:8px;cursor:pointer;transition:.12s;text-align:center;}
+  .rb-cell:hover{background:rgba(255,255,255,0.05);}
+  .rb-cell.covered{opacity:.4;}
+  .rb-cell.covered .rb-name{text-decoration:line-through;}
+  .rb-name{font-size:11px;font-weight:500;line-height:1.25;word-break:break-word;}
+  .rb-name.B{color:var(--r-base);}
+  .rb-name.G{color:var(--r-gold);}
+  .rb-name.D{color:var(--r-diamond);}
+  .rb-name.R{color:var(--r-rainbow1);}
+  .rb-name.K{color:var(--r-beskar);}
+  .rb-name.X{color:var(--r-galactic);}
+  .rb-name.S{color:var(--r-stellar);}
+
+  .retire-level-row{
+    display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;
+  }
+  .retire-level-row label{font-size:11.5px;color:var(--text-dim);font-family:'IBM Plex Mono',monospace;letter-spacing:.03em;flex:1 1 auto;}
+  .retire-level-row input{
+    background:var(--panel2);border:1px solid var(--line);color:var(--text);
+    border-radius:6px;padding:5px 9px;font-size:14px;font-family:'IBM Plex Mono',monospace;
+    width:58px;text-align:center;
+  }
+  .retire-level-row input:focus{outline:none;border-color:var(--accent-dim);}
+  .retire-empty{padding:14px 4px;color:var(--text-dim);font-size:12.5px;line-height:1.5;}
+  /* Safe to Retire cells are informational only — nothing to tap or log,
+     since by definition every droid listed here is already owned — so
+     don't borrow .rb-cell's implied clickability. */
+  #retireList .rb-cell{cursor:default;}
+
+  @media (max-width:900px){
+    /* align-items:flex-start (set above for the desktop side-by-side
+       layout, to top-align the two columns) becomes a trap once
+       flex-direction flips to column: on the cross axis (now horizontal)
+       "flex-start" means "don't stretch, hug content width" instead of
+       "fill available width" — which let a wide descendant (e.g. the
+       level-table) size .main-col past the viewport instead of scrolling
+       inside its own overflow-x:auto wrapper. Stretch fixes it. */
+    .content-row{flex-direction:column;align-items:stretch;}
+    .rebirth-panel{flex:1 1 auto;width:100%;position:static;max-height:none;overflow-y:visible;}
+    .wrap.with-rebirth{max-width:980px;}
+  }
+
+  /* ---- event timers: full-width section, not a floating always-on-top
+     banner like the desktop overlay's timers.html — that concept doesn't
+     translate to a normal scrolled webpage, so this is a toggleable block
+     between the toolbar and the droid list instead, sized to the same
+     .wrap the rest of the page uses. */
+  .timers-section{display:none;margin-bottom:18px;}
+  .timers-section.show{display:block;}
+  .timers-head{margin-bottom:10px;}
+  .timers-head h3{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:17px;margin:0 0 3px;color:var(--accent);letter-spacing:.02em;}
+  .timers-sub{font-size:11.5px;color:var(--text-dim);margin:0;line-height:1.45;max-width:64ch;}
+  .timers-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:12px;}
+  .timer-card{
+    --accent-color: var(--text-dim);
+    display:flex;align-items:center;gap:10px;
+    background:
+      radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, var(--accent-color) 16%, transparent), transparent 60%),
+      var(--panel);
+    border:1px solid color-mix(in srgb, var(--accent-color) 40%, var(--line));
+    border-top:3px solid var(--accent-color);
+    border-radius:10px;
+    padding:10px 12px;
+    transition:box-shadow .3s ease;
+  }
+  .timer-card.imminent{
+    box-shadow:0 0 0 1px var(--accent-color), 0 0 14px 1px color-mix(in srgb, var(--accent-color) 70%, transparent);
+    animation:timer-pulse 1s ease-in-out infinite;
+  }
+  @keyframes timer-pulse{ 0%,100%{filter:brightness(1);} 50%{filter:brightness(1.3);} }
+  .timer-icon{
+    flex:0 0 auto;width:34px;height:34px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(circle at 32% 28%, color-mix(in srgb, var(--accent-color) 85%, white 15%), var(--accent-color) 70%);
+    color:#0b0f0d;
+  }
+  .timer-icon svg{width:19px;height:19px;}
+  .timer-icon img{width:22px;height:22px;object-fit:contain;}
+  .timer-body{display:flex;flex-direction:column;gap:1px;min-width:0;}
+  .timer-label{
+    font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+    color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;
+  }
+  .timer-time{font-size:19px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--text);}
+  .timer-card.stellar{--accent-color:var(--timer-stellar);}
+  .timer-card.mythic{--accent-color:var(--rarity-mythic);}
+  .timer-card.galactic{--accent-color:var(--timer-galactic);}
+  .timer-card.mission{--accent-color:var(--accent);}
+  .mission-sync-row{display:flex;align-items:center;gap:7px;flex-wrap:wrap;font-size:12.5px;color:var(--text-dim);}
+  .mission-sync-row label{font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.02em;}
+  .mission-sync-row input{
+    background:var(--panel2);border:1px solid var(--line);color:var(--text);
+    border-radius:6px;padding:5px 7px;font-size:13.5px;font-family:'IBM Plex Mono',monospace;
+    width:44px;text-align:center;
+  }
+  .mission-sync-row input:focus{outline:none;border-color:var(--accent-dim);}
+  .mission-sync-row .sep{color:var(--text-dim);}
+  @media (max-width:640px){
+    .timers-grid{grid-template-columns:repeat(auto-fit,minmax(130px,1fr));}
+    .timer-time{font-size:17px;}
+  }
+  /* Below ~390px, a 2-up card can't fit "Stormtrooper" (the longest of the
+     4 possible mission names) without ellipsis-truncating it — measured the
+     real cutoff empirically (needs 96px, a 130-150px card only has 65-93px
+     for the label once the icon/padding/gap are subtracted) rather than
+     guessing. Single column below that point gives every label the full
+     content width, which is always enough. */
+  @media (max-width:400px){
+    .timers-grid{grid-template-columns:1fr;}
+  }
+
+  /* ---- quick panel: the by-droid keep/let-go list ---- */
+  .quick-panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px;}
+  .dq-empty{padding:26px;text-align:center;color:var(--text-dim);font-size:14.5px;}
+  .dq-row{display:flex;align-items:center;gap:14px;padding:11px 10px;border-radius:8px;transition:.12s;}
+  .dq-row:hover{background:rgba(255,255,255,0.03);}
+  .dq-row.maxed{opacity:.5;}
+  .dq-row + .dq-row{border-top:1px solid var(--line);}
+
+  .icon-badge{
+    position:relative; flex:0 0 48px; width:48px; height:48px; border-radius:10px;
+    display:flex; align-items:center; justify-content:center; overflow:hidden;
+    border:1px solid rgba(255,255,255,0.08); box-shadow:inset 0 0 0 1px rgba(0,0,0,0.25);
+  }
+  .icon-badge img{width:88%;height:88%;object-fit:contain;position:relative;z-index:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5));}
+
+  .rarity-base{background:linear-gradient(160deg,#20272c,#171c1f 70%);}
+  .rarity-gold{background:linear-gradient(155deg,#8a641c 0%,#f0c04e 38%,#fff3c4 50%,#e8ab2e 62%,#7a5615 100%);}
+  .rarity-diamond{background:linear-gradient(155deg,#3f7f92 0%,#8fe3f5 35%,#f2feff 50%,#8fe3f5 65%,#2f6373 100%);}
+  .rarity-rainbow{background:linear-gradient(135deg,#ff6ec7,#ffd76e 25%,#6ef7c1 50%,#6ecbff 75%,#c96bf2 100%);}
+  .rarity-beskar{background:linear-gradient(155deg,#6b7178 0%,#c9ced3 35%,#f5f7f8 50%,#aab0b6 65%,#4c5157 100%);}
+  .rarity-galactic{background:linear-gradient(155deg,#3d1a63 0%,#9b4de0 38%,#e2c3ff 50%,#8536d6 62%,#2c0f4d 100%);}
+  .rarity-stellar{background:linear-gradient(155deg,#7a3d0a 0%,#e2841f 30%,#ffe2a6 48%,#ffb545 58%,#c9670f 75%,#5c2a05 100%);}
+  .icon-badge.rarity-beskar::before, .icon-badge.rarity-stellar::before{
+    content:'';position:absolute;inset:0;z-index:0;
+    background:linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.55) 46%, transparent 58%);
+    mix-blend-mode:overlay;
+  }
+  .icon-badge.rarity-stellar::before{background:linear-gradient(115deg, transparent 25%, rgba(255,255,255,0.75) 44%, transparent 56%);}
+
+  /* Rebirth Reqs panel only: each badge split diagonally — upper-left half
+     shows the rarity you've actually logged for that droid, lower-right half
+     shows this cycle's highest required rarity. */
+  .icon-badge-split{background:none;}
+  .badge-half{position:absolute;inset:0;z-index:0;}
+  .badge-half-owned{clip-path:polygon(0 0, 100% 0, 0 100%);}
+  .badge-half-req{clip-path:polygon(100% 0, 100% 100%, 0 100%);}
+  .badge-half.rarity-beskar::after, .badge-half.rarity-stellar::after{
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.55) 46%, transparent 58%);
+    mix-blend-mode:overlay;
+  }
+  .badge-half.rarity-stellar::after{background:linear-gradient(115deg, transparent 25%, rgba(255,255,255,0.75) 44%, transparent 56%);}
+  .icon-badge-split::after{
+    content:'';position:absolute;inset:0;z-index:0;pointer-events:none;
+    background:linear-gradient(to bottom right, transparent calc(50% - 0.75px), rgba(255,255,255,0.5) 50%, transparent calc(50% + 0.75px));
+  }
+  .rarity-unowned{background:#12161a;}
+
+  .dq-name-wrap{flex:1;min-width:0;}
+  .dq-name{font-size:17px;font-weight:500;line-height:1.3;}
+  .dq-name[contenteditable="true"]{outline:1px dashed var(--accent-dim); padding:1px 4px; border-radius:3px; cursor:text;}
+  .dq-sub{font-size:10.5px;color:var(--text-dim);font-family:'IBM Plex Mono',monospace;margin-top:2px;letter-spacing:.02em;}
+
+  .sort-toggle{display:flex;gap:5px;}
+
+  .level-note{font-size:12.5px;color:var(--text-dim);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-bottom:14px;line-height:1.45;}
+
+  .level-group{margin-bottom:4px;}
+  .level-group + .level-group{margin-top:16px;}
+  .level-group-header{
+    font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--text-dim);
+    letter-spacing:.06em;margin:0 0 6px 3px;text-transform:uppercase;
+  }
+  .dq-row.dimmed{opacity:.3;}
+
+  .cycle-picker-row{display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;}
+  .cycle-select{
+    background:var(--panel);border:1px solid var(--line);color:var(--text);
+    border-radius:7px;padding:9px 13px;font-size:16.5px;font-family:'Rajdhani',sans-serif;
+    font-weight:600;cursor:pointer;
+  }
+  .cycle-select:focus{outline:none;border-color:var(--accent-dim);}
+  .cycle-progress-label{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--text-dim);}
+
+  .cycle-section{margin-bottom:8px;}
+  .cycle-section-header{
+    font-family:'Rajdhani',sans-serif;font-weight:700;font-size:19px;color:var(--accent);
+    letter-spacing:.03em;margin:0 0 12px;
+  }
+
+  .level-table-hint{display:none;}
+  .level-table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:8px;}
+  .level-table{border-collapse:collapse;width:100%;font-size:16px;}
+  .level-table td{padding:11px 13px;border-bottom:1px solid var(--line);}
+  .level-table td.lv-num{
+    font-family:'IBM Plex Mono',monospace;color:var(--text-dim);font-size:13.5px;
+    width:36px;text-align:right;padding-right:14px;white-space:nowrap;cursor:pointer;transition:.12s;
+  }
+  .level-table td.lv-num:hover{color:var(--accent);background:rgba(94,242,166,0.08);}
+  .droid-cell{cursor:pointer;font-weight:500;transition:.12s;}
+  .droid-cell:hover{background:rgba(255,255,255,0.04);}
+  .droid-cell.covered{opacity:.35;text-decoration:line-through;}
+  .cell-flex{display:flex;align-items:center;gap:10px;}
+  .icon-badge-sm{flex:0 0 34px;width:34px;height:34px;border-radius:8px;}
+  .cell-name{flex:1;min-width:0;font-size:16px;}
+  .sell-tag{
+    display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;
+    letter-spacing:.04em;color:#0b0f0d;background:var(--accent);border-radius:4px;
+    padding:2px 6px;margin-left:7px;vertical-align:middle;
+  }
+  .droid-cell.B{color:var(--r-base);}
+  .droid-cell.G{color:var(--r-gold);}
+  .droid-cell.D{color:var(--r-diamond);}
+  .droid-cell.R{color:var(--r-rainbow1);}
+  .droid-cell.K{color:var(--r-beskar);}
+  .droid-cell.X{color:var(--r-galactic);}
+  .droid-cell.S{color:var(--r-stellar);}
+
+  .pip-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;flex:0 0 auto;}
+  .pip{
+    width:17px;height:17px;border-radius:50%;cursor:pointer;flex:0 0 17px;
+    border:1.5px solid var(--line-bright);background:var(--panel2);transition:.12s;
+  }
+  .pip:hover{transform:scale(1.25);}
+  .pip.filled{border-color:transparent;}
+  .pip.filled.B{background:var(--r-base);}
+  .pip.filled.G{background:var(--r-gold);}
+  .pip.filled.D{background:var(--r-diamond);}
+  .pip.filled.R{background:linear-gradient(90deg,var(--r-rainbow1),var(--r-rainbow2));}
+  .pip.filled.K{background:var(--r-beskar);}
+  .pip.filled.X{background:var(--r-galactic);}
+  .pip.filled.S{background:var(--r-stellar);}
+  .pip.next{box-shadow:0 0 0 2px var(--amber);border-color:var(--amber);}
+
+  .status-badge{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;padding:5px 10px;border-radius:6px;
+    white-space:nowrap;flex:0 0 auto;letter-spacing:.02em;
+  }
+  .status-badge.maxed{background:rgba(94,242,166,0.12);color:var(--accent);border:1px solid var(--accent-dim);}
+  .status-badge.need{background:rgba(242,185,94,0.1);color:var(--amber);border:1px solid rgba(242,185,94,0.35);}
+
+  /* ---- reference panel ---- */
+  .ref{margin-top:30px;border-top:1px solid var(--line);padding-top:18px;}
+  .ref h2{font-family:'Rajdhani',sans-serif;font-size:19px;margin:0 0 13px;color:var(--text);cursor:pointer;user-select:none;display:flex;align-items:center;gap:8px;}
+  .ref h2::before{content:'▸';color:var(--accent);transition:.15s;font-size:14px;}
+  .ref.open h2::before{transform:rotate(90deg);}
+  .ref-body{display:none;}
+  .ref.open .ref-body{display:block;}
+  table{border-collapse:collapse;width:100%;font-size:13.5px;margin-bottom:16px;}
+  th,td{border:1px solid var(--line);padding:7px 11px;text-align:center;font-family:'IBM Plex Mono',monospace;}
+  th{background:var(--panel2);color:var(--text-dim);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;}
+  td.rn{text-align:left;font-weight:600;}
+
+  footer{text-align:center;color:var(--text-dim);font-size:12px;margin-top:34px;line-height:1.65;padding:0 12px;}
+
+  .toast{
+    position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(10px);
+    background:var(--panel);border:1px solid var(--accent-dim);color:var(--text);
+    padding:9px 16px;border-radius:8px;font-size:12.5px;opacity:0;pointer-events:none;
+    transition:.2s;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,.4);max-width:90vw;text-align:center;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  @media (max-width:600px){
+    .title-block h1{font-size:23px;}
+    .overall{text-align:left;}
+    header{flex-direction:column;align-items:flex-start;}
+    .searchbox{max-width:none;}
+  }
+
+  /* Right-click context menu (mouse) / long-press (touch) on any grid cell,
+     A-Z pip, or Rebirth Reqs cell — sets an exact owned colorway. Left-click
+     / tap keeps its original quick "claim the top tier or undo" behavior. */
+  .rb-context-menu{
+    position:fixed;z-index:100;background:var(--panel);border:1px solid var(--line-bright);
+    border-radius:8px;padding:4px;box-shadow:0 10px 30px rgba(0,0,0,0.5);min-width:150px;
+  }
+  .rb-context-item{
+    display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:5px;
+    cursor:pointer;font-size:13px;color:var(--text);
+  }
+  .rb-context-item:hover{background:rgba(255,255,255,0.07);}
+  .rb-context-item.current{background:rgba(94,242,166,0.14);}
+  .rb-context-swatch{width:12px;height:12px;border-radius:3px;flex:0 0 auto;}
+  .rb-context-check{margin-left:auto;color:var(--accent);font-weight:700;}
+
+  /* ---- mobile / touch additions (web tracker only — no equivalent needed
+     in the Electron app, which is mouse+keyboard only) ---- */
+  .pip, .droid-cell, .rb-cell, .lv-num, .dq-name:not([contenteditable="true"]){
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    touch-action: manipulation;
+  }
+  @media (max-width:640px){
+    .pip{width:22px;height:22px;flex:0 0 22px;}
+    .pip-row{gap:8px;}
+    /* A droid can have up to 7 pips (Base..Stellar); pip-row and
+       status-badge are both flex:0 0 auto (non-shrinking) so a full-width
+       single-line row doesn't fit narrow phones. Wrap the row instead: line
+       1 keeps icon+name+status together, line 2 is the full-width pip row
+       indented to line up under the name. */
+    .dq-row{flex-wrap:wrap;row-gap:6px;}
+    .status-badge{order:3;}
+    .pip-row{order:4;flex:1 1 100%;margin-left:62px;}
+    .level-table{font-size:13.5px;}
+    .level-table td{padding:8px 7px;}
+    .level-table td.lv-num{width:22px;padding-right:6px;font-size:12px;}
+    .icon-badge-sm{flex:0 0 26px;width:26px;height:26px;border-radius:6px;}
+    .cell-name{font-size:13px;}
+    .cell-flex{gap:6px;}
+    .sell-tag{font-size:9.5px;padding:1px 4px;margin-left:4px;}
+    .toolbar{gap:7px;}
+    .btn{padding:8px 11px;font-size:13px;}
+    .rebirth-grid{gap:4px;}
+    .rb-cell{padding:6px 3px;}
+    .rb-name{font-size:10px;}
+    .rb-cell .icon-badge{width:40px;height:40px;}
+    .level-table-hint{display:block;font-size:11px;color:var(--text-dim);margin:0 0 6px;font-family:'IBM Plex Mono',monospace;letter-spacing:.02em;}
+  }
+  @media (max-width:380px){
+    .level-table{font-size:12.5px;}
+    .icon-badge-sm{flex:0 0 22px;width:22px;height:22px;}
+    .cell-name{font-size:12px;}
+    .rb-cell .icon-badge{width:34px;height:34px;}
+    .rb-name{font-size:9.5px;}
+  }
+</style>
+</head>
+<body>
+<div id="bgLayer"></div>
+<div id="bgScrim"></div>
+<div class="mini-nav">
+  <a href="../index.html">← Droid Tycoon Tracker</a>
+  <a href="https://github.com/ibefuzzy/Fuzzy-Droid-Tracker/releases/latest" target="_blank" rel="noopener">Desktop app (Windows/Mac) ↗</a>
+</div>
+<div class="wrap" id="wrapEl">
+
+  <header>
+    <div class="title-block">
+      <h1><span class="glyph">⟳</span>DROID TYCOON — Keep or Let Go<span class="app-version" title="Browser version — the desktop app's screen-reading features aren't available here, everything is tapped in by hand">WEB</span></h1>
+      <p>Tap a droid's rarity dots to log what you own. Amber ring = the next upgrade worth chasing — anything at or below your best is safe to let go of. Press and hold a dot (or right-click on desktop) to set an exact colorway.</p>
+      <p class="storage-note">Progress saves in this browser only — it won't sync with the desktop app or your other devices. Use Export below before clearing site data or switching browsers/phones, then Import it back.</p>
+    </div>
+    <div class="overall">
+      <div class="num" id="overallNum">0 / 0</div>
+      <div class="lbl">DROIDS MAXED</div>
+      <div class="bar"><div id="overallBar" style="width:0%"></div></div>
+    </div>
+  </header>
+
+  <div class="legend" id="legend"></div>
+  <div class="level-note" id="levelNote" style="display:none;">Three droids per line, one line per level, all 35 levels for the cycle you've picked below. Tap a name to log it — dimmed names are already covered by a higher rarity you own.</div>
+  <div class="cycle-picker-row" id="cyclePickerRow" style="display:none;">
+    <select class="cycle-select" id="cycleSelect">
+      <option value="1">Cycle 1</option>
+      <option value="2">Cycle 2</option>
+      <option value="3">Cycle 3</option>
+      <option value="4">Cycle 4</option>
+      <option value="5">Cycle 5</option>
+    </select>
+    <span class="cycle-progress-label" id="cycleProgress"></span>
+  </div>
+
+  <div class="toolbar">
+    <div class="searchbox" id="searchBoxWrap"><input id="search" type="text" placeholder="Search a droid…"></div>
+    <div class="sort-toggle" id="sortToggleWrap">
+      <button class="btn on" data-sort="alpha" title="Needs-work first, then A–Z">A–Z</button>
+      <button class="btn" data-sort="level" title="Grouped in trios by the level they unlock at, for whichever cycle is selected">By Rebirth Level</button>
+    </div>
+    <div class="spacer"></div>
+    <button class="btn" id="editToggle" title="Tap a name to fix a misread, or rename it to match another droid to merge them">✎ Rename</button>
+    <button class="btn" id="reqPanelToggle" title="Show a panel of the droids needed for rebirth 35, at the rarity each cycle requires">🧬 Rebirth Reqs</button>
+    <button class="btn" id="retirePanelToggle" title="Show Legendary/Mythic droids you're done needing this cycle — safe to fuse or sell">♻ Safe to Retire</button>
+    <button class="btn" id="timersToggle" title="Show live countdowns for the Stellar, Mythic and Galactic blueprint drops and the next mission">⏱ Event Timers</button>
+    <button class="btn" id="bgBtn" title="Set a custom background image">🖼 Background</button>
+    <div class="bg-controls" id="bgControls" hidden>
+      <span class="bg-dim-label">Dim</span>
+      <input type="range" id="bgDimRange" min="0.2" max="0.92" step="0.02" value="0.72">
+      <button class="btn" id="bgClearBtn" title="Remove custom background">✕</button>
+    </div>
+    <button class="btn" id="exportBtn">Export</button>
+    <button class="btn" id="importBtn">Import</button>
+    <button class="btn" id="resetBtn">Reset all</button>
+    <input type="file" id="importFile" accept="application/json" style="display:none">
+    <input type="file" id="bgFile" accept="image/*" style="display:none">
+  </div>
+
+  <div class="timers-section" id="timersSection">
+    <div class="timers-head">
+      <h3>Event Timers</h3>
+      <p class="timers-sub">Wall-clock countdowns only — nothing here reads the game. The mission name/order is a best guess; sync it below if it drifts from what you see in-game.</p>
+    </div>
+    <div class="timers-grid" id="timersGrid">
+      <div class="timer-card stellar" id="stellarTimerCard">
+        <div class="timer-icon" title="Stellar Blueprint">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1.5 L14.7 9.3 L22.5 12 L14.7 14.7 L12 22.5 L9.3 14.7 L1.5 12 L9.3 9.3 Z"/></svg>
+        </div>
+        <div class="timer-body">
+          <span class="timer-label">Stellar</span>
+          <span class="timer-time" id="stellarTimerTime">--:--</span>
+        </div>
+      </div>
+      <div class="timer-card mythic" id="mythicTimerCard">
+        <div class="timer-icon" title="Mythic Blueprint">
+          <svg viewBox="0 0 24 24"><path d="M12 2 L19.5 9 L12 22 L4.5 9 Z" fill="currentColor"/><path d="M4.5 9 L19.5 9 L12 2 Z" fill="rgba(255,255,255,0.4)"/></svg>
+        </div>
+        <div class="timer-body">
+          <span class="timer-label">Mythic</span>
+          <span class="timer-time" id="mythicTimerTime">--:--</span>
+        </div>
+      </div>
+      <div class="timer-card galactic" id="galacticTimerCard">
+        <div class="timer-icon" title="Galactic Blueprint">
+          <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4.3" fill="currentColor"/><ellipse cx="12" cy="12" rx="10.5" ry="3.3" stroke="currentColor" stroke-width="1.7" transform="rotate(-20 12 12)"/></svg>
+        </div>
+        <div class="timer-body">
+          <span class="timer-label">Galactic</span>
+          <span class="timer-time" id="galacticTimerTime">--:--</span>
+        </div>
+      </div>
+      <div class="timer-card mission" id="missionTimerCard">
+        <div class="timer-icon" title="Next Mission">
+          <img id="missionTimerIcon" src="mission-icons/stormtrooper.png" alt="">
+        </div>
+        <div class="timer-body">
+          <span class="timer-label" id="missionTimerLabel">—</span>
+          <span class="timer-time" id="missionTimerTime">--:--</span>
+        </div>
+      </div>
+    </div>
+    <div class="mission-sync-row">
+      <label for="missionSyncMin">Sync mission timer — time left shown in-game</label>
+      <input type="number" id="missionSyncMin" min="0" max="59" placeholder="mm" inputmode="numeric">
+      <span class="sep">:</span>
+      <input type="number" id="missionSyncSec" min="0" max="59" placeholder="ss" inputmode="numeric">
+      <button class="btn" id="missionSyncBtn">🔄 Sync</button>
+    </div>
+  </div>
+
+  <div class="content-row">
+    <div class="main-col" id="quickPanelHome">
+      <div class="quick-panel" id="quickPanel">
+        <div id="dqList"></div>
+      </div>
+    </div>
+    <div class="rebirth-panel" id="rebirthPanel">
+      <div class="rebirth-panel-head">
+        <h3>Rebirth Requirements</h3>
+        <button class="btn" id="reqPanelClose" title="Hide this panel">✕</button>
+      </div>
+      <div class="rebirth-cycle-row">
+        <label for="reqCycleSelect">Cycle</label>
+        <select class="rb-cycle-select" id="reqCycleSelect">
+          <option value="1">Cycle 1</option>
+          <option value="2">Cycle 2</option>
+          <option value="3">Cycle 3</option>
+          <option value="4">Cycle 4</option>
+          <option value="5">Cycle 5</option>
+        </select>
+      </div>
+      <p class="rebirth-sub">Every droid this cycle calls for, grouped low to high (Base → Stellar) — the highest variety needed per droid. Tap one to log it (marks every lower variety of that droid in the list on the left too).</p>
+      <div id="rebirthList"></div>
+    </div>
+    <div class="rebirth-panel" id="retirePanel">
+      <div class="rebirth-panel-head">
+        <h3>Safe to Retire</h3>
+        <button class="btn" id="retirePanelClose" title="Hide this panel">✕</button>
+      </div>
+      <div class="rebirth-cycle-row">
+        <label for="retireCycleSelect">Cycle</label>
+        <select class="rb-cycle-select" id="retireCycleSelect">
+          <option value="1">Cycle 1</option>
+          <option value="2">Cycle 2</option>
+          <option value="3">Cycle 3</option>
+          <option value="4">Cycle 4</option>
+          <option value="5">Cycle 5</option>
+        </select>
+      </div>
+      <div class="retire-level-row">
+        <label for="retireLevelInput">Current rebirth level (this cycle)</label>
+        <input type="number" id="retireLevelInput" min="0" max="35" value="0" inputmode="numeric">
+      </div>
+      <p class="rebirth-sub">Legendary and Mythic droids you've already logged, past the last level this cycle still asks for them — nothing left to lose by fusing or selling your copy.</p>
+      <div id="retireList"></div>
+    </div>
+  </div>
+
+  <div class="ref" id="refCosts">
+    <h2>Upgrade chip costs</h2>
+    <div class="ref-body">
+      <table>
+        <tr><th>Rarity</th><th>Common</th><th>Rare</th><th>Epic</th><th>Legendary</th><th>Mythic</th></tr>
+        <tr><td class="rn" style="color:var(--r-gold)">Gold</td><td>10</td><td>30</td><td>120</td><td>400</td><td>4,000</td></tr>
+        <tr><td class="rn" style="color:var(--r-diamond)">Diamond</td><td>25</td><td>60</td><td>180</td><td>1,200</td><td>8,000</td></tr>
+        <tr><td class="rn" style="color:var(--r-rainbow2)">Rainbow</td><td>40</td><td>100</td><td>240</td><td>2,500</td><td>14,000</td></tr>
+        <tr><td class="rn" style="color:var(--r-beskar)">Beskar</td><td>80</td><td>250</td><td>2,000</td><td>6,000</td><td>30,000</td></tr>
+        <tr><td class="rn" style="color:var(--r-galactic)">Galactic</td><td>120</td><td>400</td><td>5,000</td><td>16,000</td><td>60,000</td></tr>
+        <tr><td class="rn" style="color:var(--r-stellar)">Stellar</td><td>180</td><td>750</td><td>8,000</td><td>24,000</td><td>90,000</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <footer>Tracks the highest rarity you own per droid, not every individual pull. If two rows are really the same droid, rename one to match the other's spelling and they'll merge.<br>Fan-made, unofficial, not affiliated with Epic Games. Made for you, with head-pats gratefully accepted.</footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="icons-data.js"></script>
+<script src="droid-data.js"></script>
+<script>
+/* ---------------- STORAGE ----------------
+   No Electron bridge exists in a plain browser, so this always falls
+   through to plain localStorage — same storeGet/storeSet contract as the
+   desktop app's tracker.html, just without the window.overlayAPI / cloud
+   branches (neither is ever present here). */
+async function storeGet(key){
+  try{
+    const v = localStorage.getItem(key); return v ? JSON.parse(v) : null;
+  }catch(e){ return null; }
+}
+async function storeSet(key,value){
+  try{
+    localStorage.setItem(key, JSON.stringify(value));
+    return true;
+  }catch(e){ console.error("storage failed", e); return false; }
+}
+
+/* ---------------- DOM HELPERS ---------------- */
+function getEl(id){ return document.getElementById(id); }
+function qsa(sel){ return Array.from(document.querySelectorAll(sel)); }
+
+/* ---------------- NAME NORMALIZATION / MERGES ---------------- */
+function normKey(name){
+  return name.toLowerCase().replace(/[^a-z0-9]/g,'');
+}
+let nameMerges = {};        // rawName (as it appears in CYCLES) -> canonical display name
+let displayOverrides = {};  // normKey -> preferred display name
+function canonicalName(rawName){
+  return nameMerges[rawName] || rawName;
+}
+
+/* ---------------- BUILD DROID INDEX FROM CYCLES ---------------- */
+let DROID_INDEX = {};  // normKey -> {display, entries:[{cycle,level,slot,code,rank}], ceilingRank}
+let RAW_GROUPS = {};   // normKey -> {names:{rawName:count}, entries:[...]}  (kept for merge lookups)
+
+function buildIndex(){
+  const groups = {};
+  for(let c=1;c<=5;c++){
+    for(let l=1;l<=35;l++){
+      const row = CYCLES[c][l-1];
+      row.forEach((d,i)=>{
+        const code = d[0], rawName = d[1];
+        const canon = canonicalName(rawName);
+        const nk = normKey(canon);
+        if(!groups[nk]) groups[nk] = { names:{}, entries:[] };
+        groups[nk].names[canon] = (groups[nk].names[canon]||0)+1;
+        groups[nk].entries.push({cycle:c, level:l, slot:i, code:code, rank:rankOf(code)});
+      });
+    }
+  }
+  const idx = {};
+  Object.keys(groups).forEach(nk=>{
+    const g = groups[nk];
+    let display = displayOverrides[nk];
+    if(!display){
+      display = Object.keys(g.names).sort((a,b)=>g.names[b]-g.names[a])[0];
+    }
+    let ceilingRank = 0;
+    let minLevel = null, minLevelCycle = null;
+    g.entries.forEach(e=>{
+      if(e.rank > ceilingRank) ceilingRank = e.rank;
+      if(minLevel === null || e.level < minLevel || (e.level === minLevel && e.cycle < minLevelCycle)){
+        minLevel = e.level; minLevelCycle = e.cycle;
+      }
+    });
+    idx[nk] = { display:display, entries:g.entries, ceilingRank:ceilingRank, minLevel:minLevel, minLevelCycle:minLevelCycle };
+  });
+  DROID_INDEX = idx;
+  RAW_GROUPS = groups;
+  // A rename/merge changes what canonicalName() returns for these raw
+  // names, which getDroidRarityClass()'s cache (below, used by Safe to
+  // Retire) is keyed by. Invalidate it here so a rebuild after a
+  // nameMerges change also gets a fresh rarity-class lookup, instead of
+  // keeping stale post-rename entries for the rest of the page's life —
+  // mirrors requirements.js's identical comment/fix in the Electron app.
+  RARITY_CLASS_BY_NK = null;
+}
+
+/* ---------------- OWNERSHIP ---------------- */
+let ownedRank = {}; // normKey -> highest rarity rank owned
+
+function droidStatus(nk){
+  const entry = DROID_INDEX[nk];
+  const owned = ownedRank[nk];
+  const maxed = owned !== undefined && owned >= entry.ceilingRank;
+  let nextRank = null;
+  if(!maxed){
+    const ranksHere = Array.from(new Set(entry.entries.map(e=>e.rank))).sort((a,b)=>a-b);
+    for(let i=0;i<ranksHere.length;i++){
+      if(owned === undefined || ranksHere[i] > owned){ nextRank = ranksHere[i]; break; }
+    }
+  }
+  return { maxed:maxed, owned:owned, nextRank:nextRank };
+}
+
+async function setOwned(nk, rank){
+  const current = ownedRank[nk];
+  const coveredBefore = cycleCoveredCount(activeCycle);
+  if(current === rank){
+    delete ownedRank[nk]; // tapping your current best again undoes it
+  } else if(current === undefined || rank > current){
+    ownedRank[nk] = rank; // new claim, or a genuine upgrade — cascades "covered" down to every lower variant automatically
+  } else {
+    // rank < current -> that variant is already covered by something higher.
+    // Never silently downgrade from a plain tap (a stray tap on an
+    // already-covered cell shouldn't erase real progress) — but don't leave
+    // the tap looking like it just did nothing, either. A droid can recur
+    // at many rarities across 5 cycles, so "something higher" is often
+    // logged nowhere near the cell just tapped. Point at the fix instead of
+    // failing silently.
+    const entry = DROID_INDEX[nk];
+    const label = entry ? entry.display : nk;
+    showToast(label + ' is logged at ' + RNAME[RARITY_ORDER[current]] + ' — press and hold (or right-click) any of its cells to change or clear that');
+    return;
+  }
+  await storeSet('rebirth-ownedRank-v2', ownedRank);
+  renderList(); renderStats();
+  maybeOfferCycleReset(activeCycle, coveredBefore);
+}
+
+function setOwnedAtLeast(nk, rank){
+  if(ownedRank[nk] === undefined || ownedRank[nk] < rank){ ownedRank[nk] = rank; }
+}
+
+async function markRowObtained(row, opts){
+  const skipCycleCheck = !!(opts && opts.skipCycleCheck);
+  const coveredBefore = skipCycleCheck ? null : cycleCoveredCount(activeCycle);
+  row.forEach(d=>{
+    const nk = normKey(canonicalName(d[1]));
+    setOwnedAtLeast(nk, rankOf(d[0]));
+  });
+  await storeSet('rebirth-ownedRank-v2', ownedRank);
+  renderList(); renderStats();
+  if(!skipCycleCheck) maybeOfferCycleReset(activeCycle, coveredBefore);
+}
+
+/* ---------------- CYCLE COMPLETION: offer to reset + advance ----------------
+   "Covered" here means the same thing renderByLevel()'s "x / 105 covered"
+   counter shows: every one of a cycle's 35 levels x 3 slots has a droid
+   logged (anywhere, any cycle — ownedRank is global by name) at that slot's
+   required rarity or better. Once a mark-increasing action pushes that from
+   something less than 105 up to exactly 105, offer to clear this cycle's
+   droids and roll over to the next one — never on an unmark, and never
+   again just from re-rendering an already-105 cycle. Cycles wrap 5 -> 1. */
+function cycleCoveredCount(cycle){
+  let covered = 0;
+  CYCLES[cycle].forEach(row=>{
+    row.forEach(d=>{
+      const nk = normKey(canonicalName(d[1]));
+      const owned = ownedRank[nk];
+      if(owned !== undefined && rankOf(d[0]) <= owned) covered++;
+    });
+  });
+  return covered;
+}
+
+function cycleDroidKeys(cycle){
+  const keys = new Set();
+  CYCLES[cycle].forEach(row=>{
+    row.forEach(d=>{ keys.add(normKey(canonicalName(d[1]))); });
+  });
+  return keys;
+}
+
+async function resetCycleAndAdvance(cycle){
+  cycleDroidKeys(cycle).forEach(nk=>{ delete ownedRank[nk]; });
+  await storeSet('rebirth-ownedRank-v2', ownedRank);
+  // Also clear the manually-entered "current rebirth level" Safe to Retire
+  // uses. The Electron app's own declutter panel deliberately leaves this
+  // number untouched on a cycle reset, because there it's read off-screen
+  // via OCR — the game's own HUD is the ground truth, so the app just waits
+  // for the next OCR read to correct it. This web tracker has no OCR to
+  // defer to; the number only ever comes from what the player last typed
+  // in, so a stale "level 30" surviving into a freshly-reset cycle 1 would
+  // silently mark every early droid safe to retire before you'd even logged
+  // one. Resetting it to 0 (Safe to Retire's own "unset" state, see
+  // renderRetirePanel) is the correct call here even though it diverges
+  // from the desktop app's behavior.
+  retireCurrentLevel = 0;
+  await storeSet('rebirth-currentLevel', retireCurrentLevel);
+  const next = (cycle >= 5) ? 1 : cycle + 1;
+  await setActiveCycle(next); // persists rebirth-activeCycle, syncs both selects, renderList()
+  renderStats();
+  showToast('Cycle ' + cycle + ' reset — now on Cycle ' + next);
+}
+
+function maybeOfferCycleReset(cycle, coveredBefore){
+  if(coveredBefore === 105) return; // was already fully marked before this action — don't re-nag on every subsequent tap
+  if(cycleCoveredCount(cycle) !== 105) return; // not complete yet
+  const wantsReset = confirm('Would you like to reset progress for this cycle and open the next?');
+  if(wantsReset) resetCycleAndAdvance(cycle);
+  // "No" -> leave everything exactly as it is: fully marked, same cycle, nothing cleared.
+}
+
+/* ---------------- MIGRATION FROM V1 ---------------- */
+async function migrate(){
+  const existing = await storeGet('rebirth-ownedRank-v2');
+  if(existing){ ownedRank = existing; return; }
+  const legacyOwned = (await storeGet('rebirth-owned')) || {};
+  const legacyOverrides = (await storeGet('rebirth-overrides')) || {};
+  const rank = {};
+  for(let c=1;c<=5;c++){
+    for(let l=1;l<=35;l++){
+      const row = CYCLES[c][l-1];
+      row.forEach((d,i)=>{
+        const key = c+'-'+l+'-'+i;
+        if(!legacyOwned[key]) return;
+        const code = d[0];
+        const rawName = legacyOverrides[key] || d[1];
+        const nk = normKey(rawName);
+        const r = rankOf(code);
+        if(!(nk in rank) || rank[nk] < r) rank[nk] = r;
+      });
+    }
+  }
+  ownedRank = rank;
+  await storeSet('rebirth-ownedRank-v2', ownedRank);
+}
+
+/* ---------------- TOAST ---------------- */
+let toastTimer = null;
+function showToast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>{ el.classList.remove('show'); }, 2600);
+}
+
+/* ---------------- RENAME / MERGE ---------------- */
+async function handleRename(nk, newVal){
+  newVal = newVal.trim();
+  if(!newVal) return;
+  const newNk = normKey(newVal);
+  const isMerge = (newNk !== nk) && !!DROID_INDEX[newNk]; // newNk already existed as its own group
+  const rawNames = RAW_GROUPS[nk] ? Object.keys(RAW_GROUPS[nk].names) : [];
+  rawNames.forEach(rn=>{ nameMerges[rn] = newVal; });
+  if(newNk !== nk && ownedRank[nk] !== undefined){
+    if(ownedRank[newNk] === undefined || ownedRank[nk] > ownedRank[newNk]){
+      ownedRank[newNk] = ownedRank[nk];
+    }
+    delete ownedRank[nk];
+  }
+  displayOverrides[newNk] = newVal;
+  await storeSet('rebirth-nameMerges', nameMerges);
+  await storeSet('rebirth-displayOverrides', displayOverrides);
+  await storeSet('rebirth-ownedRank-v2', ownedRank);
+  buildIndex();
+  renderList(); renderStats();
+  if(isMerge){
+    const merged = DROID_INDEX[newNk];
+    const keptRank = ownedRank[newNk];
+    const keptLabel = keptRank !== undefined ? RNAME[RARITY_ORDER[keptRank]] : 'nothing owned yet';
+    showToast('Merged into ' + merged.display + ' — ' + merged.entries.length + ' entries, kept ' + keptLabel);
+  }
+}
+
+/* ---------------- RENDER: LEGEND ---------------- */
+function renderLegend(){
+  const order = ["B","G","D","R","K","X","S"];
+  const legendEl = getEl('legend');
+  legendEl.innerHTML = order.map(code=>{
+    return '<span class="item"><span class="dot ' + RCLASS[code] + '"></span>' + RNAME[code] + '</span>';
+  }).join('');
+}
+
+/* ---------------- RENDER: STATS ---------------- */
+function renderStats(){
+  const keys = Object.keys(DROID_INDEX);
+  let maxedCount = 0;
+  keys.forEach(nk=>{ if(droidStatus(nk).maxed) maxedCount++; });
+  document.getElementById('overallNum').textContent = maxedCount + ' / ' + keys.length;
+  const pct = keys.length ? (maxedCount/keys.length*100) : 0;
+  document.getElementById('overallBar').style.width = pct + '%';
+}
+
+/* ---------------- RENDER: LIST ---------------- */
+let filterText = '';
+let editMode = false;
+let sortMode = 'alpha'; // 'alpha' | 'level'
+let activeCycle = 1;
+
+function droidRowHtml(nk, occEntry, extraClass){
+  const entry = DROID_INDEX[nk];
+  const st = droidStatus(nk);
+  const ranksHere = Array.from(new Set(entry.entries.map(e=>e.rank))).sort((a,b)=>a-b);
+  const pips = ranksHere.map(r=>{
+    const code = RARITY_ORDER[r];
+    const filled = st.owned !== undefined && r <= st.owned;
+    const isNext = r === st.nextRank;
+    const cls = 'pip' + (filled ? ' filled ' + code : '') + (isNext ? ' next' : '');
+    return '<div class="' + cls + '" data-nk="' + nk + '" data-rank="' + r + '" title="' + RNAME[code] + (isNext?' — next upgrade':'') + ' — press and hold (or right-click) to see/change the exact colorway on record' + '"></div>';
+  }).join('');
+  let iconEntry = occEntry;
+  if(!iconEntry){
+    iconEntry = entry.entries[0];
+    entry.entries.forEach(e=>{ if(e.rank===entry.ceilingRank) iconEntry = e; });
+  }
+  const iconKey = iconEntry.cycle + '-' + iconEntry.level + '-' + iconEntry.slot;
+  const src = (typeof ICONS !== 'undefined' && ICONS[iconKey]) ? ('data:image/webp;base64,' + ICONS[iconKey]) : '';
+  const imgTag = src ? ('<img src="' + src + '" alt="' + entry.display + '" loading="lazy">') : '';
+  const badgeClass = RCLASS[RARITY_ORDER[iconEntry.rank]];
+  const statusHtml = st.maxed
+    ? '<span class="status-badge maxed">MAXED</span>'
+    : '<span class="status-badge need">NEED · ' + RNAME[RARITY_ORDER[st.nextRank]] + '</span>';
+  const rowClass = 'dq-row' + (st.maxed?' maxed':'') + (extraClass?' '+extraClass:'');
+  return '<div class="' + rowClass + '">' +
+    '<div class="icon-badge ' + badgeClass + '">' + imgTag + '</div>' +
+    '<div class="dq-name-wrap">' +
+      '<div class="dq-name" data-nk="' + nk + '"' + (editMode?' contenteditable="true"':'') + '>' + entry.display + '</div>' +
+    '</div>' +
+    '<div class="pip-row">' + pips + '</div>' +
+    statusHtml +
+  '</div>';
+}
+
+function renderByAlpha(){
+  const q = filterText.trim().toLowerCase();
+  let keys = Object.keys(DROID_INDEX).filter(nk=>{
+    if(!q) return true;
+    return DROID_INDEX[nk].display.toLowerCase().indexOf(q) !== -1;
+  });
+  keys.sort((a,b)=>{
+    const sa = droidStatus(a), sb = droidStatus(b);
+    if(sa.maxed !== sb.maxed) return sa.maxed ? 1 : -1;
+    return DROID_INDEX[a].display.localeCompare(DROID_INDEX[b].display);
+  });
+  const listEl = getEl('dqList');
+  if(keys.length === 0){
+    listEl.innerHTML = '<div class="dq-empty">No droid matches that search.</div>';
+    return;
+  }
+  listEl.innerHTML = keys.map(nk=>droidRowHtml(nk)).join('');
+}
+
+function droidCellHtml(nk, occEntry){
+  const entry = DROID_INDEX[nk];
+  const owned = ownedRank[nk];
+  const covered = owned !== undefined && occEntry.rank <= owned;
+  const sellable = !entry.entries.some(e => e.cycle > occEntry.cycle || (e.cycle === occEntry.cycle && e.level > occEntry.level));
+  const code = RARITY_ORDER[occEntry.rank];
+  const cls = 'droid-cell ' + code + (covered ? ' covered' : '');
+  const iconKey = occEntry.cycle + '-' + occEntry.level + '-' + occEntry.slot;
+  const src = (typeof ICONS !== 'undefined' && ICONS[iconKey]) ? ('data:image/webp;base64,' + ICONS[iconKey]) : '';
+  const imgTag = src ? ('<img src="' + src + '" alt="" loading="lazy">') : '';
+  const badgeClass = RCLASS[code];
+  const sellTag = sellable ? '<span class="sell-tag">SELL</span>' : '';
+  const titleBits = [entry.display + ' — ' + RNAME[code]];
+  titleBits.push(covered ? 'already covered' : 'tap to log');
+  titleBits.push('press and hold (or right-click) to see/change the exact colorway on record');
+  if(sellable) titleBits.push('not needed again at any later level or rebirth');
+  return '<td class="' + cls + '" data-nk="' + nk + '" data-rank="' + occEntry.rank + '" title="' + titleBits.join(' — ') + '">' +
+    '<div class="cell-flex">' +
+      '<div class="icon-badge icon-badge-sm ' + badgeClass + '">' + imgTag + '</div>' +
+      '<span class="cell-name">' + entry.display + sellTag + '</span>' +
+    '</div>' +
+  '</td>';
+}
+
+function renderByLevel(){
+  getEl('cycleSelect').value = String(activeCycle);
+  const covered = cycleCoveredCount(activeCycle);
+  getEl('cycleProgress').textContent = covered + ' / 105 covered';
+  const q = filterText.trim().toLowerCase();
+  let rowsHtml = '';
+  let anyVisible = false;
+  for(let l=1;l<=35;l++){
+    const row = CYCLES[activeCycle][l-1];
+    const nks = row.map(d=> normKey(canonicalName(d[1])) );
+    const matchesAny = !q || nks.some(nk=> DROID_INDEX[nk].display.toLowerCase().indexOf(q)!==-1 );
+    if(!matchesAny) continue; // whole line hidden if nothing on it matches
+    anyVisible = true;
+    const cellsHtml = row.map((d,i)=>{
+      const occEntry = { cycle:activeCycle, level:l, slot:i, code:d[0], rank:rankOf(d[0]) };
+      return droidCellHtml(nks[i], occEntry);
+    }).join('');
+    rowsHtml += '<tr><td class="lv-num" data-cycle="' + activeCycle + '" data-level="' + l + '" title="Mark all 3 as obtained">' + l + '</td>' + cellsHtml + '</tr>';
+  }
+
+  const listEl = getEl('dqList');
+  if(!anyVisible){
+    listEl.innerHTML = '<div class="dq-empty">No droid matches that search.</div>';
+    return;
+  }
+  listEl.innerHTML = '<div class="cycle-section">' +
+    '<div class="cycle-section-header">Cycle ' + activeCycle + '</div>' +
+    '<div class="level-table-hint">↔ swipe the table sideways to see all 3 droids per row</div>' +
+    '<div class="level-table-scroll"><table class="level-table"><tbody>' + rowsHtml + '</tbody></table></div>' +
+  '</div>';
+}
+
+function wireRowEvents(){
+  const listEl = getEl('dqList');
+  listEl.querySelectorAll('.pip').forEach(p=>{
+    p.addEventListener('click', ()=>{
+      setOwned(p.dataset.nk, parseInt(p.dataset.rank, 10));
+    });
+    p.addEventListener('contextmenu', (e)=>{
+      e.preventDefault();
+      openRbContextMenu(p.dataset.nk, e.clientX, e.clientY);
+    });
+    wireLongPress(p, p.dataset.nk);
+  });
+  listEl.querySelectorAll('.droid-cell').forEach(td=>{
+    td.addEventListener('click', ()=>{
+      setOwned(td.dataset.nk, parseInt(td.dataset.rank, 10));
+    });
+    td.addEventListener('contextmenu', (e)=>{
+      e.preventDefault();
+      openRbContextMenu(td.dataset.nk, e.clientX, e.clientY);
+    });
+    wireLongPress(td, td.dataset.nk);
+  });
+  listEl.querySelectorAll('.lv-num').forEach(td=>{
+    td.addEventListener('click', ()=>{
+      const c = parseInt(td.dataset.cycle, 10);
+      const l = parseInt(td.dataset.level, 10);
+      markRowObtained(CYCLES[c][l-1]);
+    });
+  });
+  if(editMode){
+    listEl.querySelectorAll('.dq-name[contenteditable="true"]').forEach(el=>{
+      el.addEventListener('click', e=>e.stopPropagation());
+      el.addEventListener('blur', ()=>{
+        const nk = el.dataset.nk;
+        const val = el.textContent.trim();
+        if(val && val !== DROID_INDEX[nk].display){
+          handleRename(nk, val);
+        }
+      });
+    });
+  }
+}
+
+function renderList(){
+  getEl('levelNote').style.display = (sortMode === 'level') ? '' : 'none';
+  getEl('cyclePickerRow').style.display = (sortMode === 'level') ? '' : 'none';
+  if(sortMode === 'level'){ renderByLevel(); }
+  else { renderByAlpha(); }
+  wireRowEvents();
+  renderRebirthPanel();
+  renderRetirePanel();
+}
+
+/* ---------------- RENDER: REBIRTH REQUIREMENTS PANEL ----------------
+   For the cycle currently being watched, find every droid's highest-rarity
+   occurrence WITHIN THAT CYCLE ONLY (a droid can cap out higher in one
+   cycle than another), and group everything Base through Stellar. Tapping
+   one here calls the same setOwned() the main list pips use, so it fills in
+   every lower variety of that droid on the left too. */
+function cycleCeilings(cycle){
+  const ceilings = {}; // nk -> {rank, cycle, level, slot, code}
+  for(let l=1;l<=35;l++){
+    const row = CYCLES[cycle][l-1];
+    row.forEach((d,i)=>{
+      const code = d[0];
+      const nk = normKey(canonicalName(d[1]));
+      const rank = rankOf(code);
+      if(!ceilings[nk] || rank > ceilings[nk].rank){
+        ceilings[nk] = { rank:rank, cycle:cycle, level:l, slot:i, code:code };
+      }
+    });
+  }
+  return ceilings;
+}
+
+function rebirthCellHtml(nk, info){
+  const entry = DROID_INDEX[nk];
+  if(!entry) return '';
+  const rank = info.rank; // this cycle's highest required rarity for this droid
+  const code = RARITY_ORDER[rank];
+  const owned = ownedRank[nk];
+  const covered = owned !== undefined && rank <= owned;
+  const reqClass = RCLASS[code];
+  const ownedCode = (owned !== undefined) ? RARITY_ORDER[owned] : null;
+  const ownedClass = ownedCode ? RCLASS[ownedCode] : 'rarity-unowned';
+  const iconKey = info.cycle + '-' + info.level + '-' + info.slot;
+  const src = (typeof ICONS !== 'undefined' && ICONS[iconKey]) ? ('data:image/webp;base64,' + ICONS[iconKey]) : '';
+  const imgTag = src ? ('<img src="' + src + '" alt="' + entry.display + '" loading="lazy">') : '';
+  const haveText = ownedCode ? ('you have ' + RNAME[ownedCode]) : "you haven't logged this one";
+  const titleBits = [entry.display + ' — need ' + RNAME[code], haveText, covered ? 'already covered' : 'tap to log the top tier', 'press and hold (or right-click) to pick an exact colorway'];
+  return '<div class="rb-cell' + (covered ? ' covered' : '') + '" data-nk="' + nk + '" data-rank="' + rank + '" title="' + titleBits.join(' — ') + '">' +
+    '<div class="icon-badge icon-badge-split">' +
+      '<div class="badge-half badge-half-owned ' + ownedClass + '"></div>' +
+      '<div class="badge-half badge-half-req ' + reqClass + '"></div>' +
+      imgTag +
+    '</div>' +
+    '<div class="rb-name ' + code + '">' + entry.display + '</div>' +
+  '</div>';
+}
+
+function renderRebirthPanel(){
+  const listEl = getEl('rebirthList');
+  if(!listEl) return;
+  const sel = getEl('reqCycleSelect');
+  if(sel) sel.value = String(activeCycle);
+
+  const ceilings = cycleCeilings(activeCycle);
+  const tiers = {}; // rank -> [nk,...]  (every droid included now, Base through Stellar)
+  Object.keys(ceilings).forEach(nk=>{
+    const rank = ceilings[nk].rank;
+    if(!tiers[rank]) tiers[rank] = [];
+    tiers[rank].push(nk);
+  });
+
+  let html = '';
+  for(let rank=0; rank<=6; rank++){
+    const nks = tiers[rank];
+    if(!nks || !nks.length) continue;
+    nks.sort((a,b)=> DROID_INDEX[a].display.localeCompare(DROID_INDEX[b].display));
+    const code = RARITY_ORDER[rank];
+    const cellsHtml = nks.map(nk=>rebirthCellHtml(nk, ceilings[nk])).join('');
+    html += '<div class="rebirth-tier-block">' +
+      '<div class="rebirth-tier-label ' + code + '">' + RNAME[code] + '</div>' +
+      '<div class="rebirth-grid">' + cellsHtml + '</div>' +
+    '</div>';
+  }
+  listEl.innerHTML = html || '<div class="dq-empty" style="padding:16px 8px;">No droids found for this cycle.</div>';
+  listEl.querySelectorAll('.rb-cell').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      setOwned(el.dataset.nk, parseInt(el.dataset.rank, 10));
+    });
+    el.addEventListener('contextmenu', (e)=>{
+      e.preventDefault();
+      openRbContextMenu(el.dataset.nk, e.clientX, e.clientY);
+    });
+    wireLongPress(el, el.dataset.nk);
+  });
+}
+
+/* ---------------- SAFE TO RETIRE ----------------
+   Ported from the Electron app's requirements.js (getDeclutterList /
+   cycleLastNeededLevel / getDroidRarityClass), byte-for-byte where the
+   underlying data lets it be: every Legendary or Mythic droid you've
+   logged as owned, whose last appearance in the active cycle (at ANY
+   rarity) is already behind the rebirth level you're on — nothing further
+   this cycle will ever ask for it again, so it's safe to fuse or sell.
+
+   Deliberately NOT the same level as cycleCeilings() above: cycleCeilings
+   records the FIRST level a droid hits its ceiling (highest) rarity, which
+   isn't always its true final appearance in the cycle — some droids show up
+   again at a later level, occasionally at that same ceiling rarity, other
+   times at a lower one. Either way, a later occurrence still needs the
+   physical droid to exist at rebirth time regardless of what rarity that
+   slot asks for, so cycleCeilings' level alone isn't a safe cutoff. Verified
+   against the real CYCLES data: 13 of 223 droid/cycle combinations have a
+   last-appearance level later than their ceiling level, so this genuinely
+   matters and isn't just a theoretical edge case. cycleLastNeededLevel
+   tracks the LAST level a droid appears at any rarity instead. */
+function cycleLastNeededLevel(cycle){
+  const lastLevel = {}; // nk -> highest level number requiring this droid, any rarity
+  for(let l=1;l<=35;l++){
+    const row = CYCLES[cycle][l-1];
+    row.forEach(d=>{
+      const nk = normKey(canonicalName(d[1]));
+      lastLevel[nk] = l; // levels visited in increasing order, so the last write is the true max
+    });
+  }
+  return lastLevel;
+}
+
+// Looks up the DROID_RARITY_CLASS table (droid-data.js) by normalized key,
+// resolved through canonicalName() so a renamed/merged Legendary or Mythic
+// droid is still found under its new name. Cached, and invalidated by
+// buildIndex() above whenever a rename changes what canonicalName() returns.
+let RARITY_CLASS_BY_NK = null;
+function getDroidRarityClass(nk){
+  if(!RARITY_CLASS_BY_NK){
+    RARITY_CLASS_BY_NK = {};
+    Object.keys(DROID_RARITY_CLASS).forEach(rawName=>{
+      RARITY_CLASS_BY_NK[normKey(canonicalName(rawName))] = DROID_RARITY_CLASS[rawName];
+    });
+  }
+  return RARITY_CLASS_BY_NK[nk] || null;
+}
+
+// currentLevel = the rebirth level you're currently on within `cycle`
+// (manually entered below — see retireCurrentLevel — since the browser has
+// no OCR to read it off-screen the way the desktop overlay does).
+function getDeclutterList(cycle, currentLevel, ownedRank){
+  const lastNeeded = cycleLastNeededLevel(cycle);
+  const ceilings = cycleCeilings(cycle);
+  const out = [];
+  Object.keys(lastNeeded).forEach(nk=>{
+    const rarityClass = getDroidRarityClass(nk);
+    if(rarityClass !== 'Legendary' && rarityClass !== 'Mythic') return;
+    const owned = ownedRank ? ownedRank[nk] : undefined;
+    if(owned === undefined || owned === null) return; // nothing logged, nothing to retire
+    if(lastNeeded[nk] > currentLevel) return; // still needed later this cycle
+    const entry = DROID_INDEX[nk];
+    const ceilingInfo = ceilings[nk];
+    out.push({
+      nk,
+      display: entry ? entry.display : nk,
+      ownedCode: RARITY_ORDER[owned],
+      rarityClass,
+      ceilingInfo
+    });
+  });
+  out.sort((a,b)=> a.display.localeCompare(b.display));
+  return out;
+}
+
+function retireCellHtml(item){
+  const code = item.ownedCode; // the rarity YOU own, not a requirement — Safe to Retire has nothing to "tap and log"
+  const badgeClass = RCLASS[code];
+  const info = item.ceilingInfo;
+  const iconKey = info ? (info.cycle + '-' + info.level + '-' + info.slot) : null;
+  const src = (iconKey && typeof ICONS !== 'undefined' && ICONS[iconKey]) ? ('data:image/webp;base64,' + ICONS[iconKey]) : '';
+  const imgTag = src ? ('<img src="' + src + '" alt="' + item.display + '" loading="lazy">') : '';
+  const title = item.display + ' — you have ' + RNAME[code] + ' — ' + item.rarityClass + ' — not needed again this cycle';
+  // data-nk/data-class carried through even though there's no click handler
+  // here (nothing to tap/log) — keeps this cell identifiable in the DOM the
+  // same way every other cell type in this file is, for tooling and tests.
+  return '<div class="rb-cell" data-nk="' + item.nk + '" data-class="' + item.rarityClass + '" title="' + title + '">' +
+    '<div class="icon-badge ' + badgeClass + '">' + imgTag + '</div>' +
+    '<div class="rb-name ' + code + '">' + item.display + '</div>' +
+  '</div>';
+}
+
+let showRetirePanel = false;
+let retireCurrentLevel = 0; // 0 = unset; persisted separately from ownedRank, see resetCycleAndAdvance()
+function applyPanelWidths(){
+  const wrapEl = getEl('wrapEl');
+  if(wrapEl) wrapEl.classList.toggle('with-rebirth', showReqPanel || showRetirePanel);
+}
+function applyRetirePanelVisibility(){
+  const panel = getEl('retirePanel');
+  const btn = getEl('retirePanelToggle');
+  if(panel) panel.classList.toggle('show', showRetirePanel);
+  if(btn) btn.classList.toggle('on', showRetirePanel);
+  applyPanelWidths();
+}
+async function toggleRetirePanel(force){
+  showRetirePanel = (force !== undefined) ? force : !showRetirePanel;
+  applyRetirePanelVisibility();
+  await storeSet('rebirth-showRetirePanel', showRetirePanel);
+}
+document.getElementById('retirePanelToggle').addEventListener('click', ()=> toggleRetirePanel());
+document.getElementById('retirePanelClose').addEventListener('click', ()=> toggleRetirePanel(false));
+document.getElementById('retireCycleSelect').addEventListener('change', (e)=>{
+  setActiveCycle(parseInt(e.target.value, 10));
+});
+document.getElementById('retireLevelInput').addEventListener('input', async (e)=>{
+  let v = parseInt(e.target.value, 10);
+  if(isNaN(v)) v = 0;
+  v = Math.max(0, Math.min(35, v));
+  retireCurrentLevel = v;
+  await storeSet('rebirth-currentLevel', retireCurrentLevel);
+  renderRetirePanel();
+});
+
+function renderRetirePanel(){
+  const listEl = getEl('retireList');
+  if(!listEl) return;
+  const sel = getEl('retireCycleSelect');
+  if(sel) sel.value = String(activeCycle);
+  const input = getEl('retireLevelInput');
+  if(input && document.activeElement !== input) input.value = String(retireCurrentLevel);
+
+  if(retireCurrentLevel <= 0){
+    listEl.innerHTML = '<div class="retire-empty">Set your current rebirth level above to see what\'s safe to let go of — nothing shows until then, since "safe" depends on how far through the cycle you are.</div>';
+    return;
+  }
+  const items = getDeclutterList(activeCycle, retireCurrentLevel, ownedRank);
+  if(!items.length){
+    listEl.innerHTML = '<div class="retire-empty">Nothing to retire yet at rebirth ' + retireCurrentLevel + ' — either you haven\'t logged a Legendary/Mythic droid this cycle is done with, or none have finished appearing yet.</div>';
+    return;
+  }
+  const byClass = { Legendary: [], Mythic: [] };
+  items.forEach(item=>{ byClass[item.rarityClass].push(item); });
+  let html = '';
+  ['Legendary','Mythic'].forEach(cls=>{
+    const list = byClass[cls];
+    if(!list.length) return;
+    html += '<div class="rebirth-tier-block">' +
+      '<div class="rebirth-tier-label ' + cls.toLowerCase() + '">' + cls + '</div>' +
+      '<div class="rebirth-grid">' + list.map(retireCellHtml).join('') + '</div>' +
+    '</div>';
+  });
+  listEl.innerHTML = html;
+}
+
+/* ---------------- right-click / long-press "set exact colorway" menu ----------------
+   Originally right-click only (mouse): left-click on any pip/cell keeps its
+   quick "claim the top tier or undo" behavior, right-click opens a menu of
+   all 7 colorways so you can log — or clear — exactly what you have for
+   that droid, no matter which specific cell you clicked from. That matters
+   because a droid can recur at many rarities across all 5 cycles, and
+   setOwned() never lets a plain tap downgrade a tier logged elsewhere.
+   wireLongPress() below is the touch equivalent, added for the web
+   tracker — a ~500ms press-and-hold opens this same menu. */
+let rbMenuEl = null;
+function closeRbContextMenu(){
+  if(rbMenuEl){ rbMenuEl.remove(); rbMenuEl = null; }
+  document.removeEventListener('mousedown', onRbMenuOutsideClick, true);
+  document.removeEventListener('keydown', onRbMenuEscape, true);
+}
+function onRbMenuOutsideClick(e){
+  if(rbMenuEl && !rbMenuEl.contains(e.target)) closeRbContextMenu();
+}
+function onRbMenuEscape(e){
+  if(e.key === 'Escape') closeRbContextMenu();
+}
+function openRbContextMenu(nk, x, y){
+  closeRbContextMenu();
+  const entry = DROID_INDEX[nk];
+  if(!entry) return;
+  const current = ownedRank[nk];
+  const menu = document.createElement('div');
+  menu.className = 'rb-context-menu';
+  menu.innerHTML = RARITY_ORDER.map((code, rank)=>{
+    const isCurrent = current === rank;
+    return '<div class="rb-context-item' + (isCurrent ? ' current' : '') + '" data-rank="' + rank + '">' +
+      '<span class="rb-context-swatch ' + RCLASS[code] + '"></span>' +
+      '<span>' + RNAME[code] + '</span>' +
+      (isCurrent ? '<span class="rb-context-check">✓</span>' : '') +
+    '</div>';
+  }).join('');
+  document.body.appendChild(menu);
+  const rect = menu.getBoundingClientRect();
+  menu.style.left = Math.max(4, Math.min(x, window.innerWidth - rect.width - 8)) + 'px';
+  menu.style.top = Math.max(4, Math.min(y, window.innerHeight - rect.height - 8)) + 'px';
+  menu.querySelectorAll('.rb-context-item').forEach(item=>{
+    item.addEventListener('click', ()=>{
+      setOwned(nk, parseInt(item.dataset.rank, 10));
+      closeRbContextMenu();
+    });
+  });
+  rbMenuEl = menu;
+  setTimeout(()=>{
+    document.addEventListener('mousedown', onRbMenuOutsideClick, true);
+    document.addEventListener('keydown', onRbMenuEscape, true);
+  }, 0);
+}
+
+/* ---------------- LONG-PRESS (touch equivalent of right-click) ----------------
+   Touch devices have no contextmenu gesture, so a ~500ms press-and-hold on
+   the same cells opens the same exact-colorway menu right-click does.
+   Cancels itself if the finger moves more than a few px (a scroll/swipe,
+   not a hold) and swallows the click that a touch normally fires on
+   release, so a long-press never ALSO logs the tapped cell's top tier. */
+function wireLongPress(el, nk){
+  let timer = null, startX = 0, startY = 0, lastX = 0, lastY = 0, fired = false;
+  const MOVE_TOLERANCE = 10, HOLD_MS = 500;
+  el.addEventListener('touchstart', (e)=>{
+    if(e.touches.length !== 1) return;
+    fired = false;
+    const t = e.touches[0];
+    startX = lastX = t.clientX; startY = lastY = t.clientY;
+    timer = setTimeout(()=>{
+      fired = true;
+      timer = null;
+      openRbContextMenu(nk, lastX, lastY);
+    }, HOLD_MS);
+  }, {passive:true});
+  el.addEventListener('touchmove', (e)=>{
+    if(!timer) return;
+    const t = e.touches[0];
+    lastX = t.clientX; lastY = t.clientY;
+    if(Math.abs(lastX-startX) > MOVE_TOLERANCE || Math.abs(lastY-startY) > MOVE_TOLERANCE){
+      clearTimeout(timer); timer = null;
+    }
+  }, {passive:true});
+  el.addEventListener('touchend', (e)=>{
+    if(timer){ clearTimeout(timer); timer = null; }
+    if(fired) e.preventDefault(); // suppress the synthetic click this touch would otherwise fire
+  });
+  el.addEventListener('touchcancel', ()=>{
+    if(timer){ clearTimeout(timer); timer = null; }
+  });
+}
+
+let showReqPanel = false;
+function applyReqPanelVisibility(){
+  const panel = getEl('rebirthPanel');
+  const btn = getEl('reqPanelToggle');
+  if(panel) panel.classList.toggle('show', showReqPanel);
+  if(btn) btn.classList.toggle('on', showReqPanel);
+  applyPanelWidths(); // shared with the Safe to Retire panel — widens .wrap if EITHER side panel is open
+}
+async function toggleReqPanel(force){
+  showReqPanel = (force !== undefined) ? force : !showReqPanel;
+  applyReqPanelVisibility();
+  await storeSet('rebirth-showReqPanel', showReqPanel);
+}
+document.getElementById('reqPanelToggle').addEventListener('click', ()=> toggleReqPanel());
+document.getElementById('reqPanelClose').addEventListener('click', ()=> toggleReqPanel(false));
+
+/* ---------------- CONTROLS ---------------- */
+document.getElementById('search').addEventListener('input', e=>{
+  filterText = e.target.value; renderList();
+});
+qsa('.sort-toggle button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    sortMode = btn.dataset.sort;
+    qsa('.sort-toggle button').forEach(b=>{ b.classList.toggle('on', b===btn); });
+    storeSet('rebirth-sortMode', sortMode);
+    renderList();
+  });
+});
+async function setActiveCycle(c){
+  activeCycle = c;
+  await storeSet('rebirth-activeCycle', activeCycle);
+  const mainSel = getEl('cycleSelect');
+  if(mainSel) mainSel.value = String(activeCycle);
+  const reqSel = getEl('reqCycleSelect');
+  if(reqSel) reqSel.value = String(activeCycle);
+  renderList();
+}
+document.getElementById('cycleSelect').addEventListener('change', (e)=>{
+  setActiveCycle(parseInt(e.target.value, 10));
+});
+document.getElementById('reqCycleSelect').addEventListener('change', (e)=>{
+  setActiveCycle(parseInt(e.target.value, 10));
+});
+document.getElementById('editToggle').addEventListener('click', (e)=>{
+  editMode = !editMode;
+  e.target.classList.toggle('on', editMode);
+  e.target.textContent = editMode ? '✓ Editing (tap a name to rename)' : '✎ Rename';
+  renderList();
+});
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  if(!confirm('Clear ALL tracked droid progress? This cannot be undone.')) return;
+  ownedRank = {};
+  storeSet('rebirth-ownedRank-v2', ownedRank);
+  renderList(); renderStats();
+});
+document.getElementById('exportBtn').addEventListener('click', ()=>{
+  const payload = { v:2, ownedRank:ownedRank, nameMerges:nameMerges, displayOverrides:displayOverrides };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'droid-tycoon-progress.json'; a.click();
+  URL.revokeObjectURL(url);
+});
+document.getElementById('importBtn').addEventListener('click', ()=> document.getElementById('importFile').click());
+document.getElementById('importFile').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  e.target.value = '';
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = async () => {
+    try{
+      const parsed = JSON.parse(reader.result);
+      ownedRank = parsed.ownedRank || {};
+      nameMerges = parsed.nameMerges || {};
+      displayOverrides = parsed.displayOverrides || {};
+      await storeSet('rebirth-ownedRank-v2', ownedRank);
+      await storeSet('rebirth-nameMerges', nameMerges);
+      await storeSet('rebirth-displayOverrides', displayOverrides);
+      buildIndex();
+      renderList(); renderStats();
+    }catch(err){ alert('Could not read that file.'); }
+  };
+  reader.readAsText(file);
+});
+document.getElementById('refCosts').querySelector('h2').addEventListener('click', function(){
+  this.parentElement.classList.toggle('open');
+});
+
+/* ---------------- CUSTOM BACKGROUND IMAGE ---------------- */
+let bgImageData = null;
+let bgDim = 0.72;
+
+function applyBackground(){
+  const layer = document.getElementById('bgLayer');
+  const scrim = document.getElementById('bgScrim');
+  const controls = document.getElementById('bgControls');
+  const bgBtn = document.getElementById('bgBtn');
+  const dimRange = document.getElementById('bgDimRange');
+  if(bgImageData){
+    layer.style.backgroundImage = `url("${bgImageData}")`;
+    scrim.style.background = `rgba(11,15,13,${bgDim})`;
+    controls.hidden = false;
+    bgBtn.classList.add('on');
+    bgBtn.textContent = '🖼 Change background';
+    dimRange.value = bgDim;
+  } else {
+    layer.style.backgroundImage = 'none';
+    scrim.style.background = 'transparent';
+    controls.hidden = true;
+    bgBtn.classList.remove('on');
+    bgBtn.textContent = '🖼 Background';
+  }
+}
+
+document.getElementById('bgBtn').addEventListener('click', ()=> document.getElementById('bgFile').click());
+
+document.getElementById('bgFile').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  e.target.value = '';
+  if(!file) return;
+  if(!file.type.startsWith('image/')){ alert('Please choose an image file.'); return; }
+  const reader = new FileReader();
+  reader.onload = () => {
+    const img = new Image();
+    img.onload = async () => {
+      // Downscale large photos so they fit comfortably in local storage.
+      const maxDim = 1920;
+      const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+      const w = Math.max(1, Math.round(img.width * scale));
+      const h = Math.max(1, Math.round(img.height * scale));
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      let dataUrl;
+      try{
+        dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      }catch(err){
+        alert('Could not process that image.'); return;
+      }
+      bgImageData = dataUrl;
+      applyBackground();
+      const saved = await storeSet('rebirth-bgImage', dataUrl);
+      if(!saved){
+        alert('That image was too large to save. Try a smaller picture.');
+      }
+    };
+    img.onerror = () => alert('Could not read that image.');
+    img.src = reader.result;
+  };
+  reader.onerror = () => alert('Could not read that file.');
+  reader.readAsDataURL(file);
+});
+
+document.getElementById('bgClearBtn').addEventListener('click', async (e)=>{
+  e.stopPropagation();
+  bgImageData = null;
+  applyBackground();
+  await storeSet('rebirth-bgImage', null);
+});
+
+document.getElementById('bgDimRange').addEventListener('input', (e)=>{
+  bgDim = parseFloat(e.target.value);
+  document.getElementById('bgScrim').style.background = `rgba(11,15,13,${bgDim})`;
+});
+document.getElementById('bgDimRange').addEventListener('change', async (e)=>{
+  bgDim = parseFloat(e.target.value);
+  await storeSet('rebirth-bgDim', bgDim);
+});
+
+/* ---------------- EVENT TIMERS ----------------
+   Ported from the Electron overlay's timers.html — pure wall-clock
+   countdown math against the system clock, nothing here reads the screen
+   or Fortnite in any way. Shown as a full-width toggleable section rather
+   than that file's floating always-on-top banner strip, which has no
+   equivalent on a normal scrolled webpage; the setInterval below only runs
+   while the section is visible. */
+
+function nextStellar(now){
+  // Every hour, on the hour exactly (1:00, 2:00, 3:00, ...).
+  const next = new Date(now);
+  next.setMinutes(0, 0, 0);
+  if(next <= now) next.setHours(next.getHours() + 1);
+  return next;
+}
+
+function nextMythic(now){
+  // Every hour, at :55 (1:55, 2:55, 3:55, ...).
+  const next = new Date(now);
+  next.setMinutes(55, 0, 0);
+  if(next <= now) next.setHours(next.getHours() + 1);
+  return next;
+}
+
+function nextGalactic(now){
+  // Every 30 minutes, starting 15 minutes after the hour (:15 and :45).
+  const candidates = [];
+  for(let h = 0; h <= 1; h++){
+    const a = new Date(now); a.setHours(a.getHours() + h, 15, 0, 0); candidates.push(a);
+    const b = new Date(now); b.setHours(b.getHours() + h, 45, 0, 0); candidates.push(b);
+  }
+  candidates.sort((a, b) => a - b);
+  return candidates.find(d => d > now);
+}
+
+// Missions run 45 minutes apart, then stay live for a further 5-minute
+// window before the next countdown starts — 50 minutes start-to-start, not
+// 45 (see timers.html in the desktop app for the original discovery notes
+// on this).
+const MISSION_CYCLE = ['Stormtrooper', 'Fishing', 'D-0', 'Mining'];
+const MISSION_ICONS = {
+  'Stormtrooper': 'mission-icons/stormtrooper.png',
+  'Fishing': 'mission-icons/fishing.png',
+  'D-0': 'mission-icons/d0.png',
+  'Mining': 'mission-icons/mining.png',
+};
+const MISSION_COUNTDOWN_MS = 45 * 60 * 1000;
+const MISSION_RUN_DURATION_MS = 5 * 60 * 1000; // each mission stays live/active for 5 minutes before the next countdown starts
+const MISSION_PERIOD_MS = MISSION_COUNTDOWN_MS + MISSION_RUN_DURATION_MS; // 50 minutes, start-to-start
+
+// Same reference instant as the desktop overlay (a confirmed Stormtrooper
+// occurrence: 2026-09-19 12:10:20 America/New_York — see timers.html for how
+// it was derived), but built with Date.UTC instead of the local-timezone
+// Date(y,m,d,h,m,s) constructor timers.html uses. That distinction doesn't
+// matter for the single-user desktop app (it only ever runs in the
+// calibrator's own timezone), but it would silently break for anyone
+// visiting this public page from a different timezone than the original
+// reading — each visitor's browser would reinterpret those same numbers as
+// a different absolute instant, desyncing both the mission name cycle and
+// its countdown for everyone not in that exact timezone. Date.UTC pins it
+// to one exact instant for every visitor everywhere. 12:10:20 EDT (UTC-4,
+// in effect for this date) = 16:10:20 UTC.
+const MISSION_NAME_EPOCH_MS = Date.UTC(2026, 8, 19, 16, 10, 20, 0);
+
+let missionSyncEpochMs = null; // set via "Sync mission timer" below; sharpens the countdown TARGET only, never the name cycle
+let lastMissionIconName = null;
+
+function missionStepIndex(occurrenceMs, epochMs){
+  const steps = Math.round((occurrenceMs - epochMs) / MISSION_PERIOD_MS);
+  return ((steps % MISSION_CYCLE.length) + MISSION_CYCLE.length) % MISSION_CYCLE.length;
+}
+
+function nextMission(now){
+  const epochMs = (missionSyncEpochMs != null) ? missionSyncEpochMs : MISSION_NAME_EPOCH_MS;
+  const nowMs = now.getTime();
+  const k = Math.floor((nowMs - epochMs) / MISSION_PERIOD_MS) + 1;
+  let nextMs = epochMs + k * MISSION_PERIOD_MS;
+  if(nextMs <= nowMs) nextMs += MISSION_PERIOD_MS;
+  return new Date(nextMs);
+}
+
+function missionNameForOccurrence(occurrence){
+  // Always the fixed nominal epoch, never the synced one — see timers.html:
+  // a sync performed while any mission is showing (not necessarily
+  // Stormtrooper) must not relabel every future mission's name.
+  const idx = missionStepIndex(occurrence.getTime(), MISSION_NAME_EPOCH_MS);
+  return MISSION_CYCLE[idx];
+}
+
+function fmtRemaining(ms){
+  if(ms < 0) ms = 0;
+  const totalSec = Math.floor(ms / 1000);
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  const pad = (n) => String(n).padStart(2, '0');
+  return h > 0 ? (h + ':' + pad(m) + ':' + pad(s)) : (pad(m) + ':' + pad(s));
+}
+
+const IMMINENT_THRESHOLD_MS = 10 * 1000;
+function setTimerImminent(cardEl, remainingMs){
+  if(cardEl) cardEl.classList.toggle('imminent', remainingMs >= 0 && remainingMs < IMMINENT_THRESHOLD_MS);
+}
+
+function renderTimers(){
+  const now = new Date();
+
+  const stellarRemaining = nextStellar(now) - now;
+  const mythicRemaining = nextMythic(now) - now;
+  const galacticRemaining = nextGalactic(now) - now;
+
+  getEl('stellarTimerTime').textContent = fmtRemaining(stellarRemaining);
+  getEl('mythicTimerTime').textContent = fmtRemaining(mythicRemaining);
+  getEl('galacticTimerTime').textContent = fmtRemaining(galacticRemaining);
+  setTimerImminent(getEl('stellarTimerCard'), stellarRemaining);
+  setTimerImminent(getEl('mythicTimerCard'), mythicRemaining);
+  setTimerImminent(getEl('galacticTimerCard'), galacticRemaining);
+
+  const missionAt = nextMission(now);
+  const missionName = missionNameForOccurrence(missionAt);
+  const missionRemaining = missionAt - now;
+  getEl('missionTimerLabel').textContent = missionName;
+  getEl('missionTimerTime').textContent = fmtRemaining(missionRemaining);
+  setTimerImminent(getEl('missionTimerCard'), missionRemaining);
+  if(missionName !== lastMissionIconName){
+    const iconEl = getEl('missionTimerIcon');
+    iconEl.src = MISSION_ICONS[missionName] || iconEl.src;
+    iconEl.alt = missionName;
+    lastMissionIconName = missionName;
+  }
+}
+
+let timersInterval = null;
+let showTimersSection = false;
+function applyTimersVisibility(){
+  const section = getEl('timersSection');
+  const btn = getEl('timersToggle');
+  if(section) section.classList.toggle('show', showTimersSection);
+  if(btn) btn.classList.toggle('on', showTimersSection);
+  if(showTimersSection){
+    if(!timersInterval){ renderTimers(); timersInterval = setInterval(renderTimers, 1000); }
+  } else if(timersInterval){
+    clearInterval(timersInterval); timersInterval = null;
+  }
+}
+async function toggleTimersSection(force){
+  showTimersSection = (force !== undefined) ? force : !showTimersSection;
+  applyTimersVisibility();
+  await storeSet('rebirth-showTimersSection', showTimersSection);
+}
+document.getElementById('timersToggle').addEventListener('click', ()=> toggleTimersSection());
+
+document.getElementById('missionSyncBtn').addEventListener('click', async ()=>{
+  const mmEl = getEl('missionSyncMin'), ssEl = getEl('missionSyncSec');
+  const mm = parseInt(mmEl.value, 10), ss = parseInt(ssEl.value, 10);
+  if(isNaN(mm) && isNaN(ss)){ showToast('Enter the minutes and/or seconds shown in-game first'); return; }
+  const totalMs = ((isNaN(mm)?0:mm) * 60 + (isNaN(ss)?0:ss)) * 1000;
+  missionSyncEpochMs = Date.now() + totalMs;
+  await storeSet('rebirth-missionSyncEpochMs', missionSyncEpochMs);
+  mmEl.value = ''; ssEl.value = '';
+  renderTimers();
+  showToast('Mission timer synced');
+});
+
+/* ---------------- INIT ---------------- */
+(async function init(){
+  nameMerges = (await storeGet('rebirth-nameMerges')) || {};
+  displayOverrides = (await storeGet('rebirth-displayOverrides')) || {};
+  sortMode = (await storeGet('rebirth-sortMode')) || 'alpha';
+  {
+    const loadedCycle = await storeGet('rebirth-activeCycle');
+    activeCycle = (Number.isInteger(loadedCycle) && loadedCycle >= 1 && loadedCycle <= 5) ? loadedCycle : 1;
+  }
+  bgImageData = await storeGet('rebirth-bgImage');
+  bgDim = (await storeGet('rebirth-bgDim'));
+  if(bgDim === null || bgDim === undefined || isNaN(bgDim)) bgDim = 0.72;
+  applyBackground();
+  showReqPanel = !!(await storeGet('rebirth-showReqPanel'));
+  {
+    const loadedLevel = await storeGet('rebirth-currentLevel');
+    retireCurrentLevel = (Number.isInteger(loadedLevel) && loadedLevel >= 0 && loadedLevel <= 35) ? loadedLevel : 0;
+  }
+  showRetirePanel = !!(await storeGet('rebirth-showRetirePanel'));
+  applyReqPanelVisibility();
+  applyRetirePanelVisibility();
+  {
+    const loadedSync = await storeGet('rebirth-missionSyncEpochMs');
+    missionSyncEpochMs = (typeof loadedSync === 'number' && !isNaN(loadedSync)) ? loadedSync : null;
+  }
+  showTimersSection = !!(await storeGet('rebirth-showTimersSection'));
+  applyTimersVisibility();
+  qsa('.sort-toggle button').forEach(b=>{
+    b.classList.toggle('on', b.dataset.sort === sortMode);
+  });
+  buildIndex();
+  await migrate();
+  renderLegend();
+  renderStats();
+  renderList();
+})();
+</script>
+</body>
+</html>
