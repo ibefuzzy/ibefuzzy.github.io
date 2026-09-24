@@ -598,6 +598,11 @@
       </ul>
     </div>
   </div>
+  <script>
+    // Runs the moment the section is parsed (before the rest of the page),
+    // so a visitor who closed "How to use this" never sees it flash open.
+    try{ if(JSON.parse(localStorage.getItem('rebirth-howToUseOpen')) === false) document.getElementById('howToUse').classList.remove('open'); }catch(e){}
+  </script>
 
   <div class="legend" id="legend"></div>
   <div class="level-note" id="levelNote" style="display:none;">Three droids per line, one line per level, all 35 levels for the cycle you've picked below. Tap a name to log it — dimmed names are already covered by a higher rarity you own.</div>
@@ -1686,12 +1691,18 @@ document.getElementById('importFile').addEventListener('change', (e)=>{
 });
 /* Both collapsible .ref sections (How to use this / Upgrade chip costs)
    share one open/close handler — click the heading, toggle .open on its
-   parent. Not persisted: each reload shows "How to use this" open again,
-   which is fine (arguably useful) for a page people return to after a
-   long break from the game. */
+   parent. "How to use this" remembers its state: it starts open for a
+   first-time visitor, and once someone closes it, it stays closed on every
+   later visit (until they open it again) — it's ~1300px tall on a phone,
+   which otherwise pushes the Rebirth Reqs / Safe to Retire panels well down
+   the page. The saved state is applied by the small inline script right
+   after the section's markup, so it never flashes open first. */
 qsa('.ref').forEach(function(refEl){
   const h2 = refEl.querySelector('h2');
-  if(h2) h2.addEventListener('click', function(){ refEl.classList.toggle('open'); });
+  if(h2) h2.addEventListener('click', function(){
+    refEl.classList.toggle('open');
+    if(refEl.id === 'howToUse') storeSet('rebirth-howToUseOpen', refEl.classList.contains('open'));
+  });
 });
 
 /* ---------------- CUSTOM BACKGROUND IMAGE ---------------- */
