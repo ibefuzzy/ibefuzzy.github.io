@@ -602,7 +602,7 @@
       <div class="howto-subhead">Good to know</div>
       <ul class="howto-tips">
         <li>The <b>A–Z</b> view works the same way — tap a droid's rarity dot to log it, tap your current best again to undo it, or press and hold (right-click) a dot for that same set-exact-rarity menu.</li>
-        <li>A <b>SELL</b> tag next to a name means that's the last time this droid is needed, at any level or cycle — safe to fuse or sell once you own it.</li>
+        <li>A <b>SELL</b> tag next to a name means that's the last time this droid is needed this cycle — safe to fuse or sell once you own it. (It may show up again in a future cycle, but by then you'll need to re-earn it fresh anyway, so there's nothing to hold onto it for now.)</li>
         <li>A dimmed name in the By Rebirth Level view is already covered by a higher rarity you logged elsewhere — nothing to do there.</li>
         <li><b>🧬 Rebirth Reqs</b> lists everything the selected cycle asks for, low to high, in one panel.</li>
         <li><b>♻ Safe to Retire</b> lists droids you own that the cycle is done asking for, grouped by tier (tap a tier to hide/show it) — enter your current rebirth level in that panel first.</li>
@@ -1195,11 +1195,18 @@ function renderByAlpha(){
   listEl.innerHTML = keys.map(nk=>droidRowHtml(nk)).join('');
 }
 
-function droidCellHtml(nk, occEntry){
+function droidCellHtml(nk, occEntry, lastNeeded){
   const entry = DROID_INDEX[nk];
   const owned = ownedRank[nk];
   const covered = owned !== undefined && occEntry.rank <= owned;
-  const sellable = !entry.entries.some(e => e.cycle > occEntry.cycle || (e.cycle === occEntry.cycle && e.level > occEntry.level));
+  // Cycle-scoped, not cross-cycle: cycles loop forever and clearCycleMarks()
+  // wipes tracked ownership for every droid in a cycle once that cycle resets,
+  // so whether a droid reappears in a later-numbered cycle is irrelevant —
+  // by the time that cycle is reached, this droid will need to be re-logged
+  // from scratch anyway. The real question is only whether THIS cycle's own
+  // table still needs it again. Matches requirements.js's cycleLastNeededLevel
+  // (same test already used correctly by the Safe to Retire list below).
+  const sellable = lastNeeded[nk] === occEntry.level;
   const code = RARITY_ORDER[occEntry.rank];
   const cls = 'droid-cell ' + code + (covered ? ' covered' : '');
   const iconKey = occEntry.cycle + '-' + occEntry.level + '-' + occEntry.slot;
@@ -1210,7 +1217,7 @@ function droidCellHtml(nk, occEntry){
   const titleBits = [entry.display + ' — ' + RNAME[code]];
   titleBits.push(covered ? 'already covered' : 'tap to log');
   titleBits.push('press and hold (or right-click) to see/change the exact colorway on record');
-  if(sellable) titleBits.push('not needed again at any later level or rebirth');
+  if(sellable) titleBits.push('not needed again this cycle');
   return '<td class="' + cls + '" data-nk="' + nk + '" data-rank="' + occEntry.rank + '" title="' + titleBits.join(' — ') + '">' +
     '<div class="cell-flex">' +
       '<div class="icon-badge icon-badge-sm ' + badgeClass + '">' + imgTag + '</div>' +
@@ -1224,6 +1231,7 @@ function renderByLevel(){
   const covered = cycleCoveredCount(activeCycle);
   getEl('cycleProgress').textContent = covered + ' / 105 covered';
   const q = filterText.trim().toLowerCase();
+  const lastNeeded = cycleLastNeededLevel(activeCycle);
   let rowsHtml = '';
   let anyVisible = false;
   for(let l=1;l<=35;l++){
@@ -1234,7 +1242,7 @@ function renderByLevel(){
     anyVisible = true;
     const cellsHtml = row.map((d,i)=>{
       const occEntry = { cycle:activeCycle, level:l, slot:i, code:d[0], rank:rankOf(d[0]) };
-      return droidCellHtml(nks[i], occEntry);
+      return droidCellHtml(nks[i], occEntry, lastNeeded);
     }).join('');
     rowsHtml += '<tr><td class="lv-num" data-cycle="' + activeCycle + '" data-level="' + l + '" title="Mark all 3 as obtained">' + l + '</td>' + cellsHtml + '</tr>';
   }
