@@ -126,6 +126,15 @@
   /* ---- content row: main list + optional rebirth-requirements side panel ---- */
   .content-row{display:flex;gap:22px;align-items:flex-start;}
   .content-row .main-col{flex:1;min-width:0;}
+  /* 2026-09-24: the A–Z / By Rebirth Level buttons toggle the whole droid
+     list off when the active one is pressed again, so on a phone the
+     Rebirth Reqs / Safe to Retire panels sit right under the toolbar
+     instead of below a long scroll. */
+  .content-row .main-col.list-off{display:none;}
+  .nothing-shown{display:none;flex:1;padding:28px 12px;text-align:center;color:var(--text-dim);font-size:13px;border:1px dashed var(--line);border-radius:8px;}
+  .nothing-shown.show{display:block;}
+  .content-row .main-col.list-off ~ .rebirth-panel{flex:1 1 0;}
+  .content-row .main-col.list-off ~ .rebirth-panel .rebirth-grid{grid-template-columns:repeat(auto-fill,minmax(92px,1fr));}
   .wrap.with-rebirth{max-width:1300px;}
 
   .rebirth-panel{
@@ -160,9 +169,27 @@
   .rebirth-tier-label.X{color:var(--r-galactic);}
   .rebirth-tier-label.S{color:var(--r-stellar);}
   /* Safe to Retire reuses this same tier-block/tier-label pattern, but
-     grouped by rarity CLASS (Legendary/Mythic) rather than by B..S code. */
+     grouped by rarity CLASS (Default..Mythic) rather than by B..S code. */
+  .rebirth-tier-label.default{color:#b7bfba;}
+  .rebirth-tier-label.rare{color:#6fb4ee;}
+  .rebirth-tier-label.epic{color:#c08af5;}
   .rebirth-tier-label.legendary{color:var(--r-gold);}
   .rebirth-tier-label.mythic{color:var(--rarity-mythic);}
+  /* tier filter chips (2026-09-24) — tap to show/hide a tier; remembered */
+  .retire-tiers{display:flex;flex-wrap:wrap;gap:5px;margin:0 0 12px;}
+  .retire-tier{
+    background:transparent;border:1px solid var(--line);color:var(--text-dim);
+    border-radius:999px;padding:4px 10px;font-size:11.5px;font-weight:600;cursor:pointer;
+    font-family:'IBM Plex Mono',monospace;letter-spacing:.02em;touch-action:manipulation;
+    text-decoration:line-through;opacity:.6;
+  }
+  .retire-tier.on{text-decoration:none;opacity:1;color:var(--tc);border-color:var(--tc);background:color-mix(in srgb, var(--tc) 14%, transparent);}
+  .retire-tier[data-tier="all"]{--tc:var(--accent);}
+  .retire-tier[data-tier="Default"]{--tc:#b7bfba;}
+  .retire-tier[data-tier="Rare"]{--tc:#6fb4ee;}
+  .retire-tier[data-tier="Epic"]{--tc:#c08af5;}
+  .retire-tier[data-tier="Legendary"]{--tc:var(--r-gold);}
+  .retire-tier[data-tier="Mythic"]{--tc:var(--rarity-mythic);}
   .rebirth-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
   .rb-cell{display:flex;flex-direction:column;align-items:center;gap:5px;padding:7px 4px;border-radius:8px;cursor:pointer;transition:.12s;text-align:center;}
   .rb-cell:hover{background:rgba(255,255,255,0.05);}
@@ -564,7 +591,8 @@
         <li>A <b>SELL</b> tag next to a name means that's the last time this droid is needed, at any level or cycle — safe to fuse or sell once you own it.</li>
         <li>A dimmed name in the By Rebirth Level view is already covered by a higher rarity you logged elsewhere — nothing to do there.</li>
         <li><b>🧬 Rebirth Reqs</b> lists everything the selected cycle asks for, low to high, in one panel.</li>
-        <li><b>♻ Safe to Retire</b> narrows that down to Legendary/Mythic droids you own that the cycle is done asking for — enter your current rebirth level in that panel first.</li>
+        <li><b>♻ Safe to Retire</b> lists droids you own that the cycle is done asking for, grouped by tier (tap a tier to hide/show it) — enter your current rebirth level in that panel first.</li>
+        <li>On a phone, tap the already-lit <b>A–Z</b> or <b>By Rebirth Level</b> button again to hide the droid list, so <b>🧬 Rebirth Reqs</b> / <b>♻ Safe to Retire</b> sit right under the toolbar instead of at the bottom of a long scroll. Tap either one to bring the list back.</li>
         <li><b>⏱ Event Timers</b> shows live countdowns to the next Stellar/Mythic/Galactic drop and the next mission.</li>
         <li><b>Export</b> a backup before clearing site data, switching browsers, or moving to a new device, then <b>Import</b> it back. <b>Reset all</b> clears every droid you've logged and can't be undone.</li>
       </ul>
@@ -593,7 +621,7 @@
     <div class="spacer"></div>
     <button class="btn" id="editToggle" title="Tap a name to fix a misread, or rename it to match another droid to merge them">✎ Rename</button>
     <button class="btn" id="reqPanelToggle" title="Show a panel of the droids needed for rebirth 35, at the rarity each cycle requires">🧬 Rebirth Reqs</button>
-    <button class="btn" id="retirePanelToggle" title="Show Legendary/Mythic droids you're done needing this cycle — safe to fuse or sell">♻ Safe to Retire</button>
+    <button class="btn" id="retirePanelToggle" title="Show droids you're done needing this cycle — safe to fuse or sell">♻ Safe to Retire</button>
     <button class="btn" id="timersToggle" title="Show live countdowns for the Stellar, Mythic and Galactic blueprint drops and the next mission">⏱ Event Timers</button>
     <button class="btn" id="bgBtn" title="Set a custom background image">🖼 Background</button>
     <div class="bg-controls" id="bgControls" hidden>
@@ -661,6 +689,7 @@
   </div>
 
   <div class="content-row">
+    <div class="nothing-shown" id="nothingShown">Nothing selected — tap <b>A–Z</b>, <b>By Rebirth Level</b>, <b>🧬 Rebirth Reqs</b> or <b>♻ Safe to Retire</b> to show a view.</div>
     <div class="main-col" id="quickPanelHome">
       <div class="quick-panel" id="quickPanel">
         <div id="dqList"></div>
@@ -703,7 +732,15 @@
         <label for="retireLevelInput">Current rebirth level (this cycle)</label>
         <input type="number" id="retireLevelInput" min="0" max="35" value="0" inputmode="numeric">
       </div>
-      <p class="rebirth-sub">Legendary and Mythic droids you've already logged, past the last level this cycle still asks for them — nothing left to lose by fusing or selling your copy.</p>
+      <p class="rebirth-sub">Droids you've already logged, past the last level this cycle still asks for them — nothing left to lose by fusing or selling your copy. Tap a tier to show or hide it.</p>
+      <div class="retire-tiers" id="retireTiers">
+        <button class="retire-tier" data-tier="all">All</button>
+        <button class="retire-tier" data-tier="Mythic">Mythic</button>
+        <button class="retire-tier" data-tier="Legendary">Legendary</button>
+        <button class="retire-tier" data-tier="Epic">Epic</button>
+        <button class="retire-tier" data-tier="Rare">Rare</button>
+        <button class="retire-tier" data-tier="Default">Default</button>
+      </div>
       <div id="retireList"></div>
     </div>
   </div>
@@ -1264,8 +1301,8 @@ function renderRebirthPanel(){
 /* ---------------- SAFE TO RETIRE ----------------
    Ported from the Electron app's requirements.js (getDeclutterList /
    cycleLastNeededLevel / getDroidRarityClass), byte-for-byte where the
-   underlying data lets it be: every Legendary or Mythic droid you've
-   logged as owned, whose last appearance in the active cycle (at ANY
+   underlying data lets it be: every droid you've logged as owned (any
+   tier since 2026-09-24 — Legendary/Mythic only before that), whose last appearance in the active cycle (at ANY
    rarity) is already behind the rebirth level you're on — nothing further
    this cycle will ever ask for it again, so it's safe to fuse or sell.
 
@@ -1304,7 +1341,7 @@ function getDroidRarityClass(nk){
       RARITY_CLASS_BY_NK[normKey(canonicalName(rawName))] = DROID_RARITY_CLASS[rawName];
     });
   }
-  return RARITY_CLASS_BY_NK[nk] || null;
+  return RARITY_CLASS_BY_NK[nk] || 'Default'; // every CYCLES droid is classified; fallback only for an unknown/renamed key
 }
 
 // currentLevel = the rebirth level you're currently on within `cycle`
@@ -1316,7 +1353,6 @@ function getDeclutterList(cycle, currentLevel, ownedRank){
   const out = [];
   Object.keys(lastNeeded).forEach(nk=>{
     const rarityClass = getDroidRarityClass(nk);
-    if(rarityClass !== 'Legendary' && rarityClass !== 'Mythic') return;
     const owned = ownedRank ? ownedRank[nk] : undefined;
     if(owned === undefined || owned === null) return; // nothing logged, nothing to retire
     if(lastNeeded[nk] > currentLevel) return; // still needed later this cycle
@@ -1330,7 +1366,11 @@ function getDeclutterList(cycle, currentLevel, ownedRank){
       ceilingInfo
     });
   });
-  out.sort((a,b)=> a.display.localeCompare(b.display));
+  out.sort((a,b)=>{
+    const ta = RARITY_CLASS_ORDER.indexOf(a.rarityClass), tb = RARITY_CLASS_ORDER.indexOf(b.rarityClass);
+    if(ta !== tb) return tb - ta; // Mythic first
+    return a.display.localeCompare(b.display);
+  });
   return out;
 }
 
@@ -1352,10 +1392,19 @@ function retireCellHtml(item){
 }
 
 let showRetirePanel = false;
+let showReqPanel = false;
+let listVisible = true; // false = droid list hidden (active sort button pressed again), so a side panel can be the whole page
 let retireCurrentLevel = 0; // 0 = unset; persisted separately from ownedRank, see resetCycleAndAdvance()
 function applyPanelWidths(){
   const wrapEl = getEl('wrapEl');
   if(wrapEl) wrapEl.classList.toggle('with-rebirth', showReqPanel || showRetirePanel);
+  applyNothingShown();
+}
+// List toggled off AND both side panels closed would leave an empty page —
+// say how to get a view back instead.
+function applyNothingShown(){
+  const el = getEl('nothingShown');
+  if(el) el.classList.toggle('show', !listVisible && !showReqPanel && !showRetirePanel);
 }
 function applyRetirePanelVisibility(){
   const panel = getEl('retirePanel');
@@ -1364,9 +1413,17 @@ function applyRetirePanelVisibility(){
   if(btn) btn.classList.toggle('on', showRetirePanel);
   applyPanelWidths();
 }
+// On the stacked (phone/narrow) layout a newly opened panel lands below the
+// whole droid list — bring it into view so opening it isn't a scroll hunt.
+function revealPanelIfStacked(id){
+  if(!window.matchMedia('(max-width:900px)').matches) return;
+  const el = getEl(id);
+  if(el) el.scrollIntoView({ behavior:'smooth', block:'start' });
+}
 async function toggleRetirePanel(force){
   showRetirePanel = (force !== undefined) ? force : !showRetirePanel;
   applyRetirePanelVisibility();
+  if(showRetirePanel && force === undefined) revealPanelIfStacked('retirePanel');
   await storeSet('rebirth-showRetirePanel', showRetirePanel);
 }
 document.getElementById('retirePanelToggle').addEventListener('click', ()=> toggleRetirePanel());
@@ -1395,15 +1452,20 @@ function renderRetirePanel(){
     listEl.innerHTML = '<div class="retire-empty">Set your current rebirth level above to see what\'s safe to let go of — nothing shows until then, since "safe" depends on how far through the cycle you are.</div>';
     return;
   }
-  const items = getDeclutterList(activeCycle, retireCurrentLevel, ownedRank);
+  const all = getDeclutterList(activeCycle, retireCurrentLevel, ownedRank);
+  const items = all.filter(item => retireTiersOn[item.rarityClass] !== false);
   if(!items.length){
-    listEl.innerHTML = '<div class="retire-empty">Nothing to retire yet at rebirth ' + retireCurrentLevel + ' — either you haven\'t logged a Legendary/Mythic droid this cycle is done with, or none have finished appearing yet.</div>';
+    const hidden = all.length - items.length;
+    listEl.innerHTML = '<div class="retire-empty">' + (hidden
+      ? (hidden + ' droid' + (hidden === 1 ? '' : 's') + ' hidden by the tier filter above — tap a tier to show it again.')
+      : ('Nothing to retire yet at rebirth ' + retireCurrentLevel + ' — either you haven\'t logged a droid this cycle is done with, or none have finished appearing yet.')) + '</div>';
     return;
   }
-  const byClass = { Legendary: [], Mythic: [] };
-  items.forEach(item=>{ byClass[item.rarityClass].push(item); });
+  const byClass = {};
+  RARITY_CLASS_ORDER.forEach(cls=>{ byClass[cls] = []; });
+  items.forEach(item=>{ (byClass[item.rarityClass] || byClass.Default).push(item); });
   let html = '';
-  ['Legendary','Mythic'].forEach(cls=>{
+  RARITY_CLASS_ORDER.slice().reverse().forEach(cls=>{
     const list = byClass[cls];
     if(!list.length) return;
     html += '<div class="rebirth-tier-block">' +
@@ -1413,6 +1475,29 @@ function renderRetirePanel(){
   });
   listEl.innerHTML = html;
 }
+
+// Safe to Retire tier filter — all on by default, remembered per browser.
+let retireTiersOn = { Default:true, Rare:true, Epic:true, Legendary:true, Mythic:true };
+function applyRetireTierChips(){
+  qsa('#retireTiers .retire-tier').forEach(b=>{
+    const t = b.dataset.tier;
+    b.classList.toggle('on', t === 'all' ? RARITY_CLASS_ORDER.every(c => retireTiersOn[c] !== false) : retireTiersOn[t] !== false);
+  });
+}
+qsa('#retireTiers .retire-tier').forEach(b=>{
+  b.addEventListener('click', async ()=>{
+    const t = b.dataset.tier;
+    if(t === 'all'){
+      const allOn = RARITY_CLASS_ORDER.every(c => retireTiersOn[c] !== false);
+      RARITY_CLASS_ORDER.forEach(c=>{ retireTiersOn[c] = !allOn; });
+    } else {
+      retireTiersOn[t] = retireTiersOn[t] === false;
+    }
+    applyRetireTierChips();
+    renderRetirePanel();
+    await storeSet('rebirth-retireTiers', retireTiersOn);
+  });
+});
 
 /* ---------------- right-click / long-press "set exact colorway" menu ----------------
    Originally right-click only (mouse): left-click on any pip/cell keeps its
@@ -1504,7 +1589,6 @@ function wireLongPress(el, nk){
   });
 }
 
-let showReqPanel = false;
 function applyReqPanelVisibility(){
   const panel = getEl('rebirthPanel');
   const btn = getEl('reqPanelToggle');
@@ -1515,6 +1599,7 @@ function applyReqPanelVisibility(){
 async function toggleReqPanel(force){
   showReqPanel = (force !== undefined) ? force : !showReqPanel;
   applyReqPanelVisibility();
+  if(showReqPanel && force === undefined) revealPanelIfStacked('rebirthPanel');
   await storeSet('rebirth-showReqPanel', showReqPanel);
 }
 document.getElementById('reqPanelToggle').addEventListener('click', ()=> toggleReqPanel());
@@ -1524,11 +1609,23 @@ document.getElementById('reqPanelClose').addEventListener('click', ()=> toggleRe
 document.getElementById('search').addEventListener('input', e=>{
   filterText = e.target.value; renderList();
 });
+function applyListVisibility(){
+  const col = getEl('quickPanelHome');
+  if(col) col.classList.toggle('list-off', !listVisible);
+  qsa('.sort-toggle button').forEach(b=>{ b.classList.toggle('on', listVisible && b.dataset.sort === sortMode); });
+  applyNothingShown();
+}
 qsa('.sort-toggle button').forEach(btn=>{
   btn.addEventListener('click', ()=>{
-    sortMode = btn.dataset.sort;
-    qsa('.sort-toggle button').forEach(b=>{ b.classList.toggle('on', b===btn); });
-    storeSet('rebirth-sortMode', sortMode);
+    if(listVisible && btn.dataset.sort === sortMode){
+      listVisible = false; // pressing the active sort again hides the list
+    } else {
+      listVisible = true;
+      sortMode = btn.dataset.sort;
+      storeSet('rebirth-sortMode', sortMode);
+    }
+    storeSet('rebirth-listVisible', listVisible);
+    applyListVisibility();
     renderList();
   });
 });
@@ -1856,12 +1953,19 @@ document.getElementById('missionSyncBtn').addEventListener('click', async ()=>{
   bgDim = (await storeGet('rebirth-bgDim'));
   if(bgDim === null || bgDim === undefined || isNaN(bgDim)) bgDim = 0.72;
   applyBackground();
+  { const lv = await storeGet('rebirth-listVisible'); listVisible = (lv === null || lv === undefined) ? true : !!lv; }
   showReqPanel = !!(await storeGet('rebirth-showReqPanel'));
   {
     const loadedLevel = await storeGet('rebirth-currentLevel');
     retireCurrentLevel = (Number.isInteger(loadedLevel) && loadedLevel >= 0 && loadedLevel <= 35) ? loadedLevel : 0;
   }
   showRetirePanel = !!(await storeGet('rebirth-showRetirePanel'));
+  {
+    const t = await storeGet('rebirth-retireTiers');
+    if(t && typeof t === 'object') RARITY_CLASS_ORDER.forEach(c=>{ if(typeof t[c] === 'boolean') retireTiersOn[c] = t[c]; });
+    applyRetireTierChips();
+  }
+  applyListVisibility();
   applyReqPanelVisibility();
   applyRetirePanelVisibility();
   {
@@ -1870,9 +1974,7 @@ document.getElementById('missionSyncBtn').addEventListener('click', async ()=>{
   }
   showTimersSection = !!(await storeGet('rebirth-showTimersSection'));
   applyTimersVisibility();
-  qsa('.sort-toggle button').forEach(b=>{
-    b.classList.toggle('on', b.dataset.sort === sortMode);
-  });
+  applyListVisibility(); // also sets which sort button reads as "on"
   buildIndex();
   await migrate();
   renderLegend();
