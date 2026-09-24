@@ -219,6 +219,20 @@
      since by definition every droid listed here is already owned — so
      don't borrow .rb-cell's implied clickability. */
   #retireList .rb-cell{cursor:default;}
+  /* Sneak Preview (v1.7.1) — informational too, same as Safe to Retire */
+  #sneakList .rb-cell{cursor:default;}
+  .sneak-next{color:var(--text);}
+  .sneak-status{font-size:10px;font-weight:600;line-height:1.2;color:var(--text-dim);}
+  .sneak-status.have{color:var(--accent);}
+
+  /* cycle-complete prompt (v1.7.1) */
+  .cycle-prompt{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:16px;}
+  .cycle-prompt[hidden]{display:none;}
+  .cycle-prompt-card{position:relative;width:100%;max-width:420px;background:var(--panel);border:1px solid var(--accent-dim);border-radius:12px;padding:20px 18px 16px;box-shadow:0 10px 40px rgba(0,0,0,.55);}
+  .cycle-prompt-card p{margin:0 30px 16px 0;font-size:14.5px;line-height:1.5;color:var(--text);}
+  .cycle-prompt-btns{display:flex;gap:10px;flex-wrap:wrap;}
+  .cycle-prompt-btns .btn{flex:1 1 140px;touch-action:manipulation;}
+  .cycle-prompt-x{position:absolute;top:8px;right:8px;padding:4px 9px;font-size:12px;}
 
   @media (max-width:900px){
     /* align-items:flex-start (set above for the desktop side-by-side
@@ -594,6 +608,7 @@
         <li><b>♻ Safe to Retire</b> lists droids you own that the cycle is done asking for, grouped by tier (tap a tier to hide/show it) — enter your current rebirth level in that panel first.</li>
         <li>On a phone, tap the already-lit <b>A–Z</b> or <b>By Rebirth Level</b> button again to hide the droid list, so <b>🧬 Rebirth Reqs</b> / <b>♻ Safe to Retire</b> sit right under the toolbar instead of at the bottom of a long scroll. Tap either one to bring the list back.</li>
         <li><b>⏱ Event Timers</b> shows live countdowns to the next Stellar/Mythic/Galactic drop and the next mission.</li>
+        <li><b>🔮 Sneak Preview</b> shows the Mythic droids the <i>next</i> cycle will ask for. When you finish a cycle you'll be asked to pick <b>Next Cycle</b> (reset it and move on) or <b>Sneak Preview</b> (reset it and open the preview) — close the box with ✕ to leave everything as it is.</li>
         <li><b>Export</b> a backup before clearing site data, switching browsers, or moving to a new device, then <b>Import</b> it back. <b>Reset all</b> clears every droid you've logged and can't be undone.</li>
       </ul>
     </div>
@@ -627,6 +642,7 @@
     <button class="btn" id="editToggle" title="Tap a name to fix a misread, or rename it to match another droid to merge them">✎ Rename</button>
     <button class="btn" id="reqPanelToggle" title="Show a panel of the droids needed for rebirth 35, at the rarity each cycle requires">🧬 Rebirth Reqs</button>
     <button class="btn" id="retirePanelToggle" title="Show droids you're done needing this cycle — safe to fuse or sell">♻ Safe to Retire</button>
+    <button class="btn" id="sneakPanelToggle" title="Show the Mythic droids the next cycle will ask for, at the highest variety it needs">🔮 Sneak Preview</button>
     <button class="btn" id="timersToggle" title="Show live countdowns for the Stellar, Mythic and Galactic blueprint drops and the next mission">⏱ Event Timers</button>
     <button class="btn" id="bgBtn" title="Set a custom background image">🖼 Background</button>
     <div class="bg-controls" id="bgControls" hidden>
@@ -694,7 +710,7 @@
   </div>
 
   <div class="content-row">
-    <div class="nothing-shown" id="nothingShown">Nothing selected — tap <b>A–Z</b>, <b>By Rebirth Level</b>, <b>🧬 Rebirth Reqs</b> or <b>♻ Safe to Retire</b> to show a view.</div>
+    <div class="nothing-shown" id="nothingShown">Nothing selected — tap <b>A–Z</b>, <b>By Rebirth Level</b>, <b>🧬 Rebirth Reqs</b>, <b>♻ Safe to Retire</b> or <b>🔮 Sneak Preview</b> to show a view.</div>
     <div class="main-col" id="quickPanelHome">
       <div class="quick-panel" id="quickPanel">
         <div id="dqList"></div>
@@ -748,6 +764,14 @@
       </div>
       <div id="retireList"></div>
     </div>
+    <div class="rebirth-panel" id="sneakPanel">
+      <div class="rebirth-panel-head">
+        <h3>🔮 Sneak Preview</h3>
+        <button class="btn" id="sneakPanelClose" title="Hide this panel">✕</button>
+      </div>
+      <p class="rebirth-sub"><b class="sneak-next" id="sneakNextLabel">Next: Cycle 2</b> — the Mythic droids it will ask for, each at the highest variety it ever needs, highest first. Start hunting these before you get there.</p>
+      <div id="sneakList"></div>
+    </div>
   </div>
 
   <div class="ref" id="refCosts">
@@ -770,8 +794,21 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="icons-data.js?v=1.6.0"></script>
-<script src="droid-data.js?v=1.6.0"></script>
+<!-- Cycle-complete prompt (v1.7.1) — confirm() can only say OK/Cancel, so
+     it's an in-page box. ✕, Esc or tapping outside = no change. -->
+<div class="cycle-prompt" id="cyclePrompt" hidden>
+  <div class="cycle-prompt-card" role="dialog" aria-modal="true" aria-labelledby="cyclePromptMsg">
+    <button class="btn cycle-prompt-x" id="cyclePromptX" title="Close — nothing gets reset">✕</button>
+    <p id="cyclePromptMsg">Would you like to reset progress for this cycle and open the next, or open the Sneak Preview?</p>
+    <div class="cycle-prompt-btns">
+      <button class="btn on" id="cyclePromptNext">Next Cycle</button>
+      <button class="btn" id="cyclePromptSneak">Sneak Preview</button>
+    </div>
+  </div>
+</div>
+
+<script src="icons-data.js?v=1.7.1"></script>
+<script src="droid-data.js?v=1.7.1"></script>
 <script>
 /* ---------------- STORAGE ----------------
    No Electron bridge exists in a plain browser, so this always falls
@@ -937,7 +974,9 @@ function cycleDroidKeys(cycle){
   return keys;
 }
 
-async function resetCycleAndAdvance(cycle){
+function cycleAfter(cycle){ return (cycle >= 5) ? 1 : cycle + 1; }
+
+async function clearCycleMarks(cycle){
   cycleDroidKeys(cycle).forEach(nk=>{ delete ownedRank[nk]; });
   await storeSet('rebirth-ownedRank-v2', ownedRank);
   // Also clear the manually-entered "current rebirth level" Safe to Retire
@@ -953,18 +992,66 @@ async function resetCycleAndAdvance(cycle){
   // from the desktop app's behavior.
   retireCurrentLevel = 0;
   await storeSet('rebirth-currentLevel', retireCurrentLevel);
-  const next = (cycle >= 5) ? 1 : cycle + 1;
+}
+
+async function resetCycleAndAdvance(cycle){
+  await clearCycleMarks(cycle);
+  const next = cycleAfter(cycle);
   await setActiveCycle(next); // persists rebirth-activeCycle, syncs both selects, renderList()
   renderStats();
   showToast('Cycle ' + cycle + ' reset — now on Cycle ' + next);
 }
 
-function maybeOfferCycleReset(cycle, coveredBefore){
+// "Sneak Preview" choice (v1.7.1, same as the desktop app): the same reset,
+// but the tracker STAYS on the finished cycle — the preview always shows the
+// cycle after the selected one, so advancing here would make it skip ahead
+// to the one after next. Then, like the app turning off its other overlays,
+// close the other side panels (Event Timers stays as it is) and open the
+// preview.
+async function resetCycleForSneakPreview(cycle){
+  await clearCycleMarks(cycle);
+  renderList(); renderStats();
+  await toggleReqPanel(false);
+  await toggleRetirePanel(false);
+  await toggleSneakPanel(true);
+  revealPanelIfStacked('sneakPanel');
+  showToast('Cycle ' + cycle + ' reset — Sneak Preview shows Cycle ' + cycleAfter(cycle) + '. Switch to it when you start it.');
+}
+
+// The in-page prompt (markup next to the toast) -> 'next' | 'sneak' | 'none'.
+// ✕, Esc and tapping the dimmed backdrop all answer 'none' = nothing changes.
+function askCycleComplete(){
+  return new Promise(resolve=>{
+    const box = getEl('cyclePrompt');
+    const finish = (choice)=>{
+      box.hidden = true;
+      document.removeEventListener('keydown', onKey);
+      box.onclick = null;
+      resolve(choice);
+    };
+    const onKey = (e)=>{ if(e.key === 'Escape') finish('none'); };
+    getEl('cyclePromptNext').onclick = ()=> finish('next');
+    getEl('cyclePromptSneak').onclick = ()=> finish('sneak');
+    getEl('cyclePromptX').onclick = ()=> finish('none');
+    box.onclick = (e)=>{ if(e.target === box) finish('none'); };
+    document.addEventListener('keydown', onKey);
+    box.hidden = false;
+    getEl('cyclePromptNext').focus();
+  });
+}
+
+let cyclePromptOpen = false;
+async function maybeOfferCycleReset(cycle, coveredBefore){
   if(coveredBefore === 105) return; // was already fully marked before this action — don't re-nag on every subsequent tap
   if(cycleCoveredCount(cycle) !== 105) return; // not complete yet
-  const wantsReset = confirm('Would you like to reset progress for this cycle and open the next?');
-  if(wantsReset) resetCycleAndAdvance(cycle);
-  // "No" -> leave everything exactly as it is: fully marked, same cycle, nothing cleared.
+  if(cyclePromptOpen) return;
+  cyclePromptOpen = true;
+  let choice = 'none';
+  try{ choice = await askCycleComplete(); }
+  finally{ cyclePromptOpen = false; }
+  if(choice === 'next') await resetCycleAndAdvance(cycle);
+  else if(choice === 'sneak') await resetCycleForSneakPreview(cycle);
+  // 'none' -> leave everything exactly as it is: fully marked, same cycle, nothing cleared.
 }
 
 /* ---------------- MIGRATION FROM V1 ---------------- */
@@ -1215,6 +1302,7 @@ function renderList(){
   wireRowEvents();
   renderRebirthPanel();
   renderRetirePanel();
+  renderSneakPanel();
 }
 
 /* ---------------- RENDER: REBIRTH REQUIREMENTS PANEL ----------------
@@ -1398,18 +1486,19 @@ function retireCellHtml(item){
 
 let showRetirePanel = false;
 let showReqPanel = false;
+let showSneakPanel = false;
 let listVisible = true; // false = droid list hidden (active sort button pressed again), so a side panel can be the whole page
 let retireCurrentLevel = 0; // 0 = unset; persisted separately from ownedRank, see resetCycleAndAdvance()
 function applyPanelWidths(){
   const wrapEl = getEl('wrapEl');
-  if(wrapEl) wrapEl.classList.toggle('with-rebirth', showReqPanel || showRetirePanel);
+  if(wrapEl) wrapEl.classList.toggle('with-rebirth', showReqPanel || showRetirePanel || showSneakPanel);
   applyNothingShown();
 }
-// List toggled off AND both side panels closed would leave an empty page —
+// List toggled off AND every side panel closed would leave an empty page —
 // say how to get a view back instead.
 function applyNothingShown(){
   const el = getEl('nothingShown');
-  if(el) el.classList.toggle('show', !listVisible && !showReqPanel && !showRetirePanel);
+  if(el) el.classList.toggle('show', !listVisible && !showReqPanel && !showRetirePanel && !showSneakPanel);
 }
 function applyRetirePanelVisibility(){
   const panel = getEl('retirePanel');
@@ -1609,6 +1698,69 @@ async function toggleReqPanel(force){
 }
 document.getElementById('reqPanelToggle').addEventListener('click', ()=> toggleReqPanel());
 document.getElementById('reqPanelClose').addEventListener('click', ()=> toggleReqPanel(false));
+
+/* ---------------- SNEAK PREVIEW (v1.7.1) ----------------
+   Ported from the desktop app's requirements.js getSneakPreview(): the
+   Mythic-class droids the NEXT cycle (after the selected one; 5 wraps to 1)
+   will ask for, each at the highest variety that cycle ever needs, highest
+   first. "✓ Have X" = what you've logged for it already covers that. */
+function getSneakPreview(cycle, ownedRank){
+  const next = cycleAfter(cycle);
+  const ceilings = cycleCeilings(next);
+  const out = [];
+  Object.keys(ceilings).forEach(nk=>{
+    if(getDroidRarityClass(nk) !== 'Mythic') return;
+    const info = ceilings[nk];
+    const entry = DROID_INDEX[nk];
+    const owned = ownedRank ? ownedRank[nk] : undefined;
+    out.push({
+      nk,
+      display: entry ? entry.display : nk,
+      rank: info.rank,
+      code: RARITY_ORDER[info.rank],
+      ownedCode: (owned === undefined || owned === null) ? null : RARITY_ORDER[owned],
+      iconKey: info.cycle + '-' + info.level + '-' + info.slot
+    });
+  });
+  out.sort((a,b)=> (b.rank - a.rank) || a.display.localeCompare(b.display));
+  return { nextCycle: next, items: out };
+}
+function sneakCellHtml(it){
+  const covered = it.ownedCode != null && rankOf(it.ownedCode) >= it.rank;
+  const src = (typeof ICONS !== 'undefined' && ICONS[it.iconKey]) ? ('data:image/webp;base64,' + ICONS[it.iconKey]) : '';
+  const imgTag = src ? ('<img src="' + src + '" alt="' + it.display + '" loading="lazy">') : '';
+  const status = covered ? ('✓ Have ' + RNAME[it.ownedCode]) : ('Needs ' + RNAME[it.code]);
+  const title = it.display + ' — next cycle needs ' + RNAME[it.code] + ' — ' + (it.ownedCode ? ('you have ' + RNAME[it.ownedCode]) : 'not logged yet');
+  return '<div class="rb-cell" data-nk="' + it.nk + '" title="' + title + '">' +
+    '<div class="icon-badge ' + RCLASS[it.code] + '">' + imgTag + '</div>' +
+    '<div class="rb-name ' + it.code + '">' + it.display + '</div>' +
+    '<div class="sneak-status' + (covered ? ' have' : '') + '">' + status + '</div>' +
+  '</div>';
+}
+function renderSneakPanel(){
+  const listEl = getEl('sneakList');
+  if(!listEl) return;
+  const { nextCycle, items } = getSneakPreview(activeCycle, ownedRank);
+  getEl('sneakNextLabel').textContent = 'Next: Cycle ' + nextCycle;
+  listEl.innerHTML = items.length
+    ? '<div class="rebirth-grid">' + items.map(sneakCellHtml).join('') + '</div>'
+    : '<div class="retire-empty">No Mythic droids in Cycle ' + nextCycle + "'s requirements.</div>";
+}
+function applySneakPanelVisibility(){
+  const panel = getEl('sneakPanel');
+  const btn = getEl('sneakPanelToggle');
+  if(panel) panel.classList.toggle('show', showSneakPanel);
+  if(btn) btn.classList.toggle('on', showSneakPanel);
+  applyPanelWidths();
+}
+async function toggleSneakPanel(force){
+  showSneakPanel = (force !== undefined) ? force : !showSneakPanel;
+  applySneakPanelVisibility();
+  if(showSneakPanel && force === undefined) revealPanelIfStacked('sneakPanel');
+  await storeSet('rebirth-showSneakPanel', showSneakPanel);
+}
+document.getElementById('sneakPanelToggle').addEventListener('click', ()=> toggleSneakPanel());
+document.getElementById('sneakPanelClose').addEventListener('click', ()=> toggleSneakPanel(false));
 
 /* ---------------- CONTROLS ---------------- */
 document.getElementById('search').addEventListener('input', e=>{
@@ -1976,9 +2128,11 @@ document.getElementById('missionSyncBtn').addEventListener('click', async ()=>{
     if(t && typeof t === 'object') RARITY_CLASS_ORDER.forEach(c=>{ if(typeof t[c] === 'boolean') retireTiersOn[c] = t[c]; });
     applyRetireTierChips();
   }
+  showSneakPanel = !!(await storeGet('rebirth-showSneakPanel'));
   applyListVisibility();
   applyReqPanelVisibility();
   applyRetirePanelVisibility();
+  applySneakPanelVisibility();
   {
     const loadedSync = await storeGet('rebirth-missionSyncEpochMs');
     missionSyncEpochMs = (typeof loadedSync === 'number' && !isNaN(loadedSync)) ? loadedSync : null;
