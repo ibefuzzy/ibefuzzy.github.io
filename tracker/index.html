@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Droid Tycoon Tracker — Web</title>
+<title>Droid Tycoon Tracker â€” Web</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230b0f0d'/%3E%3Ctext x='50' y='70' font-size='58' text-anchor='middle' fill='%235ef2a6'%3E%E2%9F%B3%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -29,9 +29,10 @@
     --r-beskar: #b9c2cc;
     --r-galactic: #c96bf2;
     --r-stellar: #e08a3c;
+    --r-kyber: #d0a0ff;
 
     /* Event-timer accent colors, kept separate from the --r-* rarity-ladder
-       colors above even though two names overlap (Stellar/Galactic) — these
+       colors above even though two names overlap (Stellar/Galactic) â€” these
        are the in-game blueprint-drop timers, a different axis from the
        Base->Stellar variant colors a droid can be owned in, and the source
        Electron overlay (timers.html) uses different exact hex values for
@@ -113,7 +114,7 @@
     padding:9px 14px 9px 33px;font-size:15px;width:100%;font-family:'Inter',sans-serif;
   }
   .searchbox input:focus{outline:none;border-color:var(--accent-dim);}
-  .searchbox::before{content:'⌕';position:absolute;left:11px;top:7px;color:var(--text-dim);font-size:16px;}
+  .searchbox::before{content:'âŒ•';position:absolute;left:11px;top:7px;color:var(--text-dim);font-size:16px;}
 
   .btn{
     background:var(--panel);border:1px solid var(--line);color:var(--text-dim);border-radius:7px;
@@ -126,7 +127,7 @@
   /* ---- content row: main list + optional rebirth-requirements side panel ---- */
   .content-row{display:flex;gap:22px;align-items:flex-start;}
   .content-row .main-col{flex:1;min-width:0;}
-  /* 2026-09-24: the A–Z / By Rebirth Level buttons toggle the whole droid
+  /* 2026-09-24: the Aâ€“Z / By Rebirth Level buttons toggle the whole droid
      list off when the active one is pressed again, so on a phone the
      Rebirth Reqs / Safe to Retire panels sit right under the toolbar
      instead of below a long scroll. */
@@ -168,6 +169,7 @@
   .rebirth-tier-label.K{color:var(--r-beskar);}
   .rebirth-tier-label.X{color:var(--r-galactic);}
   .rebirth-tier-label.S{color:var(--r-stellar);}
+  .rebirth-tier-label.Y{color:var(--r-kyber);}
   /* Safe to Retire reuses this same tier-block/tier-label pattern, but
      grouped by rarity CLASS (Default..Mythic) rather than by B..S code. */
   .rebirth-tier-label.default{color:#b7bfba;}
@@ -175,7 +177,7 @@
   .rebirth-tier-label.epic{color:#c08af5;}
   .rebirth-tier-label.legendary{color:var(--r-gold);}
   .rebirth-tier-label.mythic{color:var(--rarity-mythic);}
-  /* tier filter chips (2026-09-24) — tap to show/hide a tier; remembered */
+  /* tier filter chips (2026-09-24) â€” tap to show/hide a tier; remembered */
   .retire-tiers{display:flex;flex-wrap:wrap;gap:5px;margin:0 0 12px;}
   .retire-tier{
     background:transparent;border:1px solid var(--line);color:var(--text-dim);
@@ -215,11 +217,11 @@
   }
   .retire-level-row input:focus{outline:none;border-color:var(--accent-dim);}
   .retire-empty{padding:14px 4px;color:var(--text-dim);font-size:12.5px;line-height:1.5;}
-  /* Safe to Retire cells are informational only — nothing to tap or log,
-     since by definition every droid listed here is already owned — so
+  /* Safe to Retire cells are informational only â€” nothing to tap or log,
+     since by definition every droid listed here is already owned â€” so
      don't borrow .rb-cell's implied clickability. */
   #retireList .rb-cell{cursor:default;}
-  /* Sneak Preview (v1.7.1) — informational too, same as Safe to Retire */
+  /* Sneak Preview (v1.7.1) â€” informational too, same as Safe to Retire */
   #sneakList .rb-cell{cursor:default;}
   .sneak-next{color:var(--text);}
   .sneak-status{font-size:10px;font-weight:600;line-height:1.2;color:var(--text-dim);}
@@ -239,7 +241,7 @@
        layout, to top-align the two columns) becomes a trap once
        flex-direction flips to column: on the cross axis (now horizontal)
        "flex-start" means "don't stretch, hug content width" instead of
-       "fill available width" — which let a wide descendant (e.g. the
+       "fill available width" â€” which let a wide descendant (e.g. the
        level-table) size .main-col past the viewport instead of scrolling
        inside its own overflow-x:auto wrapper. Stretch fixes it. */
     .content-row{flex-direction:column;align-items:stretch;}
@@ -248,7 +250,7 @@
   }
 
   /* ---- event timers: full-width section, not a floating always-on-top
-     banner like the desktop overlay's timers.html — that concept doesn't
+     banner like the desktop overlay's timers.html â€” that concept doesn't
      translate to a normal scrolled webpage, so this is a toggleable block
      between the toolbar and the droid list instead, sized to the same
      .wrap the rest of the page uses. */
@@ -307,7 +309,7 @@
     .timer-time{font-size:17px;}
   }
   /* Below ~390px, a 2-up card can't fit "Stormtrooper" (the longest of the
-     4 possible mission names) without ellipsis-truncating it — measured the
+     4 possible mission names) without ellipsis-truncating it â€” measured the
      real cutoff empirically (needs 96px, a 130-150px card only has 65-93px
      for the label once the icon/padding/gap are subtracted) rather than
      guessing. Single column below that point gives every label the full
@@ -345,7 +347,7 @@
   }
   .icon-badge.rarity-stellar::before{background:linear-gradient(115deg, transparent 25%, rgba(255,255,255,0.75) 44%, transparent 56%);}
 
-  /* Rebirth Reqs panel only: each badge split diagonally — upper-left half
+  /* Rebirth Reqs panel only: each badge split diagonally â€” upper-left half
      shows the rarity you've actually logged for that droid, lower-right half
      shows this cycle's highest required rarity. */
   .icon-badge-split{background:none;}
@@ -450,7 +452,7 @@
   /* ---- reference panel ---- */
   .ref{margin-top:30px;border-top:1px solid var(--line);padding-top:18px;}
   .ref h2{font-family:'Rajdhani',sans-serif;font-size:19px;margin:0 0 13px;color:var(--text);cursor:pointer;user-select:none;display:flex;align-items:center;gap:8px;}
-  .ref h2::before{content:'▸';color:var(--accent);transition:.15s;font-size:14px;}
+  .ref h2::before{content:'â–¸';color:var(--accent);transition:.15s;font-size:14px;}
   .ref.open h2::before{transform:rotate(90deg);}
   .ref-body{display:none;}
   .ref.open .ref-body{display:block;}
@@ -460,7 +462,7 @@
   td.rn{text-align:left;font-weight:600;}
 
   /* ---- how-to-use instructions (reuses .ref/.ref-body above; ships open
-     by default — via class="ref open" in the markup — so first-time
+     by default â€” via class="ref open" in the markup â€” so first-time
      visitors see it without an extra click; still collapsible afterward) ---- */
   .howto-steps{list-style:none;margin:0 0 20px;padding:0;counter-reset:howto;}
   .howto-steps li{counter-increment:howto;position:relative;padding:0 0 20px 34px;}
@@ -478,7 +480,7 @@
   .howto-subhead{font-family:'Rajdhani',sans-serif;font-size:13.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--text-dim);margin:4px 0 10px;}
   .howto-tips{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:9px;}
   .howto-tips li{font-size:13px;line-height:1.5;color:var(--text-dim);padding-left:16px;position:relative;}
-  .howto-tips li::before{content:'•';position:absolute;left:2px;color:var(--accent);}
+  .howto-tips li::before{content:'â€¢';position:absolute;left:2px;color:var(--accent);}
   .howto-tips b{color:var(--text);font-weight:600;}
   @media (max-width:640px){
     .howto-steps li{padding-left:30px;}
@@ -504,7 +506,7 @@
   }
 
   /* Right-click context menu (mouse) / long-press (touch) on any grid cell,
-     A-Z pip, or Rebirth Reqs cell — sets an exact owned colorway. Left-click
+     A-Z pip, or Rebirth Reqs cell â€” sets an exact owned colorway. Left-click
      / tap keeps its original quick "claim the top tier or undo" behavior. */
   .rb-context-menu{
     position:fixed;z-index:100;background:var(--panel);border:1px solid var(--line-bright);
@@ -519,7 +521,7 @@
   .rb-context-swatch{width:12px;height:12px;border-radius:3px;flex:0 0 auto;}
   .rb-context-check{margin-left:auto;color:var(--accent);font-weight:700;}
 
-  /* ---- mobile / touch additions (web tracker only — no equivalent needed
+  /* ---- mobile / touch additions (web tracker only â€” no equivalent needed
      in the Electron app, which is mouse+keyboard only) ---- */
   .pip, .droid-cell, .rb-cell, .lv-num, .dq-name:not([contenteditable="true"]){
     -webkit-touch-callout: none;
@@ -566,16 +568,16 @@
 <div id="bgLayer"></div>
 <div id="bgScrim"></div>
 <div class="mini-nav">
-  <a href="../index.html">← Droid Tycoon Tracker</a>
-  <a href="https://github.com/ibefuzzy/Fuzzy-Droid-Tracker/releases/latest" target="_blank" rel="noopener">Desktop app (Windows/Mac) ↗</a>
+  <a href="../index.html">â† Droid Tycoon Tracker</a>
+  <a href="https://github.com/ibefuzzy/Fuzzy-Droid-Tracker/releases/latest" target="_blank" rel="noopener">Desktop app (Windows/Mac) â†—</a>
 </div>
 <div class="wrap" id="wrapEl">
 
   <header>
     <div class="title-block">
-      <h1><span class="glyph">⟳</span>DROID TYCOON — Keep or Let Go<span class="app-version" title="Browser version — the desktop app's screen-reading features aren't available here, everything is tapped in by hand">WEB</span></h1>
-      <p>Tap a droid's rarity dots to log what you own. Amber ring = the next upgrade worth chasing — anything at or below your best is safe to let go of. Press and hold a dot (or right-click on desktop) to set an exact colorway.</p>
-      <p class="storage-note">Progress saves in this browser only — it won't sync with the desktop app or your other devices. Use Export below before clearing site data or switching browsers/phones, then Import it back.</p>
+      <h1><span class="glyph">âŸ³</span>DROID TYCOON â€” Keep or Let Go<span class="app-version" title="Browser version â€” the desktop app's screen-reading features aren't available here, everything is tapped in by hand">WEB</span></h1>
+      <p>Tap a droid's rarity dots to log what you own. Amber ring = the next upgrade worth chasing â€” anything at or below your best is safe to let go of. Press and hold a dot (or right-click on desktop) to set an exact colorway.</p>
+      <p class="storage-note">Progress saves in this browser only â€” it won't sync with the desktop app or your other devices. Use Export below before clearing site data or switching browsers/phones, then Import it back.</p>
     </div>
     <div class="overall">
       <div class="num" id="overallNum">0 / 0</div>
@@ -585,30 +587,30 @@
   </header>
 
   <div class="ref open" id="howToUse">
-    <h2>📖 How to use this</h2>
+    <h2>ðŸ“– How to use this</h2>
     <div class="ref-body">
       <ol class="howto-steps">
         <li>
-          <p>If you're charting your rebirth cycles — which droid unlocks at which level — switch to the <strong>By Rebirth Level</strong> view in the toolbar below.</p>
+          <p>If you're charting your rebirth cycles â€” which droid unlocks at which level â€” switch to the <strong>By Rebirth Level</strong> view in the toolbar below.</p>
           <img class="howto-btn-shot" src="help-images/by-rebirth-level-button.png" alt="The By Rebirth Level toggle button in the toolbar">
         </li>
         <li>
-          <p>You'll get a layout like this — one row per rebirth level, three droids per row:</p>
+          <p>You'll get a layout like this â€” one row per rebirth level, three droids per row:</p>
           <img src="help-images/by-level-layout-example.png" alt="Example of the By Rebirth Level table, showing rows of droids and their rarities for Cycle 1">
-          <p><strong>Tap or click</strong> a droid to log it at that exact rarity — tap it again to clear it. If a tap doesn't seem to do anything, you've already logged a higher rarity for that droid somewhere else. Either way, <strong>press and hold</strong> (or right-click on desktop) any of its cells to open a menu listing every rarity — tap the checked one to clear it, or tap a different one to set that as what you own.</p>
+          <p><strong>Tap or click</strong> a droid to log it at that exact rarity â€” tap it again to clear it. If a tap doesn't seem to do anything, you've already logged a higher rarity for that droid somewhere else. Either way, <strong>press and hold</strong> (or right-click on desktop) any of its cells to open a menu listing every rarity â€” tap the checked one to clear it, or tap a different one to set that as what you own.</p>
         </li>
       </ol>
 
       <div class="howto-subhead">Good to know</div>
       <ul class="howto-tips">
-        <li>The <b>A–Z</b> view works the same way — tap a droid's rarity dot to log it, tap your current best again to undo it, or press and hold (right-click) a dot for that same set-exact-rarity menu.</li>
-        <li>A <b>SELL</b> tag next to a name means that's the last time this droid is needed this cycle — safe to fuse or sell once you own it. (It may show up again in a future cycle, but by then you'll need to re-earn it fresh anyway, so there's nothing to hold onto it for now.)</li>
-        <li>A dimmed name in the By Rebirth Level view is already covered by a higher rarity you logged elsewhere — nothing to do there.</li>
-        <li><b>🧬 Rebirth Reqs</b> lists everything the selected cycle asks for, low to high, in one panel.</li>
-        <li><b>♻ Safe to Retire</b> lists droids you own that the cycle is done asking for, grouped by tier (tap a tier to hide/show it) — enter your current rebirth level in that panel first.</li>
-        <li>On a phone, tap the already-lit <b>A–Z</b> or <b>By Rebirth Level</b> button again to hide the droid list, so <b>🧬 Rebirth Reqs</b> / <b>♻ Safe to Retire</b> sit right under the toolbar instead of at the bottom of a long scroll. Tap either one to bring the list back.</li>
-        <li><b>⏱ Event Timers</b> shows live countdowns to the next Stellar/Mythic/Galactic drop and the next mission.</li>
-        <li><b>🔮 Sneak Preview</b> shows the Mythic droids the <i>next</i> cycle will ask for. When you finish a cycle you'll be asked to pick <b>Next Cycle</b> (reset it and move on) or <b>Sneak Preview</b> (reset it and open the preview) — close the box with ✕ to leave everything as it is.</li>
+        <li>The <b>Aâ€“Z</b> view works the same way â€” tap a droid's rarity dot to log it, tap your current best again to undo it, or press and hold (right-click) a dot for that same set-exact-rarity menu.</li>
+        <li>A <b>SELL</b> tag next to a name means that's the last time this droid is needed this cycle â€” safe to fuse or sell once you own it. (It may show up again in a future cycle, but by then you'll need to re-earn it fresh anyway, so there's nothing to hold onto it for now.)</li>
+        <li>A dimmed name in the By Rebirth Level view is already covered by a higher rarity you logged elsewhere â€” nothing to do there.</li>
+        <li><b>ðŸ§¬ Rebirth Reqs</b> lists everything the selected cycle asks for, low to high, in one panel.</li>
+        <li><b>â™» Safe to Retire</b> lists droids you own that the cycle is done asking for, grouped by tier (tap a tier to hide/show it) â€” enter your current rebirth level in that panel first.</li>
+        <li>On a phone, tap the already-lit <b>Aâ€“Z</b> or <b>By Rebirth Level</b> button again to hide the droid list, so <b>ðŸ§¬ Rebirth Reqs</b> / <b>â™» Safe to Retire</b> sit right under the toolbar instead of at the bottom of a long scroll. Tap either one to bring the list back.</li>
+        <li><b>â± Event Timers</b> shows live countdowns to the next Stellar/Mythic/Galactic drop and the next mission.</li>
+        <li><b>ðŸ”® Sneak Preview</b> shows the Mythic droids the <i>next</i> cycle will ask for. When you finish a cycle you'll be asked to pick <b>Next Cycle</b> (reset it and move on) or <b>Sneak Preview</b> (reset it and open the preview) â€” close the box with âœ• to leave everything as it is.</li>
         <li><b>Export</b> a backup before clearing site data, switching browsers, or moving to a new device, then <b>Import</b> it back. <b>Reset all</b> clears every droid you've logged and can't be undone.</li>
       </ul>
     </div>
@@ -620,7 +622,7 @@
   </script>
 
   <div class="legend" id="legend"></div>
-  <div class="level-note" id="levelNote" style="display:none;">Three droids per line, one line per level, all 35 levels for the cycle you've picked below. Tap a name to log it — dimmed names are already covered by a higher rarity you own.</div>
+  <div class="level-note" id="levelNote" style="display:none;">Three droids per line, one line per level, all 35 levels for the cycle you've picked below. Tap a name to log it â€” dimmed names are already covered by a higher rarity you own.</div>
   <div class="cycle-picker-row" id="cyclePickerRow" style="display:none;">
     <select class="cycle-select" id="cycleSelect">
       <option value="1">Cycle 1</option>
@@ -633,22 +635,22 @@
   </div>
 
   <div class="toolbar">
-    <div class="searchbox" id="searchBoxWrap"><input id="search" type="text" placeholder="Search a droid…"></div>
+    <div class="searchbox" id="searchBoxWrap"><input id="search" type="text" placeholder="Search a droidâ€¦"></div>
     <div class="sort-toggle" id="sortToggleWrap">
-      <button class="btn on" data-sort="alpha" title="Needs-work first, then A–Z">A–Z</button>
+      <button class="btn on" data-sort="alpha" title="Needs-work first, then Aâ€“Z">Aâ€“Z</button>
       <button class="btn" data-sort="level" title="Grouped in trios by the level they unlock at, for whichever cycle is selected">By Rebirth Level</button>
     </div>
     <div class="spacer"></div>
-    <button class="btn" id="editToggle" title="Tap a name to fix a misread, or rename it to match another droid to merge them">✎ Rename</button>
-    <button class="btn" id="reqPanelToggle" title="Show a panel of the droids needed for rebirth 35, at the rarity each cycle requires">🧬 Rebirth Reqs</button>
-    <button class="btn" id="retirePanelToggle" title="Show droids you're done needing this cycle — safe to fuse or sell">♻ Safe to Retire</button>
-    <button class="btn" id="sneakPanelToggle" title="Show the Mythic droids the next cycle will ask for, at the highest variety it needs">🔮 Sneak Preview</button>
-    <button class="btn" id="timersToggle" title="Show live countdowns for the Stellar, Mythic and Galactic blueprint drops and the next mission">⏱ Event Timers</button>
-    <button class="btn" id="bgBtn" title="Set a custom background image">🖼 Background</button>
+    <button class="btn" id="editToggle" title="Tap a name to fix a misread, or rename it to match another droid to merge them">âœŽ Rename</button>
+    <button class="btn" id="reqPanelToggle" title="Show a panel of the droids needed for rebirth 35, at the rarity each cycle requires">ðŸ§¬ Rebirth Reqs</button>
+    <button class="btn" id="retirePanelToggle" title="Show droids you're done needing this cycle â€” safe to fuse or sell">â™» Safe to Retire</button>
+    <button class="btn" id="sneakPanelToggle" title="Show the Mythic droids the next cycle will ask for, at the highest variety it needs">ðŸ”® Sneak Preview</button>
+    <button class="btn" id="timersToggle" title="Show live countdowns for the Stellar, Mythic and Galactic blueprint drops and the next mission">â± Event Timers</button>
+    <button class="btn" id="bgBtn" title="Set a custom background image">ðŸ–¼ Background</button>
     <div class="bg-controls" id="bgControls" hidden>
       <span class="bg-dim-label">Dim</span>
       <input type="range" id="bgDimRange" min="0.2" max="0.92" step="0.02" value="0.72">
-      <button class="btn" id="bgClearBtn" title="Remove custom background">✕</button>
+      <button class="btn" id="bgClearBtn" title="Remove custom background">âœ•</button>
     </div>
     <button class="btn" id="exportBtn">Export</button>
     <button class="btn" id="importBtn">Import</button>
@@ -660,7 +662,7 @@
   <div class="timers-section" id="timersSection">
     <div class="timers-head">
       <h3>Event Timers</h3>
-      <p class="timers-sub">Wall-clock countdowns only — nothing here reads the game. The mission name/order is a best guess; sync it below if it drifts from what you see in-game.</p>
+      <p class="timers-sub">Wall-clock countdowns only â€” nothing here reads the game. The mission name/order is a best guess; sync it below if it drifts from what you see in-game.</p>
     </div>
     <div class="timers-grid" id="timersGrid">
       <div class="timer-card stellar" id="stellarTimerCard">
@@ -695,22 +697,22 @@
           <img id="missionTimerIcon" src="mission-icons/stormtrooper.png" alt="">
         </div>
         <div class="timer-body">
-          <span class="timer-label" id="missionTimerLabel">—</span>
+          <span class="timer-label" id="missionTimerLabel">â€”</span>
           <span class="timer-time" id="missionTimerTime">--:--</span>
         </div>
       </div>
     </div>
     <div class="mission-sync-row">
-      <label for="missionSyncMin">Sync mission timer — time left shown in-game</label>
+      <label for="missionSyncMin">Sync mission timer â€” time left shown in-game</label>
       <input type="number" id="missionSyncMin" min="0" max="59" placeholder="mm" inputmode="numeric">
       <span class="sep">:</span>
       <input type="number" id="missionSyncSec" min="0" max="59" placeholder="ss" inputmode="numeric">
-      <button class="btn" id="missionSyncBtn">🔄 Sync</button>
+      <button class="btn" id="missionSyncBtn">ðŸ”„ Sync</button>
     </div>
   </div>
 
   <div class="content-row">
-    <div class="nothing-shown" id="nothingShown">Nothing selected — tap <b>A–Z</b>, <b>By Rebirth Level</b>, <b>🧬 Rebirth Reqs</b>, <b>♻ Safe to Retire</b> or <b>🔮 Sneak Preview</b> to show a view.</div>
+    <div class="nothing-shown" id="nothingShown">Nothing selected â€” tap <b>Aâ€“Z</b>, <b>By Rebirth Level</b>, <b>ðŸ§¬ Rebirth Reqs</b>, <b>â™» Safe to Retire</b> or <b>ðŸ”® Sneak Preview</b> to show a view.</div>
     <div class="main-col" id="quickPanelHome">
       <div class="quick-panel" id="quickPanel">
         <div id="dqList"></div>
@@ -719,7 +721,7 @@
     <div class="rebirth-panel" id="rebirthPanel">
       <div class="rebirth-panel-head">
         <h3>Rebirth Requirements</h3>
-        <button class="btn" id="reqPanelClose" title="Hide this panel">✕</button>
+        <button class="btn" id="reqPanelClose" title="Hide this panel">âœ•</button>
       </div>
       <div class="rebirth-cycle-row">
         <label for="reqCycleSelect">Cycle</label>
@@ -731,13 +733,13 @@
           <option value="5">Cycle 5</option>
         </select>
       </div>
-      <p class="rebirth-sub">Every droid this cycle calls for, grouped low to high (Base → Stellar) — the highest variety needed per droid. Tap one to log it (marks every lower variety of that droid in the list on the left too).</p>
+      <p class="rebirth-sub">Every droid this cycle calls for, grouped low to high (Base â†’ Stellar) â€” the highest variety needed per droid. Tap one to log it (marks every lower variety of that droid in the list on the left too).</p>
       <div id="rebirthList"></div>
     </div>
     <div class="rebirth-panel" id="retirePanel">
       <div class="rebirth-panel-head">
         <h3>Safe to Retire</h3>
-        <button class="btn" id="retirePanelClose" title="Hide this panel">✕</button>
+        <button class="btn" id="retirePanelClose" title="Hide this panel">âœ•</button>
       </div>
       <div class="rebirth-cycle-row">
         <label for="retireCycleSelect">Cycle</label>
@@ -753,7 +755,7 @@
         <label for="retireLevelInput">Current rebirth level (this cycle)</label>
         <input type="number" id="retireLevelInput" min="0" max="35" value="0" inputmode="numeric">
       </div>
-      <p class="rebirth-sub">Droids you've already logged, past the last level this cycle still asks for them — nothing left to lose by fusing or selling your copy. Tap a tier to show or hide it.</p>
+      <p class="rebirth-sub">Droids you've already logged, past the last level this cycle still asks for them â€” nothing left to lose by fusing or selling your copy. Tap a tier to show or hide it.</p>
       <div class="retire-tiers" id="retireTiers">
         <button class="retire-tier" data-tier="all">All</button>
         <button class="retire-tier" data-tier="Mythic">Mythic</button>
@@ -766,10 +768,10 @@
     </div>
     <div class="rebirth-panel" id="sneakPanel">
       <div class="rebirth-panel-head">
-        <h3>🔮 Sneak Preview</h3>
-        <button class="btn" id="sneakPanelClose" title="Hide this panel">✕</button>
+        <h3>ðŸ”® Sneak Preview</h3>
+        <button class="btn" id="sneakPanelClose" title="Hide this panel">âœ•</button>
       </div>
-      <p class="rebirth-sub"><b class="sneak-next" id="sneakNextLabel">Next: Cycle 2</b> — the Mythic droids it will ask for, each at the highest variety it ever needs, highest first. Start hunting these before you get there.</p>
+      <p class="rebirth-sub"><b class="sneak-next" id="sneakNextLabel">Next: Cycle 2</b> â€” the Mythic droids it will ask for, each at the highest variety it ever needs, highest first. Start hunting these before you get there.</p>
       <div id="sneakList"></div>
     </div>
   </div>
@@ -794,11 +796,11 @@
 
 <div class="toast" id="toast"></div>
 
-<!-- Cycle-complete prompt (v1.7.1) — confirm() can only say OK/Cancel, so
-     it's an in-page box. ✕, Esc or tapping outside = no change. -->
+<!-- Cycle-complete prompt (v1.7.1) â€” confirm() can only say OK/Cancel, so
+     it's an in-page box. âœ•, Esc or tapping outside = no change. -->
 <div class="cycle-prompt" id="cyclePrompt" hidden>
   <div class="cycle-prompt-card" role="dialog" aria-modal="true" aria-labelledby="cyclePromptMsg">
-    <button class="btn cycle-prompt-x" id="cyclePromptX" title="Close — nothing gets reset">✕</button>
+    <button class="btn cycle-prompt-x" id="cyclePromptX" title="Close â€” nothing gets reset">âœ•</button>
     <p id="cyclePromptMsg">Would you like to reset progress for this cycle and open the next, or open the Sneak Preview?</p>
     <div class="cycle-prompt-btns">
       <button class="btn on" id="cyclePromptNext">Next Cycle</button>
@@ -812,7 +814,7 @@
 <script>
 /* ---------------- STORAGE ----------------
    No Electron bridge exists in a plain browser, so this always falls
-   through to plain localStorage — same storeGet/storeSet contract as the
+   through to plain localStorage â€” same storeGet/storeSet contract as the
    desktop app's tracker.html, just without the window.overlayAPI / cloud
    branches (neither is ever present here). */
 async function storeGet(key){
@@ -848,7 +850,7 @@ let RAW_GROUPS = {};   // normKey -> {names:{rawName:count}, entries:[...]}  (ke
 function buildIndex(){
   const groups = {};
   for(let c=1;c<=5;c++){
-    for(let l=1;l<=35;l++){
+    for(let l=1;l<=40;l++){
       const row = CYCLES[c][l-1];
       row.forEach((d,i)=>{
         const code = d[0], rawName = d[1];
@@ -883,7 +885,7 @@ function buildIndex(){
   // names, which getDroidRarityClass()'s cache (below, used by Safe to
   // Retire) is keyed by. Invalidate it here so a rebuild after a
   // nameMerges change also gets a fresh rarity-class lookup, instead of
-  // keeping stale post-rename entries for the rest of the page's life —
+  // keeping stale post-rename entries for the rest of the page's life â€”
   // mirrors requirements.js's identical comment/fix in the Electron app.
   RARITY_CLASS_BY_NK = null;
 }
@@ -911,18 +913,18 @@ async function setOwned(nk, rank){
   if(current === rank){
     delete ownedRank[nk]; // tapping your current best again undoes it
   } else if(current === undefined || rank > current){
-    ownedRank[nk] = rank; // new claim, or a genuine upgrade — cascades "covered" down to every lower variant automatically
+    ownedRank[nk] = rank; // new claim, or a genuine upgrade â€” cascades "covered" down to every lower variant automatically
   } else {
     // rank < current -> that variant is already covered by something higher.
     // Never silently downgrade from a plain tap (a stray tap on an
-    // already-covered cell shouldn't erase real progress) — but don't leave
+    // already-covered cell shouldn't erase real progress) â€” but don't leave
     // the tap looking like it just did nothing, either. A droid can recur
     // at many rarities across 5 cycles, so "something higher" is often
     // logged nowhere near the cell just tapped. Point at the fix instead of
     // failing silently.
     const entry = DROID_INDEX[nk];
     const label = entry ? entry.display : nk;
-    showToast(label + ' is logged at ' + RNAME[RARITY_ORDER[current]] + ' — press and hold (or right-click) any of its cells to change or clear that');
+    showToast(label + ' is logged at ' + RNAME[RARITY_ORDER[current]] + ' â€” press and hold (or right-click) any of its cells to change or clear that');
     return;
   }
   await storeSet('rebirth-ownedRank-v2', ownedRank);
@@ -949,10 +951,10 @@ async function markRowObtained(row, opts){
 /* ---------------- CYCLE COMPLETION: offer to reset + advance ----------------
    "Covered" here means the same thing renderByLevel()'s "x / 105 covered"
    counter shows: every one of a cycle's 35 levels x 3 slots has a droid
-   logged (anywhere, any cycle — ownedRank is global by name) at that slot's
+   logged (anywhere, any cycle â€” ownedRank is global by name) at that slot's
    required rarity or better. Once a mark-increasing action pushes that from
    something less than 105 up to exactly 105, offer to clear this cycle's
-   droids and roll over to the next one — never on an unmark, and never
+   droids and roll over to the next one â€” never on an unmark, and never
    again just from re-rendering an already-105 cycle. Cycles wrap 5 -> 1. */
 function cycleCoveredCount(cycle){
   let covered = 0;
@@ -982,7 +984,7 @@ async function clearCycleMarks(cycle){
   // Also clear the manually-entered "current rebirth level" Safe to Retire
   // uses. The Electron app's own declutter panel deliberately leaves this
   // number untouched on a cycle reset, because there it's read off-screen
-  // via OCR — the game's own HUD is the ground truth, so the app just waits
+  // via OCR â€” the game's own HUD is the ground truth, so the app just waits
   // for the next OCR read to correct it. This web tracker has no OCR to
   // defer to; the number only ever comes from what the player last typed
   // in, so a stale "level 30" surviving into a freshly-reset cycle 1 would
@@ -999,11 +1001,11 @@ async function resetCycleAndAdvance(cycle){
   const next = cycleAfter(cycle);
   await setActiveCycle(next); // persists rebirth-activeCycle, syncs both selects, renderList()
   renderStats();
-  showToast('Cycle ' + cycle + ' reset — now on Cycle ' + next);
+  showToast('Cycle ' + cycle + ' reset â€” now on Cycle ' + next);
 }
 
 // "Sneak Preview" choice (v1.7.1, same as the desktop app): the same reset,
-// but the tracker STAYS on the finished cycle — the preview always shows the
+// but the tracker STAYS on the finished cycle â€” the preview always shows the
 // cycle after the selected one, so advancing here would make it skip ahead
 // to the one after next. Then, like the app turning off its other overlays,
 // close the other side panels (Event Timers stays as it is) and open the
@@ -1015,11 +1017,11 @@ async function resetCycleForSneakPreview(cycle){
   await toggleRetirePanel(false);
   await toggleSneakPanel(true);
   revealPanelIfStacked('sneakPanel');
-  showToast('Cycle ' + cycle + ' reset — Sneak Preview shows Cycle ' + cycleAfter(cycle) + '. Switch to it when you start it.');
+  showToast('Cycle ' + cycle + ' reset â€” Sneak Preview shows Cycle ' + cycleAfter(cycle) + '. Switch to it when you start it.');
 }
 
 // The in-page prompt (markup next to the toast) -> 'next' | 'sneak' | 'none'.
-// ✕, Esc and tapping the dimmed backdrop all answer 'none' = nothing changes.
+// âœ•, Esc and tapping the dimmed backdrop all answer 'none' = nothing changes.
 function askCycleComplete(){
   return new Promise(resolve=>{
     const box = getEl('cyclePrompt');
@@ -1042,7 +1044,7 @@ function askCycleComplete(){
 
 let cyclePromptOpen = false;
 async function maybeOfferCycleReset(cycle, coveredBefore){
-  if(coveredBefore === 105) return; // was already fully marked before this action — don't re-nag on every subsequent tap
+  if(coveredBefore === 105) return; // was already fully marked before this action â€” don't re-nag on every subsequent tap
   if(cycleCoveredCount(cycle) !== 105) return; // not complete yet
   if(cyclePromptOpen) return;
   cyclePromptOpen = true;
@@ -1062,7 +1064,7 @@ async function migrate(){
   const legacyOverrides = (await storeGet('rebirth-overrides')) || {};
   const rank = {};
   for(let c=1;c<=5;c++){
-    for(let l=1;l<=35;l++){
+    for(let l=1;l<=40;l++){
       const row = CYCLES[c][l-1];
       row.forEach((d,i)=>{
         const key = c+'-'+l+'-'+i;
@@ -1113,7 +1115,7 @@ async function handleRename(nk, newVal){
     const merged = DROID_INDEX[newNk];
     const keptRank = ownedRank[newNk];
     const keptLabel = keptRank !== undefined ? RNAME[RARITY_ORDER[keptRank]] : 'nothing owned yet';
-    showToast('Merged into ' + merged.display + ' — ' + merged.entries.length + ' entries, kept ' + keptLabel);
+    showToast('Merged into ' + merged.display + ' â€” ' + merged.entries.length + ' entries, kept ' + keptLabel);
   }
 }
 
@@ -1151,7 +1153,7 @@ function droidRowHtml(nk, occEntry, extraClass){
     const filled = st.owned !== undefined && r <= st.owned;
     const isNext = r === st.nextRank;
     const cls = 'pip' + (filled ? ' filled ' + code : '') + (isNext ? ' next' : '');
-    return '<div class="' + cls + '" data-nk="' + nk + '" data-rank="' + r + '" title="' + RNAME[code] + (isNext?' — next upgrade':'') + ' — press and hold (or right-click) to see/change the exact colorway on record' + '"></div>';
+    return '<div class="' + cls + '" data-nk="' + nk + '" data-rank="' + r + '" title="' + RNAME[code] + (isNext?' â€” next upgrade':'') + ' â€” press and hold (or right-click) to see/change the exact colorway on record' + '"></div>';
   }).join('');
   let iconEntry = occEntry;
   if(!iconEntry){
@@ -1164,7 +1166,7 @@ function droidRowHtml(nk, occEntry, extraClass){
   const badgeClass = RCLASS[RARITY_ORDER[iconEntry.rank]];
   const statusHtml = st.maxed
     ? '<span class="status-badge maxed">MAXED</span>'
-    : '<span class="status-badge need">NEED · ' + RNAME[RARITY_ORDER[st.nextRank]] + '</span>';
+    : '<span class="status-badge need">NEED Â· ' + RNAME[RARITY_ORDER[st.nextRank]] + '</span>';
   const rowClass = 'dq-row' + (st.maxed?' maxed':'') + (extraClass?' '+extraClass:'');
   return '<div class="' + rowClass + '">' +
     '<div class="icon-badge ' + badgeClass + '">' + imgTag + '</div>' +
@@ -1201,7 +1203,7 @@ function droidCellHtml(nk, occEntry, lastNeeded){
   const covered = owned !== undefined && occEntry.rank <= owned;
   // Cycle-scoped, not cross-cycle: cycles loop forever and clearCycleMarks()
   // wipes tracked ownership for every droid in a cycle once that cycle resets,
-  // so whether a droid reappears in a later-numbered cycle is irrelevant —
+  // so whether a droid reappears in a later-numbered cycle is irrelevant â€”
   // by the time that cycle is reached, this droid will need to be re-logged
   // from scratch anyway. The real question is only whether THIS cycle's own
   // table still needs it again. Matches requirements.js's cycleLastNeededLevel
@@ -1214,11 +1216,11 @@ function droidCellHtml(nk, occEntry, lastNeeded){
   const imgTag = src ? ('<img src="' + src + '" alt="" loading="lazy">') : '';
   const badgeClass = RCLASS[code];
   const sellTag = sellable ? '<span class="sell-tag">SELL</span>' : '';
-  const titleBits = [entry.display + ' — ' + RNAME[code]];
+  const titleBits = [entry.display + ' â€” ' + RNAME[code]];
   titleBits.push(covered ? 'already covered' : 'tap to log');
   titleBits.push('press and hold (or right-click) to see/change the exact colorway on record');
   if(sellable) titleBits.push('not needed again this cycle');
-  return '<td class="' + cls + '" data-nk="' + nk + '" data-rank="' + occEntry.rank + '" title="' + titleBits.join(' — ') + '">' +
+  return '<td class="' + cls + '" data-nk="' + nk + '" data-rank="' + occEntry.rank + '" title="' + titleBits.join(' â€” ') + '">' +
     '<div class="cell-flex">' +
       '<div class="icon-badge icon-badge-sm ' + badgeClass + '">' + imgTag + '</div>' +
       '<span class="cell-name">' + entry.display + sellTag + '</span>' +
@@ -1234,7 +1236,7 @@ function renderByLevel(){
   const lastNeeded = cycleLastNeededLevel(activeCycle);
   let rowsHtml = '';
   let anyVisible = false;
-  for(let l=1;l<=35;l++){
+  for(let l=1;l<=40;l++){
     const row = CYCLES[activeCycle][l-1];
     const nks = row.map(d=> normKey(canonicalName(d[1])) );
     const matchesAny = !q || nks.some(nk=> DROID_INDEX[nk].display.toLowerCase().indexOf(q)!==-1 );
@@ -1254,7 +1256,7 @@ function renderByLevel(){
   }
   listEl.innerHTML = '<div class="cycle-section">' +
     '<div class="cycle-section-header">Cycle ' + activeCycle + '</div>' +
-    '<div class="level-table-hint">↔ swipe the table sideways to see all 3 droids per row</div>' +
+    '<div class="level-table-hint">â†” swipe the table sideways to see all 3 droids per row</div>' +
     '<div class="level-table-scroll"><table class="level-table"><tbody>' + rowsHtml + '</tbody></table></div>' +
   '</div>';
 }
@@ -1321,7 +1323,7 @@ function renderList(){
    every lower variety of that droid on the left too. */
 function cycleCeilings(cycle){
   const ceilings = {}; // nk -> {rank, cycle, level, slot, code}
-  for(let l=1;l<=35;l++){
+  for(let l=1;l<=40;l++){
     const row = CYCLES[cycle][l-1];
     row.forEach((d,i)=>{
       const code = d[0];
@@ -1349,8 +1351,8 @@ function rebirthCellHtml(nk, info){
   const src = (typeof ICONS !== 'undefined' && ICONS[iconKey]) ? ('data:image/webp;base64,' + ICONS[iconKey]) : '';
   const imgTag = src ? ('<img src="' + src + '" alt="' + entry.display + '" loading="lazy">') : '';
   const haveText = ownedCode ? ('you have ' + RNAME[ownedCode]) : "you haven't logged this one";
-  const titleBits = [entry.display + ' — need ' + RNAME[code], haveText, covered ? 'already covered' : 'tap to log the top tier', 'press and hold (or right-click) to pick an exact colorway'];
-  return '<div class="rb-cell' + (covered ? ' covered' : '') + '" data-nk="' + nk + '" data-rank="' + rank + '" title="' + titleBits.join(' — ') + '">' +
+  const titleBits = [entry.display + ' â€” need ' + RNAME[code], haveText, covered ? 'already covered' : 'tap to log the top tier', 'press and hold (or right-click) to pick an exact colorway'];
+  return '<div class="rb-cell' + (covered ? ' covered' : '') + '" data-nk="' + nk + '" data-rank="' + rank + '" title="' + titleBits.join(' â€” ') + '">' +
     '<div class="icon-badge icon-badge-split">' +
       '<div class="badge-half badge-half-owned ' + ownedClass + '"></div>' +
       '<div class="badge-half badge-half-req ' + reqClass + '"></div>' +
@@ -1375,7 +1377,7 @@ function renderRebirthPanel(){
   });
 
   let html = '';
-  for(let rank=0; rank<=6; rank++){
+  for(let rank=0; rank<RARITY_ORDER.length; rank++){
     const nks = tiers[rank];
     if(!nks || !nks.length) continue;
     nks.sort((a,b)=> DROID_INDEX[a].display.localeCompare(DROID_INDEX[b].display));
@@ -1403,13 +1405,13 @@ function renderRebirthPanel(){
    Ported from the Electron app's requirements.js (getDeclutterList /
    cycleLastNeededLevel / getDroidRarityClass), byte-for-byte where the
    underlying data lets it be: every droid you've logged as owned (any
-   tier since 2026-09-24 — Legendary/Mythic only before that), whose last appearance in the active cycle (at ANY
-   rarity) is already behind the rebirth level you're on — nothing further
+   tier since 2026-09-24 â€” Legendary/Mythic only before that), whose last appearance in the active cycle (at ANY
+   rarity) is already behind the rebirth level you're on â€” nothing further
    this cycle will ever ask for it again, so it's safe to fuse or sell.
 
    Deliberately NOT the same level as cycleCeilings() above: cycleCeilings
    records the FIRST level a droid hits its ceiling (highest) rarity, which
-   isn't always its true final appearance in the cycle — some droids show up
+   isn't always its true final appearance in the cycle â€” some droids show up
    again at a later level, occasionally at that same ceiling rarity, other
    times at a lower one. Either way, a later occurrence still needs the
    physical droid to exist at rebirth time regardless of what rarity that
@@ -1420,7 +1422,7 @@ function renderRebirthPanel(){
    tracks the LAST level a droid appears at any rarity instead. */
 function cycleLastNeededLevel(cycle){
   const lastLevel = {}; // nk -> highest level number requiring this droid, any rarity
-  for(let l=1;l<=35;l++){
+  for(let l=1;l<=40;l++){
     const row = CYCLES[cycle][l-1];
     row.forEach(d=>{
       const nk = normKey(canonicalName(d[1]));
@@ -1446,7 +1448,7 @@ function getDroidRarityClass(nk){
 }
 
 // currentLevel = the rebirth level you're currently on within `cycle`
-// (manually entered below — see retireCurrentLevel — since the browser has
+// (manually entered below â€” see retireCurrentLevel â€” since the browser has
 // no OCR to read it off-screen the way the desktop overlay does).
 function getDeclutterList(cycle, currentLevel, ownedRank){
   const lastNeeded = cycleLastNeededLevel(cycle);
@@ -1476,15 +1478,15 @@ function getDeclutterList(cycle, currentLevel, ownedRank){
 }
 
 function retireCellHtml(item){
-  const code = item.ownedCode; // the rarity YOU own, not a requirement — Safe to Retire has nothing to "tap and log"
+  const code = item.ownedCode; // the rarity YOU own, not a requirement â€” Safe to Retire has nothing to "tap and log"
   const badgeClass = RCLASS[code];
   const info = item.ceilingInfo;
   const iconKey = info ? (info.cycle + '-' + info.level + '-' + info.slot) : null;
   const src = (iconKey && typeof ICONS !== 'undefined' && ICONS[iconKey]) ? ('data:image/webp;base64,' + ICONS[iconKey]) : '';
   const imgTag = src ? ('<img src="' + src + '" alt="' + item.display + '" loading="lazy">') : '';
-  const title = item.display + ' — you have ' + RNAME[code] + ' — ' + item.rarityClass + ' — not needed again this cycle';
+  const title = item.display + ' â€” you have ' + RNAME[code] + ' â€” ' + item.rarityClass + ' â€” not needed again this cycle';
   // data-nk/data-class carried through even though there's no click handler
-  // here (nothing to tap/log) — keeps this cell identifiable in the DOM the
+  // here (nothing to tap/log) â€” keeps this cell identifiable in the DOM the
   // same way every other cell type in this file is, for tooling and tests.
   return '<div class="rb-cell" data-nk="' + item.nk + '" data-class="' + item.rarityClass + '" title="' + title + '">' +
     '<div class="icon-badge ' + badgeClass + '">' + imgTag + '</div>' +
@@ -1502,7 +1504,7 @@ function applyPanelWidths(){
   if(wrapEl) wrapEl.classList.toggle('with-rebirth', showReqPanel || showRetirePanel || showSneakPanel);
   applyNothingShown();
 }
-// List toggled off AND every side panel closed would leave an empty page —
+// List toggled off AND every side panel closed would leave an empty page â€”
 // say how to get a view back instead.
 function applyNothingShown(){
   const el = getEl('nothingShown');
@@ -1516,7 +1518,7 @@ function applyRetirePanelVisibility(){
   applyPanelWidths();
 }
 // On the stacked (phone/narrow) layout a newly opened panel lands below the
-// whole droid list — bring it into view so opening it isn't a scroll hunt.
+// whole droid list â€” bring it into view so opening it isn't a scroll hunt.
 function revealPanelIfStacked(id){
   if(!window.matchMedia('(max-width:900px)').matches) return;
   const el = getEl(id);
@@ -1551,7 +1553,7 @@ function renderRetirePanel(){
   if(input && document.activeElement !== input) input.value = String(retireCurrentLevel);
 
   if(retireCurrentLevel <= 0){
-    listEl.innerHTML = '<div class="retire-empty">Set your current rebirth level above to see what\'s safe to let go of — nothing shows until then, since "safe" depends on how far through the cycle you are.</div>';
+    listEl.innerHTML = '<div class="retire-empty">Set your current rebirth level above to see what\'s safe to let go of â€” nothing shows until then, since "safe" depends on how far through the cycle you are.</div>';
     return;
   }
   const all = getDeclutterList(activeCycle, retireCurrentLevel, ownedRank);
@@ -1559,8 +1561,8 @@ function renderRetirePanel(){
   if(!items.length){
     const hidden = all.length - items.length;
     listEl.innerHTML = '<div class="retire-empty">' + (hidden
-      ? (hidden + ' droid' + (hidden === 1 ? '' : 's') + ' hidden by the tier filter above — tap a tier to show it again.')
-      : ('Nothing to retire yet at rebirth ' + retireCurrentLevel + ' — either you haven\'t logged a droid this cycle is done with, or none have finished appearing yet.')) + '</div>';
+      ? (hidden + ' droid' + (hidden === 1 ? '' : 's') + ' hidden by the tier filter above â€” tap a tier to show it again.')
+      : ('Nothing to retire yet at rebirth ' + retireCurrentLevel + ' â€” either you haven\'t logged a droid this cycle is done with, or none have finished appearing yet.')) + '</div>';
     return;
   }
   const byClass = {};
@@ -1578,7 +1580,7 @@ function renderRetirePanel(){
   listEl.innerHTML = html;
 }
 
-// Safe to Retire tier filter — all on by default, remembered per browser.
+// Safe to Retire tier filter â€” all on by default, remembered per browser.
 let retireTiersOn = { Default:true, Rare:true, Epic:true, Legendary:true, Mythic:true };
 function applyRetireTierChips(){
   qsa('#retireTiers .retire-tier').forEach(b=>{
@@ -1604,12 +1606,12 @@ qsa('#retireTiers .retire-tier').forEach(b=>{
 /* ---------------- right-click / long-press "set exact colorway" menu ----------------
    Originally right-click only (mouse): left-click on any pip/cell keeps its
    quick "claim the top tier or undo" behavior, right-click opens a menu of
-   all 7 colorways so you can log — or clear — exactly what you have for
+   all 7 colorways so you can log â€” or clear â€” exactly what you have for
    that droid, no matter which specific cell you clicked from. That matters
    because a droid can recur at many rarities across all 5 cycles, and
    setOwned() never lets a plain tap downgrade a tier logged elsewhere.
    wireLongPress() below is the touch equivalent, added for the web
-   tracker — a ~500ms press-and-hold opens this same menu. */
+   tracker â€” a ~500ms press-and-hold opens this same menu. */
 let rbMenuEl = null;
 function closeRbContextMenu(){
   if(rbMenuEl){ rbMenuEl.remove(); rbMenuEl = null; }
@@ -1634,7 +1636,7 @@ function openRbContextMenu(nk, x, y){
     return '<div class="rb-context-item' + (isCurrent ? ' current' : '') + '" data-rank="' + rank + '">' +
       '<span class="rb-context-swatch ' + RCLASS[code] + '"></span>' +
       '<span>' + RNAME[code] + '</span>' +
-      (isCurrent ? '<span class="rb-context-check">✓</span>' : '') +
+      (isCurrent ? '<span class="rb-context-check">âœ“</span>' : '') +
     '</div>';
   }).join('');
   document.body.appendChild(menu);
@@ -1696,7 +1698,7 @@ function applyReqPanelVisibility(){
   const btn = getEl('reqPanelToggle');
   if(panel) panel.classList.toggle('show', showReqPanel);
   if(btn) btn.classList.toggle('on', showReqPanel);
-  applyPanelWidths(); // shared with the Safe to Retire panel — widens .wrap if EITHER side panel is open
+  applyPanelWidths(); // shared with the Safe to Retire panel â€” widens .wrap if EITHER side panel is open
 }
 async function toggleReqPanel(force){
   showReqPanel = (force !== undefined) ? force : !showReqPanel;
@@ -1711,7 +1713,7 @@ document.getElementById('reqPanelClose').addEventListener('click', ()=> toggleRe
    Ported from the desktop app's requirements.js getSneakPreview(): the
    Mythic-class droids the NEXT cycle (after the selected one; 5 wraps to 1)
    will ask for, each at the highest variety that cycle ever needs, highest
-   first. "✓ Have X" = what you've logged for it already covers that. */
+   first. "âœ“ Have X" = what you've logged for it already covers that. */
 function getSneakPreview(cycle, ownedRank){
   const next = cycleAfter(cycle);
   const ceilings = cycleCeilings(next);
@@ -1737,8 +1739,8 @@ function sneakCellHtml(it){
   const covered = it.ownedCode != null && rankOf(it.ownedCode) >= it.rank;
   const src = (typeof ICONS !== 'undefined' && ICONS[it.iconKey]) ? ('data:image/webp;base64,' + ICONS[it.iconKey]) : '';
   const imgTag = src ? ('<img src="' + src + '" alt="' + it.display + '" loading="lazy">') : '';
-  const status = covered ? ('✓ Have ' + RNAME[it.ownedCode]) : ('Needs ' + RNAME[it.code]);
-  const title = it.display + ' — next cycle needs ' + RNAME[it.code] + ' — ' + (it.ownedCode ? ('you have ' + RNAME[it.ownedCode]) : 'not logged yet');
+  const status = covered ? ('âœ“ Have ' + RNAME[it.ownedCode]) : ('Needs ' + RNAME[it.code]);
+  const title = it.display + ' â€” next cycle needs ' + RNAME[it.code] + ' â€” ' + (it.ownedCode ? ('you have ' + RNAME[it.ownedCode]) : 'not logged yet');
   return '<div class="rb-cell" data-nk="' + it.nk + '" title="' + title + '">' +
     '<div class="icon-badge ' + RCLASS[it.code] + '">' + imgTag + '</div>' +
     '<div class="rb-name ' + it.code + '">' + it.display + '</div>' +
@@ -1812,7 +1814,7 @@ document.getElementById('reqCycleSelect').addEventListener('change', (e)=>{
 document.getElementById('editToggle').addEventListener('click', (e)=>{
   editMode = !editMode;
   e.target.classList.toggle('on', editMode);
-  e.target.textContent = editMode ? '✓ Editing (tap a name to rename)' : '✎ Rename';
+  e.target.textContent = editMode ? 'âœ“ Editing (tap a name to rename)' : 'âœŽ Rename';
   renderList();
 });
 document.getElementById('resetBtn').addEventListener('click', ()=>{
@@ -1850,10 +1852,10 @@ document.getElementById('importFile').addEventListener('change', (e)=>{
   reader.readAsText(file);
 });
 /* Both collapsible .ref sections (How to use this / Upgrade chip costs)
-   share one open/close handler — click the heading, toggle .open on its
+   share one open/close handler â€” click the heading, toggle .open on its
    parent. "How to use this" remembers its state: it starts open for a
    first-time visitor, and once someone closes it, it stays closed on every
-   later visit (until they open it again) — it's ~1300px tall on a phone,
+   later visit (until they open it again) â€” it's ~1300px tall on a phone,
    which otherwise pushes the Rebirth Reqs / Safe to Retire panels well down
    the page. The saved state is applied by the small inline script right
    after the section's markup, so it never flashes open first. */
@@ -1880,14 +1882,14 @@ function applyBackground(){
     scrim.style.background = `rgba(11,15,13,${bgDim})`;
     controls.hidden = false;
     bgBtn.classList.add('on');
-    bgBtn.textContent = '🖼 Change background';
+    bgBtn.textContent = 'ðŸ–¼ Change background';
     dimRange.value = bgDim;
   } else {
     layer.style.backgroundImage = 'none';
     scrim.style.background = 'transparent';
     controls.hidden = true;
     bgBtn.classList.remove('on');
-    bgBtn.textContent = '🖼 Background';
+    bgBtn.textContent = 'ðŸ–¼ Background';
   }
 }
 
@@ -1948,7 +1950,7 @@ document.getElementById('bgDimRange').addEventListener('change', async (e)=>{
 });
 
 /* ---------------- EVENT TIMERS ----------------
-   Ported from the Electron overlay's timers.html — pure wall-clock
+   Ported from the Electron overlay's timers.html â€” pure wall-clock
    countdown math against the system clock, nothing here reads the screen
    or Fortnite in any way. Shown as a full-width toggleable section rather
    than that file's floating always-on-top banner strip, which has no
@@ -1983,7 +1985,7 @@ function nextGalactic(now){
 }
 
 // Missions run 45 minutes apart, then stay live for a further 5-minute
-// window before the next countdown starts — 50 minutes start-to-start, not
+// window before the next countdown starts â€” 50 minutes start-to-start, not
 // 45 (see timers.html in the desktop app for the original discovery notes
 // on this).
 const MISSION_CYCLE = ['Stormtrooper', 'Fishing', 'D-0', 'Mining'];
@@ -1998,13 +2000,13 @@ const MISSION_RUN_DURATION_MS = 5 * 60 * 1000; // each mission stays live/active
 const MISSION_PERIOD_MS = MISSION_COUNTDOWN_MS + MISSION_RUN_DURATION_MS; // 50 minutes, start-to-start
 
 // Same reference instant as the desktop overlay (a confirmed Stormtrooper
-// occurrence: 2026-09-19 12:10:20 America/New_York — see timers.html for how
+// occurrence: 2026-09-19 12:10:20 America/New_York â€” see timers.html for how
 // it was derived), but built with Date.UTC instead of the local-timezone
 // Date(y,m,d,h,m,s) constructor timers.html uses. That distinction doesn't
 // matter for the single-user desktop app (it only ever runs in the
 // calibrator's own timezone), but it would silently break for anyone
 // visiting this public page from a different timezone than the original
-// reading — each visitor's browser would reinterpret those same numbers as
+// reading â€” each visitor's browser would reinterpret those same numbers as
 // a different absolute instant, desyncing both the mission name cycle and
 // its countdown for everyone not in that exact timezone. Date.UTC pins it
 // to one exact instant for every visitor everywhere. 12:10:20 EDT (UTC-4,
@@ -2029,7 +2031,7 @@ function nextMission(now){
 }
 
 function missionNameForOccurrence(occurrence){
-  // Always the fixed nominal epoch, never the synced one — see timers.html:
+  // Always the fixed nominal epoch, never the synced one â€” see timers.html:
   // a sync performed while any mission is showing (not necessarily
   // Stormtrooper) must not relabel every future mission's name.
   const idx = missionStepIndex(occurrence.getTime(), MISSION_NAME_EPOCH_MS);
@@ -2128,7 +2130,7 @@ document.getElementById('missionSyncBtn').addEventListener('click', async ()=>{
   showReqPanel = !!(await storeGet('rebirth-showReqPanel'));
   {
     const loadedLevel = await storeGet('rebirth-currentLevel');
-    retireCurrentLevel = (Number.isInteger(loadedLevel) && loadedLevel >= 0 && loadedLevel <= 35) ? loadedLevel : 0;
+    retireCurrentLevel = (Number.isInteger(loadedLevel) && loadedLevel >= 0 && loadedLevel <= 40) ? loadedLevel : 0;
   }
   showRetirePanel = !!(await storeGet('rebirth-showRetirePanel'));
   {
