@@ -137,6 +137,62 @@ will produce exactly this shape: a "small" commit message with a
 whole-file-width diff of nothing but character substitutions. Don't
 dismiss a commit as unrelated just because its message says so.
 
+## Bug type C: orphaned duplicate data object (the actual v1.10.8 icon bug)
+
+This is what the "stale cache-buster" section below assumed was happening,
+and bumping the version DID help (it stopped browsers serving a truly-old
+copy) - but it wasn't the whole story. The real bug: `tracker/icons-data.js`
+contained **two separate top-level objects** - the real `const ICONS = {...}`
+that `tracker/index.html` actually reads, and, appended right after its
+closing `};`, a second, completely different `const CARD_ICONS = {...}` full
+of correct, valid, newly-generated icon data (including all the levels
+36-40 art) that **nothing in the app ever referenced**. A regeneration
+script (`build-gonk-icons.js` + `extract-kyber-final.js`, per the comment
+left in the file) produced good output under a new variable name and it was
+never merged into - or used to replace - the object the app actually reads.
+
+This is *insidious* specifically because:
+- It produces **zero console errors or exceptions** - `const A = {...}; const
+  B = {...};` is completely valid JavaScript, so the file parses and runs
+  fine top to bottom.
+- **Most rows still work** - anything already covered by the original
+  `ICONS` object renders exactly as before, so the bug only shows up on
+  whatever's new, making it look like a narrow, targeted problem (like a
+  keying bug for the new rows) rather than "there's a second, disconnected
+  copy of the data sitting dead in this file."
+- A naive text-search for the expected key (e.g. `grep '"1-36-0"'`) finds it
+  and looks reassuring - it's really *evidence of the bug*, not evidence
+  against it, because it's the orphaned copy you're finding, not the live one.
+
+**How to actually tell these apart:** don't trust a text search. Execute the
+file for real (Node's `vm` module, or a browser) and check what the live
+object actually contains:
+
+```js
+const vm = require('vm');
+const ctx = vm.createContext({});
+vm.runInContext(fs.readFileSync('icons-data.js', 'utf8'), ctx);
+console.log(Object.keys(vm.runInContext('ICONS', ctx)).length);
+console.log('1-36-0' in vm.runInContext('ICONS', ctx));  // false = orphaned elsewhere
+```
+
+If the count is suspiciously round (this file's real object had exactly
+525 = 5 cycles x 35 levels x 3 slots - the *old* shape, before the levels
+36-40 addition) and a key you can literally see in the file's text isn't in
+the real object, search the file for **more than one** `^const \w+ = {`
+line. A second one is your answer.
+
+**Fix:** merge, don't just delete one side blindly - the newer block may
+only be a *partial* replacement (in this incident, the gonk.tools
+re-extraction of levels 1-35 was missing 6 keys the original extraction
+had). Build the merged object programmatically (prefer the newer source,
+fall back to the older one for anything it's missing), validate every
+required key is present and every value decodes as a real image, and only
+then write it out as a single, correctly-named object - see
+`scripts/validate-tracker-data.js`, which checks for exactly this
+(duplicate top-level consts + full key coverage) and should be run before
+every push that touches `icons-data.js` or `droid-data.js`.
+
 ## Separately: "new content shows up but its image/icon doesn't"
 
 This is a **different bug class** — don't reach for the mojibake playbook

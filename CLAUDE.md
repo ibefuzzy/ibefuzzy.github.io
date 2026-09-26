@@ -18,6 +18,16 @@ a bad live site immediately.
   `"cycle-level-slot": "<base64 webp>"`.
 
 ## Rules
+- **Run `node scripts/validate-tracker-data.js` before every push that
+  touches `tracker/droid-data.js` or `tracker/icons-data.js`, and fix
+  everything it reports before pushing.** It mechanically checks for the two
+  ways this data has actually broken production: an orphaned duplicate data
+  object (a regeneration script writing its output into a new, never-loaded
+  variable instead of the one `index.html` reads — see Bug type C in
+  `memory/encoding_corruption_playbook.md`) and a stale, un-bumped
+  cache-busting version. On success it updates `tracker/.data-manifest.json`
+  — commit that file alongside your change; that's what lets the next run
+  detect "content changed, version didn't."
 - **Bump the `?v=` query param on `icons-data.js` and `droid-data.js` every
   time either file's content changes.** These are the only cache-busting
   mechanism for two files browsers otherwise cache indefinitely by URL. As of
@@ -29,7 +39,8 @@ a bad live site immediately.
   identical on desktop and mobile, and survives a normal reload — because a
   version-stamped URL that hasn't changed isn't something "hard refresh"
   reliably re-fetches, and mobile browsers mostly have no hard-refresh at
-  all. Check this BEFORE suspecting the data itself or the deploy.
+  all. Check this BEFORE suspecting the data itself or the deploy. (The
+  validate script now catches this automatically — see above.)
 - **Never open/save these files without pinning `encoding='utf-8'`
   explicitly**, especially from any Windows-side script or tool. See
   `memory/encoding_corruption_playbook.md` for exactly why and what it looks
@@ -42,9 +53,11 @@ a bad live site immediately.
   a specific, mechanical diagnosis — not a "clear cache and see" situation.
 
 ## Testing
-No test suite in this repo. Sanity-check a change by serving the directory
-locally (`python3 -m http.server` or similar) and opening `tracker/`, or by
-diffing the pushed file's raw bytes against the previous commit for anything
-unexpected outside the lines you intended to touch — see the playbook for
-the exact byte-level checks worth running before any push that touches
-`tracker/index.html`.
+No test suite in this repo, but `scripts/validate-tracker-data.js` (Node,
+no dependencies) checks `droid-data.js`/`icons-data.js` structural integrity
+— see Rules above; run it before pushing either file. Beyond that, sanity-
+check a change by serving the directory locally (`python3 -m http.server`
+or similar) and opening `tracker/`, or by diffing the pushed file's raw
+bytes against the previous commit for anything unexpected outside the lines
+you intended to touch — see the playbook for the exact byte-level checks
+worth running before any push that touches `tracker/index.html`.
