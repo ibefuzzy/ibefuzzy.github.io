@@ -2,21 +2,34 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<!-- Add to Home Screen: opens full-screen like an app, with its own icon (no service
+     worker on purpose: nothing to go stale, the ?v= stamps stay the only cache control) -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0b0f0d">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Droid Tracker">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <title>Droid Tycoon Tracker — Web</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230b0f0d'/%3E%3Ctext x='50' y='70' font-size='58' text-anchor='middle' fill='%235ef2a6'%3E%E2%9F%B3%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg: #0b0f0d;
+    /* app looks: the colours a look changes, as r,g,b so rgba() can add an alpha */
+    --bg-rgb: 11,15,13;
+    --accent-rgb: 94,242,166;
+    --glow2-rgb: 94,150,242;
+    --bg: rgb(var(--bg-rgb));
     --panel: #121815;
     --panel2: #161d19;
     --line: #26332c;
     --line-bright: #38493f;
     --text: #dfe8e2;
     --text-dim: #8fa199;
-    --accent: #5ef2a6;
+    --accent: rgb(var(--accent-rgb));
     --accent-dim: #2c6b4a;
     --amber: #f2b95e;
     --red: #ef5b5b;
@@ -29,7 +42,7 @@
     --r-beskar: #b9c2cc;
     --r-galactic: #c96bf2;
     --r-stellar: #e08a3c;
-    --r-kyber: #d0a0ff;
+    --r-kyber: #50c878; /* confirmed emerald (desktop app, 2026-09-26) */
 
     /* Event-timer accent colors, kept separate from the --r-* rarity-ladder
        colors above even though two names overlap (Stellar/Galactic) — these
@@ -46,15 +59,15 @@
        tier-groups and reused here for the Mythic Blueprint timer card too
        since the source app happens to pick the same color for both. */
     --timer-stellar: #edb142;
-    --timer-galactic: #d95cf2;
+    --timer-kyber: #50c878;
     --rarity-mythic: #ff4d6d;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;}
   body{
     background-image:
-      radial-gradient(ellipse at 20% -10%, rgba(94,242,166,0.07), transparent 45%),
-      radial-gradient(ellipse at 100% 0%, rgba(94,150,242,0.05), transparent 40%);
+      radial-gradient(ellipse at 20% -10%, rgba(var(--accent-rgb),0.07), transparent 45%),
+      radial-gradient(ellipse at 100% 0%, rgba(var(--glow2-rgb),0.05), transparent 40%);
     padding-bottom:60px;
   }
   .wrap{max-width:980px;margin:0 auto;padding:14px 20px 0;position:relative;z-index:2;}
@@ -65,7 +78,7 @@
   }
   #bgScrim{
     position:fixed;inset:0;z-index:1;
-    background:rgba(11,15,13,0.72);
+    background:rgba(var(--bg-rgb),0.72);
     transition:background-color .2s ease;
   }
   .bg-controls{display:flex;align-items:center;gap:8px;}
@@ -121,7 +134,7 @@
     padding:9px 14px;font-size:14px;cursor:pointer;font-family:'Inter',sans-serif;transition:.15s;white-space:nowrap;
   }
   .btn:hover{color:var(--text);border-color:var(--line-bright);}
-  .btn.on{color:var(--accent);border-color:var(--accent-dim);background:rgba(94,242,166,0.08);}
+  .btn.on{color:var(--accent);border-color:var(--accent-dim);background:rgba(var(--accent-rgb),0.08);}
   .btn[hidden]{display:none;}
 
   /* ---- content row: main list + optional rebirth-requirements side panel ---- */
@@ -205,6 +218,7 @@
   .rb-name.K{color:var(--r-beskar);}
   .rb-name.X{color:var(--r-galactic);}
   .rb-name.S{color:var(--r-stellar);}
+  .rb-name.Y{color:var(--r-kyber);}
 
   .retire-level-row{
     display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;
@@ -220,9 +234,18 @@
   /* Safe to Retire cells are informational only — nothing to tap or log,
      since by definition every droid listed here is already owned — so
      don't borrow .rb-cell's implied clickability. */
-  #retireList .rb-cell{cursor:default;}
+  /* retired: tap a droid once it's sold/fused; dimmed at the bottom, tap again to undo (desktop v1.10.13) */
+  #retireList .rb-cell{cursor:pointer;}
+  .rb-cell.retired > *{opacity:.4;}
+  .rb-cell.retired img{filter:grayscale(1);}
+  .rb-cell.retired .rb-name{text-decoration:line-through;}
+  .rb-cell.retired > .rb-status{opacity:1;}
+  .rb-status{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;color:var(--accent);line-height:1.2;}
+  .rebirth-tier-label.retired{color:var(--text-dim);}
   /* Sneak Preview (v1.7.1) — informational too, same as Safe to Retire */
-  #sneakList .rb-cell{cursor:default;}
+  /* held: marked for the next cycle, logged when you switch to it (desktop v1.10.13) */
+  #sneakList .rb-cell{cursor:pointer;}
+  .rb-cell.held .icon-badge{box-shadow:0 0 0 2px var(--accent), 0 0 10px -2px var(--accent);}
   .sneak-next{color:var(--text);}
   .sneak-status{font-size:10px;font-weight:600;line-height:1.2;color:var(--text-dim);}
   .sneak-status.have{color:var(--accent);}
@@ -293,7 +316,7 @@
   .timer-time{font-size:19px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--text);}
   .timer-card.stellar{--accent-color:var(--timer-stellar);}
   .timer-card.mythic{--accent-color:var(--rarity-mythic);}
-  .timer-card.galactic{--accent-color:var(--timer-galactic);}
+  .timer-card.kyber{--accent-color:var(--timer-kyber);}
   .timer-card.mission{--accent-color:var(--accent);}
   .mission-sync-row{display:flex;align-items:center;gap:7px;flex-wrap:wrap;font-size:12.5px;color:var(--text-dim);}
   .mission-sync-row label{font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.02em;}
@@ -340,12 +363,13 @@
   .rarity-beskar{background:linear-gradient(155deg,#6b7178 0%,#c9ced3 35%,#f5f7f8 50%,#aab0b6 65%,#4c5157 100%);}
   .rarity-galactic{background:linear-gradient(155deg,#3d1a63 0%,#9b4de0 38%,#e2c3ff 50%,#8536d6 62%,#2c0f4d 100%);}
   .rarity-stellar{background:linear-gradient(155deg,#7a3d0a 0%,#e2841f 30%,#ffe2a6 48%,#ffb545 58%,#c9670f 75%,#5c2a05 100%);}
-  .icon-badge.rarity-beskar::before, .icon-badge.rarity-stellar::before{
+  .rarity-kyber{background:linear-gradient(155deg,#0b3d24 0%,#1fae65 35%,#eafff2 50%,#50c878 65%,#0a3320 100%);}
+  .icon-badge.rarity-beskar::before, .icon-badge.rarity-stellar::before, .icon-badge.rarity-kyber::before{
     content:'';position:absolute;inset:0;z-index:0;
     background:linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.55) 46%, transparent 58%);
     mix-blend-mode:overlay;
   }
-  .icon-badge.rarity-stellar::before{background:linear-gradient(115deg, transparent 25%, rgba(255,255,255,0.75) 44%, transparent 56%);}
+  .icon-badge.rarity-stellar::before, .icon-badge.rarity-kyber::before{background:linear-gradient(115deg, transparent 25%, rgba(255,255,255,0.75) 44%, transparent 56%);}
 
   /* Rebirth Reqs panel only: each badge split diagonally — upper-left half
      shows the rarity you've actually logged for that droid, lower-right half
@@ -354,12 +378,12 @@
   .badge-half{position:absolute;inset:0;z-index:0;}
   .badge-half-owned{clip-path:polygon(0 0, 100% 0, 0 100%);}
   .badge-half-req{clip-path:polygon(100% 0, 100% 100%, 0 100%);}
-  .badge-half.rarity-beskar::after, .badge-half.rarity-stellar::after{
+  .badge-half.rarity-beskar::after, .badge-half.rarity-stellar::after, .badge-half.rarity-kyber::after{
     content:'';position:absolute;inset:0;
     background:linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.55) 46%, transparent 58%);
     mix-blend-mode:overlay;
   }
-  .badge-half.rarity-stellar::after{background:linear-gradient(115deg, transparent 25%, rgba(255,255,255,0.75) 44%, transparent 56%);}
+  .badge-half.rarity-stellar::after, .badge-half.rarity-kyber::after{background:linear-gradient(115deg, transparent 25%, rgba(255,255,255,0.75) 44%, transparent 56%);}
   .icon-badge-split::after{
     content:'';position:absolute;inset:0;z-index:0;pointer-events:none;
     background:linear-gradient(to bottom right, transparent calc(50% - 0.75px), rgba(255,255,255,0.5) 50%, transparent calc(50% + 0.75px));
@@ -398,6 +422,17 @@
     letter-spacing:.03em;margin:0 0 12px;
   }
 
+  /* 🎨 Look picker (app looks) */
+  .look-panel{margin:0 0 16px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);}
+  .look-panel[hidden]{display:none;}
+  .look-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;margin-bottom:10px;}
+  .look-head b{font-family:'Rajdhani',sans-serif;font-size:17px;color:var(--text);}
+  .look-head span{font-size:12.5px;color:var(--text-dim);}
+  .look-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;}
+  .look-btn{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:8px;border:1px solid var(--line);
+    background:rgba(0,0,0,.25);color:var(--text);font:inherit;font-size:13.5px;text-align:left;cursor:pointer;min-height:44px;}
+  .look-btn.active{border-color:var(--sw);box-shadow:0 0 0 1px var(--sw) inset,0 0 10px -3px var(--sw);}
+  .look-chip{flex:0 0 auto;width:26px;height:26px;border-radius:50%;border:2px solid var(--sw);}
   .level-table-hint{display:none;}
   .level-table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:8px;}
   .level-table{border-collapse:collapse;width:100%;font-size:16px;}
@@ -406,7 +441,14 @@
     font-family:'IBM Plex Mono',monospace;color:var(--text-dim);font-size:13.5px;
     width:36px;text-align:right;padding-right:14px;white-space:nowrap;cursor:pointer;transition:.12s;
   }
-  .level-table td.lv-num:hover{color:var(--accent);background:rgba(94,242,166,0.08);}
+  /* the rebirth's credit cost under its number: the game's coin + bold italic green */
+  .lv-credits{
+    display:flex; align-items:center; justify-content:flex-end; gap:3px; margin-top:3px;
+    font-family:'Rajdhani',sans-serif; font-style:italic; font-weight:700; font-size:13px; line-height:1;
+    color:#5dff6e; text-shadow:-1px -1px 0 #031a06, 1px -1px 0 #031a06, -1px 1px 0 #031a06, 1px 1px 0 #031a06;
+  }
+  .lv-credits::before{ content:''; flex:none; width:13px; height:13px; background:var(--credit-coin) center/contain no-repeat; }
+  .level-table td.lv-num:hover{color:var(--accent);background:rgba(var(--accent-rgb),0.08);}
   .droid-cell{cursor:pointer;font-weight:500;transition:.12s;}
   .droid-cell:hover{background:rgba(255,255,255,0.04);}
   .droid-cell.covered{opacity:.35;text-decoration:line-through;}
@@ -415,7 +457,7 @@
   .cell-name{flex:1;min-width:0;font-size:16px;}
   .sell-tag{
     display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;
-    letter-spacing:.04em;color:#0b0f0d;background:var(--accent);border-radius:4px;
+    letter-spacing:.04em;color:rgb(var(--bg-rgb));background:var(--accent);border-radius:4px;
     padding:2px 6px;margin-left:7px;vertical-align:middle;
   }
   .droid-cell.B{color:var(--r-base);}
@@ -425,6 +467,7 @@
   .droid-cell.K{color:var(--r-beskar);}
   .droid-cell.X{color:var(--r-galactic);}
   .droid-cell.S{color:var(--r-stellar);}
+  .droid-cell.Y{color:var(--r-kyber);}
 
   .pip-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;flex:0 0 auto;}
   .pip{
@@ -440,13 +483,14 @@
   .pip.filled.K{background:var(--r-beskar);}
   .pip.filled.X{background:var(--r-galactic);}
   .pip.filled.S{background:var(--r-stellar);}
+  .pip.filled.Y{background:var(--r-kyber);}
   .pip.next{box-shadow:0 0 0 2px var(--amber);border-color:var(--amber);}
 
   .status-badge{
     font-family:'IBM Plex Mono',monospace;font-size:12px;padding:5px 10px;border-radius:6px;
     white-space:nowrap;flex:0 0 auto;letter-spacing:.02em;
   }
-  .status-badge.maxed{background:rgba(94,242,166,0.12);color:var(--accent);border:1px solid var(--accent-dim);}
+  .status-badge.maxed{background:rgba(var(--accent-rgb),0.12);color:var(--accent);border:1px solid var(--accent-dim);}
   .status-badge.need{background:rgba(242,185,94,0.1);color:var(--amber);border:1px solid rgba(242,185,94,0.35);}
 
   /* ---- reference panel ---- */
@@ -469,7 +513,7 @@
   .howto-steps li:last-child{padding-bottom:0;}
   .howto-steps li::before{
     content:counter(howto);position:absolute;left:0;top:1px;width:24px;height:24px;
-    border-radius:50%;background:rgba(94,242,166,0.12);border:1px solid var(--accent-dim);
+    border-radius:50%;background:rgba(var(--accent-rgb),0.12);border:1px solid var(--accent-dim);
     color:var(--accent);font-family:'IBM Plex Mono',monospace;font-size:12.5px;font-weight:700;
     display:flex;align-items:center;justify-content:center;
   }
@@ -517,7 +561,7 @@
     cursor:pointer;font-size:13px;color:var(--text);
   }
   .rb-context-item:hover{background:rgba(255,255,255,0.07);}
-  .rb-context-item.current{background:rgba(94,242,166,0.14);}
+  .rb-context-item.current{background:rgba(var(--accent-rgb),0.14);}
   .rb-context-swatch{width:12px;height:12px;border-radius:3px;flex:0 0 auto;}
   .rb-context-check{margin-left:auto;color:var(--accent);font-weight:700;}
 
@@ -562,7 +606,139 @@
     .rb-cell .icon-badge{width:34px;height:34px;}
     .rb-name{font-size:9.5px;}
   }
+
+  /* ---- 🎯 Up next (the desktop HUD's content: the next rebirths, their droids and credit costs) ---- */
+  .upnext{display:none;margin-bottom:18px;}
+  .upnext.show{display:block;}
+  .upnext-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 10px;margin:0 0 10px;}
+  .upnext-title{display:flex;align-items:center;gap:8px;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:19px;color:var(--text);}
+  .upnext-title select{background:var(--panel);border:1px solid var(--line);color:var(--text-dim);border-radius:7px;padding:5px 6px;font:500 12.5px 'Inter',sans-serif;}
+  .upnext-stepper{display:inline-flex;align-items:center;gap:6px;}
+  .upnext-stepper button{width:40px;height:40px;border-radius:9px;border:1px solid var(--line);background:var(--panel);color:var(--text);font-size:20px;line-height:1;cursor:pointer;touch-action:manipulation;}
+  .upnext-stepper button:active{background:var(--panel2);}
+  .upnext-stepper span{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:14px;color:var(--accent);min-width:62px;text-align:center;}
+  .upnext-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:9px;}
+  .un-level{border:1px solid var(--line);border-left:3px solid rgba(255,255,255,.25);border-radius:10px;background:var(--panel);padding:8px 10px 9px;}
+  .un-level.now{border-left-color:var(--accent);box-shadow:0 0 0 1px rgba(var(--accent-rgb),.3) inset;background:linear-gradient(90deg,rgba(var(--accent-rgb),.08),transparent 60%),var(--panel);}
+  .un-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px;}
+  .un-tag{font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:800;letter-spacing:.06em;color:#0b0f0d;background:rgba(255,255,255,.22);border-radius:999px;padding:2px 9px;}
+  .un-level.now .un-tag{background:var(--accent);}
+  .un-credits{
+    font-family:'Rajdhani',sans-serif;font-style:italic;font-weight:700;font-size:16px;letter-spacing:.01em;line-height:1.25;color:#5dff6e;
+    text-shadow:-1px -1px 0 #031a06, 1px -1px 0 #031a06, -1px 1px 0 #031a06, 1px 1px 0 #031a06, 0 2px 3px rgba(0,0,0,.9);
+    display:inline-flex;align-items:center;gap:4px;white-space:nowrap;background:rgba(4,12,6,.72);border:1px solid rgba(93,255,110,.55);
+    border-radius:999px;padding:0 9px 0 3px;box-shadow:0 0 6px -2px rgba(93,255,110,.6);
+  }
+  .un-level.now .un-credits{color:#86ff92;border-color:rgba(134,255,146,.8);}
+  .un-credits::before{content:'';flex:none;width:17px;height:17px;background:var(--credit-coin) center/contain no-repeat;filter:drop-shadow(0 1px 1px rgba(0,0,0,.8));}
+  .un-trio{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;}
+  .un-droid{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0;cursor:pointer;padding:4px 2px;border-radius:8px;
+    touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
+  .un-droid:active{background:rgba(255,255,255,.05);}
+  .un-ic{width:46px;height:46px;border-radius:8px;border:2px solid var(--rc);background:rgba(255,255,255,.05);overflow:hidden;box-shadow:0 0 6px -2px var(--rc);}
+  .un-ic img{width:100%;height:100%;object-fit:cover;display:block;}
+  .un-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
+  .un-need{font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--text-dim);white-space:nowrap;}
+  .un-droid.covered{opacity:.42;}
+  .un-droid.covered .un-name{text-decoration:line-through;}
+  .upnext-hint{font-size:12px;color:var(--text-dim);margin:8px 0 0;line-height:1.45;}
+
+  /* ---- rarity on each droid: the picture's color (default) or written under the name
+     (html.rarity-text, 🎨 Look → "Rarity on each droid"; a player's idea) ---- */
+  .rar-label{display:none;}
+  html.rarity-text .rar-label{display:block;font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;line-height:1.3;margin-top:2px;}
+  .rar-label.B{color:var(--r-base);} .rar-label.G{color:var(--r-gold);} .rar-label.D{color:var(--r-diamond);}
+  .rar-label.R{color:var(--r-rainbow1);background:linear-gradient(90deg,var(--r-rainbow1),var(--r-rainbow2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+  .rar-label.K{color:var(--r-beskar);} .rar-label.X{color:var(--r-galactic);} .rar-label.S{color:var(--r-stellar);} .rar-label.Y{color:var(--r-kyber);}
+  html.rarity-text .icon-badge{background:var(--panel2) !important;box-shadow:inset 0 0 0 1px var(--line-bright);}
+  html.rarity-text .icon-badge::before, html.rarity-text .icon-badge::after, html.rarity-text .badge-half{display:none !important;}
+  html.rarity-text .droid-cell, html.rarity-text .rb-name{color:var(--text) !important;}
+  html.rarity-text .un-ic{border-color:var(--line-bright);box-shadow:none;}
+  html.rarity-text .un-need{color:var(--rc);font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.03em;}
+  .look-opt{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);font-size:13px;color:var(--text-dim);}
+  .look-seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+  .look-seg button{background:var(--panel);border:0;color:var(--text-dim);padding:9px 12px;font:13px 'Inter',sans-serif;cursor:pointer;min-height:40px;}
+  .look-seg button + button{border-left:1px solid var(--line);}
+  .look-seg button.on{color:var(--accent);background:rgba(var(--accent-rgb),.1);}
+
+  /* ---- phones: a bottom tab bar, one view at a time (body.tabbed, set by JS at ≤700px).
+     Computers keep the page exactly as before. setTab() marks each view's elements
+     .tab-on / .tab-off; panels are forced open in their own tab. ---- */
+  .phone-topbar, .tabbar, .more-sheet, .more-dim{display:none;}
+  body.tabbed .phone-topbar{display:flex;align-items:center;gap:9px;padding:10px 0;border-bottom:1px solid var(--line);margin-bottom:12px;}
+  .phone-topbar .glyph{color:var(--accent);font-size:21px;}
+  .phone-topbar b{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:20px;letter-spacing:.3px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .phone-maxed{font-family:'IBM Plex Mono',monospace;font-size:11.5px;font-weight:600;color:var(--accent);border:1px solid var(--accent-dim);border-radius:999px;padding:3px 9px;background:rgba(var(--accent-rgb),.08);white-space:nowrap;}
+  .phone-help{width:36px;height:36px;border-radius:50%;border:1px solid var(--line-bright);background:transparent;color:var(--text-dim);font-size:15px;cursor:pointer;}
+  body.tabbed .mini-nav, body.tabbed header, body.tabbed footer{display:none;}
+  body.tabbed .wrap{padding-bottom:calc(86px + env(safe-area-inset-bottom));}
+  body.tabbed .tab-off{display:none !important;}
+  body.tabbed .rebirth-panel.tab-on, body.tabbed #timersSection.tab-on, body.tabbed #upNextCard.tab-on, body.tabbed #lookPanel.tab-on{display:block !important;}
+  body.tabbed #howToUse.tab-on .ref-body{display:block;}
+  body.tabbed #upNextToggle, body.tabbed #reqPanelToggle, body.tabbed #retirePanelToggle, body.tabbed #sneakPanelToggle,
+  body.tabbed #timersToggle, body.tabbed #lookToggle, body.tabbed #bgBtn, body.tabbed #exportBtn, body.tabbed #importBtn,
+  body.tabbed #resetBtn, body.tabbed .toolbar .spacer, body.tabbed #reqPanelClose, body.tabbed #retirePanelClose,
+  body.tabbed #sneakPanelClose{display:none !important;}
+  body.tabbed .toast{bottom:calc(78px + env(safe-area-inset-bottom));}
+  body.tabbed .tabbar{display:grid;grid-template-columns:repeat(6,1fr);position:fixed;left:0;right:0;bottom:0;z-index:48;
+    background:rgba(var(--bg-rgb),.96);border-top:1px solid var(--line);padding:6px 4px calc(8px + env(safe-area-inset-bottom));
+    -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);}
+  .tabbar button{display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:0;color:var(--text-dim);
+    font:500 10.5px 'Inter',sans-serif;padding:5px 0 4px;border-radius:10px;cursor:pointer;touch-action:manipulation;min-height:48px;}
+  .tabbar button span{font-size:19px;line-height:1.2;filter:grayscale(.65);}
+  .tabbar button.on{color:var(--accent);background:rgba(var(--accent-rgb),.09);}
+  .tabbar button.on span{filter:none;}
+  body.tabbed .more-dim.open{display:block;position:fixed;inset:0;z-index:46;background:rgba(0,0,0,.55);}
+  body.tabbed .more-sheet.open{display:block;position:fixed;left:0;right:0;bottom:calc(64px + env(safe-area-inset-bottom));z-index:47;
+    background:var(--panel2);border-top:1px solid var(--line-bright);border-radius:16px 16px 0 0;padding:10px 14px 14px;box-shadow:0 -12px 30px rgba(0,0,0,.6);}
+  .more-grab{width:40px;height:4px;border-radius:2px;background:var(--line-bright);margin:0 auto 12px;}
+  .more-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .more-grid button{display:flex;align-items:center;gap:8px;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--panel);
+    color:var(--text);font:14px 'Inter',sans-serif;text-align:left;min-height:48px;cursor:pointer;touch-action:manipulation;}
+  .more-grid .danger{color:#ff7a7a;border-color:rgba(255,122,122,.35);}
+  .more-note{font-size:12px;color:var(--text-dim);margin:10px 2px 8px;line-height:1.45;}
+  .more-links{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;padding:0 2px;}
+  .more-links a{color:var(--accent);text-decoration:none;}
 </style>
+<script>
+  /* App looks (desktop app v1.15.0). APP_LOOKS is copied from Fuzzy-Droid-Tracker's
+     requirements.js; keep the two in sync by hand. A look recolours the page, panels,
+     lines, text and the "on" colour; rarity and tier colours never change. Applied
+     here in <head> so the page never flashes the default green first. The pick is
+     saved in localStorage 'rebirth-appLook'. */
+  const APP_LOOKS = [
+    {"key":"default","name":"Default","note":"green + holo blue","bg":"11,15,13","panel":"#121815","panel2":"#161d19","line":"#26332c","lineBright":"#38493f","text":"#dfe8e2","textDim":"#8fa199","accent":"94,242,166","accentDim":"#2c6b4a","holo":"143,214,255","glow":"79,184,255","hi":"200,230,255","surface":"9,14,20","glow2":"94,150,242"},
+    {"key":"jedi","name":"Jedi Order","note":"deep navy, saber blue","bg":"7,11,21","panel":"#0e1526","panel2":"#121b31","line":"#22304c","lineBright":"#34476e","text":"#dde7f6","textDim":"#8a9bb8","accent":"143,243,255","accentDim":"#2b6680","holo":"136,198,255","glow":"79,168,255","hi":"205,230,255","surface":"8,14,30","glow2":"79,168,255"},
+    {"key":"sith","name":"Sith","note":"black and blood red","bg":"9,5,6","panel":"#150b0d","panel2":"#1b0e11","line":"#3a1a1f","lineBright":"#58252d","text":"#f2e2e4","textDim":"#a8898d","accent":"255,64,80","accentDim":"#6e1b24","holo":"255,154,154","glow":"224,20,44","hi":"255,200,200","surface":"18,6,8","glow2":"224,20,44"},
+    {"key":"rebel","name":"Rebel Alliance","note":"warm red chrome, gold \"on\"","bg":"15,10,9","panel":"#1a1110","panel2":"#211614","line":"#3b2622","lineBright":"#583731","text":"#f3e6de","textDim":"#ae958a","accent":"255,210,74","accentDim":"#6e5720","holo":"255,170,155","glow":"255,59,59","hi":"255,215,200","surface":"20,10,9","glow2":"255,120,60"},
+    {"key":"empire","name":"Galactic Empire","note":"graphite and steel","bg":"10,11,13","panel":"#121417","panel2":"#171a1e","line":"#2a2e34","lineBright":"#3f454d","text":"#e7eaed","textDim":"#949ba3","accent":"236,241,246","accentDim":"#4a5058","holo":"190,200,212","glow":"150,162,178","hi":"232,236,241","surface":"12,13,16","glow2":"130,140,155"},
+    {"key":"firstorder","name":"First Order","note":"black, white chrome, red \"on\"","bg":"7,7,8","panel":"#101012","panel2":"#151518","line":"#2b2b30","lineBright":"#404047","text":"#f1f1f3","textDim":"#9a9aa2","accent":"255,70,58","accentDim":"#6e1f1a","holo":"236,238,242","glow":"200,204,212","hi":"255,255,255","surface":"10,10,12","glow2":"255,59,48"},
+    {"key":"republic","name":"Galactic Republic","note":"plum-black, cream chrome, red \"on\"","bg":"20,16,24","panel":"#1b1620","panel2":"#211b27","line":"#3a3040","lineBright":"#54465c","text":"#f1ebf2","textDim":"#a598a8","accent":"255,106,90","accentDim":"#6e2a24","holo":"240,230,220","glow":"216,64,58","hi":"255,240,230","surface":"22,16,26","glow2":"216,64,58"},
+    {"key":"mando","name":"Mandalorian","note":"beskar tan, visor blue \"on\"","bg":"14,12,10","panel":"#17140f","panel2":"#1d1913","line":"#342c22","lineBright":"#4b4132","text":"#ede6dc","textDim":"#a49a8b","accent":"159,231,255","accentDim":"#2e5f6e","holo":"219,188,130","glow":"201,211,220","hi":"240,225,200","surface":"18,15,11","glow2":"201,211,220"},
+    {"key":"grogu","name":"Grogu","note":"forest green, robe tan","bg":"9,15,10","panel":"#101911","panel2":"#141f16","line":"#26382a","lineBright":"#37513c","text":"#e2ecdf","textDim":"#93a78f","accent":"184,255,138","accentDim":"#4a6b34","holo":"214,188,155","glow":"94,242,166","hi":"232,218,194","surface":"11,17,11","glow2":"150,220,120"},
+    {"key":"tatooine","name":"Tatooine","note":"desert dusk, twin-sun orange","bg":"20,13,8","panel":"#21160d","panel2":"#291c11","line":"#463322","lineBright":"#634933","text":"#f6eadb","textDim":"#b39d81","accent":"255,226,154","accentDim":"#7a6232","holo":"233,173,119","glow":"255,160,70","hi":"255,225,190","surface":"28,17,9","glow2":"255,190,90"},
+    {"key":"deathstar","name":"Death Star","note":"steel grey, superlaser green","bg":"10,13,17","panel":"#11161c","panel2":"#151b23","line":"#25303c","lineBright":"#364555","text":"#dfe6ee","textDim":"#8b99a8","accent":"125,255,90","accentDim":"#3a6b2a","holo":"177,193,207","glow":"110,140,170","hi":"210,220,232","surface":"10,14,19","glow2":"125,255,90"},
+    {"key":"senate","name":"Galactic Senate","note":"violet and gold","bg":"11,9,19","panel":"#141128","panel2":"#191530","line":"#2e2850","lineBright":"#443b72","text":"#e8e4f6","textDim":"#9c95b8","accent":"240,200,110","accentDim":"#6b5a2e","holo":"194,183,255","glow":"155,140,255","hi":"222,215,255","surface":"14,11,28","glow2":"155,140,255"},
+    {"key":"tradefed","name":"Trade Federation","note":"bronze and brass","bg":"16,12,8","panel":"#1b150d","panel2":"#221a11","line":"#3d3021","lineBright":"#584631","text":"#f0e6d8","textDim":"#aa9b84","accent":"255,207,106","accentDim":"#76602f","holo":"226,187,130","glow":"201,151,90","hi":"245,225,195","surface":"22,16,9","glow2":"201,151,90"}
+  ];
+  // look field -> CSS variable (the web page has no holo console, so only these apply)
+  const APP_LOOK_VARS = { bg: '--bg-rgb', accent: '--accent-rgb', glow2: '--glow2-rgb', panel: '--panel', panel2: '--panel2',
+    line: '--line', lineBright: '--line-bright', text: '--text', textDim: '--text-dim', accentDim: '--accent-dim' };
+  function appLookFor(key){ return APP_LOOKS.find(l => l.key === key) || APP_LOOKS[0]; }
+  function applyAppLook(key){
+    const look = appLookFor(key), root = document.documentElement;
+    for(const [field, name] of Object.entries(APP_LOOK_VARS)){
+      if(look.key === 'default') root.style.removeProperty(name); else root.style.setProperty(name, look[field]);
+    }
+    const bar = document.querySelector('meta[name="theme-color"]'); // the phone's status bar follows the look
+    if(bar) bar.setAttribute('content', 'rgb(' + look.bg + ')');
+    return look;
+  }
+  try{ applyAppLook(localStorage.getItem('rebirth-appLook')); }catch(e){ /* storage off: default look */ }
+  try{ if(localStorage.getItem('rebirth-rarityStyle') === 'text') document.documentElement.classList.add('rarity-text'); }catch(e){}
+  // the game's credit coin (desktop v1.15.1), shown next to each rebirth's credit cost
+  document.documentElement.style.setProperty('--credit-coin', 'url("data:image/svg+xml,' + encodeURIComponent("<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\"><defs><linearGradient id=\"r\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\"><stop offset=\"0\" stop-color=\"#e2a93a\"/><stop offset=\"1\" stop-color=\"#6b4306\"/></linearGradient><linearGradient id=\"f\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\"><stop offset=\"0\" stop-color=\"#fff0a8\"/><stop offset=\".45\" stop-color=\"#f5bf3a\"/><stop offset=\"1\" stop-color=\"#c6860f\"/></linearGradient></defs><polygon points=\"31,16 23.5,29 8.5,29 1,16 8.5,3 23.5,3\" fill=\"url(#r)\"/><polygon points=\"28,16 22,26.4 10,26.4 4,16 10,5.6 22,5.6\" fill=\"url(#f)\"/><path d=\"M11.4 9.6V21.8M8 13.4H13.4M8 17H13.4M11.4 9.6H22L16 23\" fill=\"none\" stroke=\"#fff1b3\" stroke-width=\"2.6\" stroke-linejoin=\"round\" transform=\"translate(.7 .7)\" opacity=\".7\"/><path d=\"M11.4 9.6V21.8M8 13.4H13.4M8 17H13.4M11.4 9.6H22L16 23\" fill=\"none\" stroke=\"#7a4a06\" stroke-width=\"2.6\" stroke-linejoin=\"round\"/></svg>") + '")');
+</script>
 </head>
 <body>
 <div id="bgLayer"></div>
@@ -572,6 +748,11 @@
   <a href="https://github.com/ibefuzzy/Fuzzy-Droid-Tracker/releases/latest" target="_blank" rel="noopener">Desktop app (Windows/Mac) ↗</a>
 </div>
 <div class="wrap" id="wrapEl">
+  <div class="phone-topbar" id="phoneTopBar">
+    <span class="glyph">⟳</span><b>Droid Tycoon</b>
+    <span class="phone-maxed" id="phoneMaxed" title="Droids maxed">0 / 0</span>
+    <button class="phone-help" id="phoneHelp" type="button" title="How to use this tracker">❔</button>
+  </div>
 
   <header>
     <div class="title-block">
@@ -609,7 +790,7 @@
         <li><b>🧬 Rebirth Reqs</b> lists everything the selected cycle asks for, low to high, in one panel.</li>
         <li><b>♻ Safe to Retire</b> lists droids you own that the cycle is done asking for, grouped by tier (tap a tier to hide/show it) — enter your current rebirth level in that panel first.</li>
         <li>On a phone, tap the already-lit <b>A–Z</b> or <b>By Rebirth Level</b> button again to hide the droid list, so <b>🧬 Rebirth Reqs</b> / <b>♻ Safe to Retire</b> sit right under the toolbar instead of at the bottom of a long scroll. Tap either one to bring the list back.</li>
-        <li><b>⏱ Event Timers</b> shows live countdowns to the next Stellar/Mythic/Galactic drop and the next mission.</li>
+        <li><b>⏱ Event Timers</b> shows live countdowns to the next Stellar/Mythic/Kyber drop and the next mission.</li>
         <li><b>🔮 Sneak Preview</b> shows the Mythic droids the <i>next</i> cycle will ask for. When you finish a cycle you'll be asked to pick <b>Next Cycle</b> (reset it and move on) or <b>Sneak Preview</b> (reset it and open the preview) — close the box with ✕ to leave everything as it is.</li>
         <li><b>Export</b> a backup before clearing site data, switching browsers, or moving to a new device, then <b>Import</b> it back. <b>Reset all</b> clears every droid you've logged and can't be undone.</li>
       </ul>
@@ -622,7 +803,7 @@
   </script>
 
   <div class="legend" id="legend"></div>
-  <div class="level-note" id="levelNote" style="display:none;">Three droids per line, one line per level, all 35 levels for the cycle you've picked below. Tap a name to log it — dimmed names are already covered by a higher rarity you own.</div>
+  <div class="level-note" id="levelNote" style="display:none;">Three droids per line, one line per level, every level of the cycle you've picked below, with its credit cost under the level number. Tap a name to log it — dimmed names are already covered by a higher rarity you own.</div>
   <div class="cycle-picker-row" id="cyclePickerRow" style="display:none;">
     <select class="cycle-select" id="cycleSelect">
       <option value="1">Cycle 1</option>
@@ -642,10 +823,12 @@
     </div>
     <div class="spacer"></div>
     <button class="btn" id="editToggle" title="Tap a name to fix a misread, or rename it to match another droid to merge them">✎ Rename</button>
-    <button class="btn" id="reqPanelToggle" title="Show a panel of the droids needed for rebirth 35, at the rarity each cycle requires">🧬 Rebirth Reqs</button>
+    <button class="btn" id="upNextToggle" title="Show the next 4 rebirths: their droids and credit costs">🎯 Up next</button>
+    <button class="btn" id="reqPanelToggle" title="Show a panel of every droid this cycle needs, at the highest rarity it requires">🧬 Rebirth Reqs</button>
     <button class="btn" id="retirePanelToggle" title="Show droids you're done needing this cycle — safe to fuse or sell">♻ Safe to Retire</button>
     <button class="btn" id="sneakPanelToggle" title="Show the Mythic droids the next cycle will ask for, at the highest variety it needs">🔮 Sneak Preview</button>
-    <button class="btn" id="timersToggle" title="Show live countdowns for the Stellar, Mythic and Galactic blueprint drops and the next mission">⏱ Event Timers</button>
+    <button class="btn" id="timersToggle" title="Show live countdowns for the Stellar, Mythic and Kyber blueprint drops and the next mission">⏱ Event Timers</button>
+    <button class="btn" id="lookToggle" title="Change the colors of this page">🎨 Look</button>
     <button class="btn" id="bgBtn" title="Set a custom background image">🖼 Background</button>
     <div class="bg-controls" id="bgControls" hidden>
       <span class="bg-dim-label">Dim</span>
@@ -657,6 +840,15 @@
     <button class="btn" id="resetBtn">Reset all</button>
     <input type="file" id="importFile" accept="application/json" style="display:none">
     <input type="file" id="bgFile" accept="image/*" style="display:none">
+  </div>
+
+  <div class="look-panel" id="lookPanel" hidden>
+    <div class="look-head"><b>🎨 Look</b><span>Recolors this page. Your droid colors stay the same.</span></div>
+    <div class="look-grid" id="lookGrid"></div>
+    <div class="look-opt">
+      <span>Rarity on each droid</span>
+      <span class="look-seg"><button type="button" data-rarity-style="color">🎨 Picture color</button><button type="button" data-rarity-style="text">🔤 Written under the name</button></span>
+    </div>
   </div>
 
   <div class="timers-section" id="timersSection">
@@ -683,13 +875,13 @@
           <span class="timer-time" id="mythicTimerTime">--:--</span>
         </div>
       </div>
-      <div class="timer-card galactic" id="galacticTimerCard">
-        <div class="timer-icon" title="Galactic Blueprint">
-          <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4.3" fill="currentColor"/><ellipse cx="12" cy="12" rx="10.5" ry="3.3" stroke="currentColor" stroke-width="1.7" transform="rotate(-20 12 12)"/></svg>
+      <div class="timer-card kyber" id="kyberTimerCard">
+        <div class="timer-icon" title="Kyber Blueprint">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 L20 10 L16 22 L8 22 L4 10 Z"/></svg>
         </div>
         <div class="timer-body">
-          <span class="timer-label">Galactic</span>
-          <span class="timer-time" id="galacticTimerTime">--:--</span>
+          <span class="timer-label">Kyber</span>
+          <span class="timer-time" id="kyberTimerTime">--:--</span>
         </div>
       </div>
       <div class="timer-card mission" id="missionTimerCard">
@@ -709,6 +901,21 @@
       <input type="number" id="missionSyncSec" min="0" max="59" placeholder="ss" inputmode="numeric">
       <button class="btn" id="missionSyncBtn">🔄 Sync</button>
     </div>
+  </div>
+
+  <div class="upnext" id="upNextCard">
+    <div class="upnext-head">
+      <span class="upnext-title">🎯 Up next
+        <select id="upNextCycleSel" aria-label="Cycle">
+          <option value="1">Cycle 1</option><option value="2">Cycle 2</option><option value="3">Cycle 3</option><option value="4">Cycle 4</option><option value="5">Cycle 5</option>
+        </select>
+      </span>
+      <span class="upnext-stepper" title="Your current rebirth level: the last rebirth you've done">
+        <button type="button" id="upNextDec" aria-label="Lower rebirth level">−</button><span id="upNextLevel">Lvl 0</span><button type="button" id="upNextInc" aria-label="Raise rebirth level">+</button>
+      </span>
+    </div>
+    <div class="upnext-list" id="upNextList"></div>
+    <p class="upnext-hint">Set − / + to the rebirth you've just done. Tap a droid to log it; press and hold for an exact colorway.</p>
   </div>
 
   <div class="content-row">
@@ -753,9 +960,9 @@
       </div>
       <div class="retire-level-row">
         <label for="retireLevelInput">Current rebirth level (this cycle)</label>
-        <input type="number" id="retireLevelInput" min="0" max="35" value="0" inputmode="numeric">
+        <input type="number" id="retireLevelInput" min="0" max="40" value="0" inputmode="numeric">
       </div>
-      <p class="rebirth-sub">Droids you've already logged, past the last level this cycle still asks for them — nothing left to lose by fusing or selling your copy. Tap a tier to show or hide it.</p>
+      <p class="rebirth-sub">Droids you've already logged, past the last level this cycle still asks for them — nothing left to lose by fusing or selling your copy. Tap a tier to show or hide it. Tap a droid once you've sold or fused it to mark it retired; tap it again to undo.</p>
       <div class="retire-tiers" id="retireTiers">
         <button class="retire-tier" data-tier="all">All</button>
         <button class="retire-tier" data-tier="Mythic">Mythic</button>
@@ -771,7 +978,7 @@
         <h3>🔮 Sneak Preview</h3>
         <button class="btn" id="sneakPanelClose" title="Hide this panel">✕</button>
       </div>
-      <p class="rebirth-sub"><b class="sneak-next" id="sneakNextLabel">Next: Cycle 2</b> — the Mythic droids it will ask for, each at the highest variety it ever needs, highest first. Start hunting these before you get there.</p>
+      <p class="rebirth-sub"><b class="sneak-next" id="sneakNextLabel">Next: Cycle 2</b> — the Mythic droids it will ask for, each at the highest variety it ever needs, highest first. Start hunting these before you get there. Tap one you already have to mark it: it's logged for you when you switch to that cycle.</p>
       <div id="sneakList"></div>
     </div>
   </div>
@@ -794,6 +1001,31 @@
   <footer>Tracks the highest rarity you own per droid, not every individual pull. If two rows are really the same droid, rename one to match the other's spelling and they'll merge.<br>Fan-made, unofficial, not affiliated with Epic Games. Made for you, with head-pats gratefully accepted.</footer>
 </div>
 
+<nav class="tabbar" id="tabBar" aria-label="Views">
+  <button type="button" data-tab="upnext"><span>🎯</span>Up next</button>
+  <button type="button" data-tab="droids"><span>📋</span>Droids</button>
+  <button type="button" data-tab="reqs"><span>🧬</span>Reqs</button>
+  <button type="button" data-tab="retire"><span>♻</span>Retire</button>
+  <button type="button" data-tab="timers"><span>⏱</span>Timers</button>
+  <button type="button" data-tab="more"><span>⋯</span>More</button>
+</nav>
+<div class="more-dim" id="moreDim"></div>
+<div class="more-sheet" id="moreSheet" role="dialog" aria-label="More">
+  <div class="more-grab"></div>
+  <div class="more-grid">
+    <button type="button" data-more="sneak">🔮 Sneak Preview</button>
+    <button type="button" data-more="look">🎨 Look</button>
+    <button type="button" data-more="bg">🖼 Background</button>
+    <button type="button" data-more="rename">✎ Rename</button>
+    <button type="button" data-more="export">⬆ Export</button>
+    <button type="button" data-more="import">⬇ Import</button>
+    <button type="button" data-more="help">❔ How to use</button>
+    <button type="button" data-more="reset" class="danger">Reset all…</button>
+  </div>
+  <p class="more-note">Progress saves in this browser only. Export before clearing site data or switching phones, then Import it back.</p>
+  <div class="more-links"><a href="../index.html">← All trackers</a><a href="https://github.com/ibefuzzy/Fuzzy-Droid-Tracker/releases/latest" target="_blank" rel="noopener">Desktop app (Windows) ↗</a></div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <!-- Cycle-complete prompt (v1.7.1) — confirm() can only say OK/Cancel, so
@@ -809,8 +1041,8 @@
   </div>
 </div>
 
-<script src="icons-data.js?v=1.10.9"></script>
-<script src="droid-data.js?v=1.10.9"></script>
+<script src="icons-data.js?v=1.15.1"></script>
+<script src="droid-data.js?v=1.15.1"></script>
 <script>
 /* ---------------- STORAGE ----------------
    No Electron bridge exists in a plain browser, so this always falls
@@ -956,10 +1188,22 @@ async function markRowObtained(row, opts){
    something less than 105 up to exactly 105, offer to clear this cycle's
    droids and roll over to the next one — never on an unmark, and never
    again just from re-rendering an already-105 cycle. Cycles wrap 5 -> 1. */
+/* Real (non-placeholder) levels and droid slots in a cycle, as in the desktop app's
+   requirements.js: a "?" row is a placeholder for a level the game hasn't revealed yet. */
+function cycleRealLevelCount(cycle){
+  if(!CYCLES[cycle]) return 0;
+  for(let l=0; l<CYCLES[cycle].length; l++){
+    if(CYCLES[cycle][l][0][0] === '?') return l;
+  }
+  return CYCLES[cycle].length;
+}
+function cycleRealSlotCount(cycle){ return cycleRealLevelCount(cycle) * 3; }
+
 function cycleCoveredCount(cycle){
   let covered = 0;
   CYCLES[cycle].forEach(row=>{
     row.forEach(d=>{
+      if(d[0] === '?') return; // placeholder slot, nothing to own
       const nk = normKey(canonicalName(d[1]));
       const owned = ownedRank[nk];
       if(owned !== undefined && rankOf(d[0]) <= owned) covered++;
@@ -981,6 +1225,7 @@ function cycleAfter(cycle){ return (cycle >= 5) ? 1 : cycle + 1; }
 async function clearCycleMarks(cycle){
   cycleDroidKeys(cycle).forEach(nk=>{ delete ownedRank[nk]; });
   await storeSet('rebirth-ownedRank-v2', ownedRank);
+  if(retiredMarks[cycle]){ delete retiredMarks[cycle]; await storeSet('rebirth-retired', retiredMarks); }
   // Also clear the manually-entered "current rebirth level" Safe to Retire
   // uses. The Electron app's own declutter panel deliberately leaves this
   // number untouched on a cycle reset, because there it's read off-screen
@@ -1044,8 +1289,9 @@ function askCycleComplete(){
 
 let cyclePromptOpen = false;
 async function maybeOfferCycleReset(cycle, coveredBefore){
-  if(coveredBefore === 105) return; // was already fully marked before this action — don't re-nag on every subsequent tap
-  if(cycleCoveredCount(cycle) !== 105) return; // not complete yet
+  const total = cycleRealSlotCount(cycle);
+  if(coveredBefore === total) return; // was already fully marked before this action — don't re-nag on every subsequent tap
+  if(cycleCoveredCount(cycle) !== total) return; // not complete yet
   if(cyclePromptOpen) return;
   cyclePromptOpen = true;
   let choice = 'none';
@@ -1121,7 +1367,7 @@ async function handleRename(nk, newVal){
 
 /* ---------------- RENDER: LEGEND ---------------- */
 function renderLegend(){
-  const order = ["B","G","D","R","K","X","S"];
+  const order = RARITY_ORDER; // all of them, Kyber included
   const legendEl = getEl('legend');
   legendEl.innerHTML = order.map(code=>{
     return '<span class="item"><span class="dot ' + RCLASS[code] + '"></span>' + RNAME[code] + '</span>';
@@ -1223,15 +1469,28 @@ function droidCellHtml(nk, occEntry, lastNeeded){
   return '<td class="' + cls + '" data-nk="' + nk + '" data-rank="' + occEntry.rank + '" title="' + titleBits.join(' — ') + '">' +
     '<div class="cell-flex">' +
       '<div class="icon-badge icon-badge-sm ' + badgeClass + '">' + imgTag + '</div>' +
-      '<span class="cell-name">' + entry.display + sellTag + '</span>' +
+      '<span class="cell-name">' + entry.display + sellTag + '<span class="rar-label ' + code + '">' + RNAME[code] + '</span></span>' +
     '</div>' +
   '</td>';
+}
+
+/* Rebirth credit cost (desktop v1.15.1): REBIRTH_CREDITS in droid-data.js, the same every cycle. */
+function rebirthCreditsFor(cycle, level){
+  const n = (typeof REBIRTH_CREDITS !== 'undefined') ? REBIRTH_CREDITS[level - 1] : undefined;
+  return typeof n === 'number' ? n : null;
+}
+const CREDIT_SUFFIXES = ['', 'K', 'M', 'B', 'T', 'QA', 'QI'];
+function formatCredits(n){ // the way the game writes it: 10K, 1.36B, 1.19QA
+  if(!(n >= 0)) return '';
+  let i = 0;
+  while(i < CREDIT_SUFFIXES.length - 1 && n >= 1000){ n /= 1000; i++; }
+  return String(Number(n.toFixed(2))) + CREDIT_SUFFIXES[i];
 }
 
 function renderByLevel(){
   getEl('cycleSelect').value = String(activeCycle);
   const covered = cycleCoveredCount(activeCycle);
-  getEl('cycleProgress').textContent = covered + ' / 105 covered';
+  getEl('cycleProgress').textContent = covered + ' / ' + cycleRealSlotCount(activeCycle) + ' covered';
   const q = filterText.trim().toLowerCase();
   const lastNeeded = cycleLastNeededLevel(activeCycle);
   let rowsHtml = '';
@@ -1246,7 +1505,9 @@ function renderByLevel(){
       const occEntry = { cycle:activeCycle, level:l, slot:i, code:d[0], rank:rankOf(d[0]) };
       return droidCellHtml(nks[i], occEntry, lastNeeded);
     }).join('');
-    rowsHtml += '<tr><td class="lv-num" data-cycle="' + activeCycle + '" data-level="' + l + '" title="Mark all 3 as obtained">' + l + '</td>' + cellsHtml + '</tr>';
+    const credits = rebirthCreditsFor(activeCycle, l);
+    const creditsHtml = credits === null ? '' : '<span class="lv-credits" title="Credits needed for Rebirth ' + l + '">' + formatCredits(credits) + '</span>';
+    rowsHtml += '<tr><td class="lv-num" data-cycle="' + activeCycle + '" data-level="' + l + '" title="Mark all 3 as obtained">' + l + creditsHtml + '</td>' + cellsHtml + '</tr>';
   }
 
   const listEl = getEl('dqList');
@@ -1313,6 +1574,7 @@ function renderList(){
   renderRebirthPanel();
   renderRetirePanel();
   renderSneakPanel();
+  renderUpNext();
 }
 
 /* ---------------- RENDER: REBIRTH REQUIREMENTS PANEL ----------------
@@ -1359,6 +1621,7 @@ function rebirthCellHtml(nk, info){
       imgTag +
     '</div>' +
     '<div class="rb-name ' + code + '">' + entry.display + '</div>' +
+    '<div class="rar-label ' + code + '">Need ' + RNAME[code] + '</div>' +
   '</div>';
 }
 
@@ -1477,6 +1740,26 @@ function getDeclutterList(cycle, currentLevel, ownedRank){
   return out;
 }
 
+let retiredMarks = {}; // 'rebirth-retired': {cycle -> {nk -> the owned rank you retired}}
+let heldMarks = {};    // 'rebirth-heldMarks': {cycle -> {nk -> rank}}, Sneak Preview marks for a later cycle
+// Retired only while you still hold the same (or a lower) colorway; logging a higher one
+// is a new copy, so it's back on the list (isRetired() in the desktop app).
+function itemRetired(nk){
+  const r = (retiredMarks[activeCycle] || {})[nk];
+  return r !== undefined && r >= ownedRank[nk];
+}
+async function toggleRetired(nk){
+  const rank = ownedRank[nk];
+  if(rank === undefined) return;
+  const marks = retiredMarks[activeCycle] || {};
+  const wasRetired = itemRetired(nk);
+  if(wasRetired) delete marks[nk]; else marks[nk] = rank;
+  if(Object.keys(marks).length) retiredMarks[activeCycle] = marks; else delete retiredMarks[activeCycle];
+  await storeSet('rebirth-retired', retiredMarks);
+  renderRetirePanel();
+  const name = DROID_INDEX[nk] ? DROID_INDEX[nk].display : nk;
+  showToast(wasRetired ? (name + ' is back on the list') : (name + ' marked retired — tap again to undo'));
+}
 function retireCellHtml(item){
   const code = item.ownedCode; // the rarity YOU own, not a requirement — Safe to Retire has nothing to "tap and log"
   const badgeClass = RCLASS[code];
@@ -1488,9 +1771,12 @@ function retireCellHtml(item){
   // data-nk/data-class carried through even though there's no click handler
   // here (nothing to tap/log) — keeps this cell identifiable in the DOM the
   // same way every other cell type in this file is, for tooling and tests.
-  return '<div class="rb-cell" data-nk="' + item.nk + '" data-class="' + item.rarityClass + '" title="' + title + '">' +
+  const retired = itemRetired(item.nk);
+  return '<div class="rb-cell' + (retired ? ' retired' : '') + '" data-nk="' + item.nk + '" data-class="' + item.rarityClass + '" title="' + title + (retired ? ' — marked retired (tap to undo)' : ' — tap once sold or fused') + '">' +
     '<div class="icon-badge ' + badgeClass + '">' + imgTag + '</div>' +
     '<div class="rb-name ' + code + '">' + item.display + '</div>' +
+    '<div class="rar-label ' + code + '">Have ' + RNAME[code] + '</div>' +
+    (retired ? '<div class="rb-status">✓ Retired</div>' : '') +
   '</div>';
 }
 
@@ -1538,10 +1824,11 @@ document.getElementById('retireCycleSelect').addEventListener('change', (e)=>{
 document.getElementById('retireLevelInput').addEventListener('input', async (e)=>{
   let v = parseInt(e.target.value, 10);
   if(isNaN(v)) v = 0;
-  v = Math.max(0, Math.min(35, v));
+  v = Math.max(0, Math.min(cycleRealLevelCount(activeCycle), v));
   retireCurrentLevel = v;
   await storeSet('rebirth-currentLevel', retireCurrentLevel);
   renderRetirePanel();
+  renderUpNext();
 });
 
 function renderRetirePanel(){
@@ -1567,7 +1854,8 @@ function renderRetirePanel(){
   }
   const byClass = {};
   RARITY_CLASS_ORDER.forEach(cls=>{ byClass[cls] = []; });
-  items.forEach(item=>{ (byClass[item.rarityClass] || byClass.Default).push(item); });
+  const retiredItems = [];
+  items.forEach(item=>{ if(itemRetired(item.nk)) retiredItems.push(item); else (byClass[item.rarityClass] || byClass.Default).push(item); });
   let html = '';
   RARITY_CLASS_ORDER.slice().reverse().forEach(cls=>{
     const list = byClass[cls];
@@ -1577,7 +1865,14 @@ function renderRetirePanel(){
       '<div class="rebirth-grid">' + list.map(retireCellHtml).join('') + '</div>' +
     '</div>';
   });
+  if(retiredItems.length){ // sold/fused ones sink to the bottom, still there to undo
+    html += '<div class="rebirth-tier-block">' +
+      '<div class="rebirth-tier-label retired">✓ Retired (' + retiredItems.length + ') · tap to undo</div>' +
+      '<div class="rebirth-grid">' + retiredItems.map(retireCellHtml).join('') + '</div>' +
+    '</div>';
+  }
   listEl.innerHTML = html;
+  listEl.querySelectorAll('.rb-cell[data-nk]').forEach(el => el.addEventListener('click', ()=> toggleRetired(el.dataset.nk)));
 }
 
 // Safe to Retire tier filter — all on by default, remembered per browser.
@@ -1735,16 +2030,43 @@ function getSneakPreview(cycle, ownedRank){
   out.sort((a,b)=> (b.rank - a.rank) || a.display.localeCompare(b.display));
   return { nextCycle: next, items: out };
 }
-function sneakCellHtml(it){
+// Mark / unmark a droid for a later cycle. Same rule as a normal tap: the same rarity
+// again clears it, a higher one replaces it, a lower one is refused.
+async function toggleHeld(cycle, nk, rank){
+  const marks = heldMarks[cycle] || {};
+  const cur = marks[nk];
+  const name = DROID_INDEX[nk] ? DROID_INDEX[nk].display : nk;
+  if(cur !== undefined && rank < cur){ showToast(name + ' is already marked ' + RNAME[RARITY_ORDER[cur]] + ' for Cycle ' + cycle); return; }
+  const clearing = cur === rank;
+  if(clearing) delete marks[nk]; else marks[nk] = rank;
+  if(Object.keys(marks).length) heldMarks[cycle] = marks; else delete heldMarks[cycle];
+  await storeSet('rebirth-heldMarks', heldMarks);
+  renderSneakPanel();
+  showToast(clearing ? (name + ' unmarked') : (name + ' marked for Cycle ' + cycle + ' — logged when you switch to it'));
+}
+// When a cycle becomes active, its held marks become real progress (only ever raising
+// what you have), then they're gone. Returns how many droids were applied.
+async function applyHeldMarks(c){
+  const marks = heldMarks[c];
+  if(!marks) return 0;
+  Object.keys(marks).forEach(nk=>{ if(ownedRank[nk] === undefined || ownedRank[nk] < marks[nk]) ownedRank[nk] = marks[nk]; });
+  delete heldMarks[c];
+  await storeSet('rebirth-ownedRank-v2', ownedRank);
+  await storeSet('rebirth-heldMarks', heldMarks);
+  return Object.keys(marks).length;
+}
+function sneakCellHtml(it, nextCycle){
+  const heldRank = (heldMarks[nextCycle] || {})[it.nk];
+  const held = heldRank !== undefined && heldRank >= it.rank;
   const covered = it.ownedCode != null && rankOf(it.ownedCode) >= it.rank;
   const src = (typeof ICONS !== 'undefined' && ICONS[it.iconKey]) ? ('data:image/webp;base64,' + ICONS[it.iconKey]) : '';
   const imgTag = src ? ('<img src="' + src + '" alt="' + it.display + '" loading="lazy">') : '';
-  const status = covered ? ('✓ Have ' + RNAME[it.ownedCode]) : ('Needs ' + RNAME[it.code]);
+  const status = held ? ('✓ Marked ' + RNAME[it.code]) : covered ? ('✓ Have ' + RNAME[it.ownedCode]) : ('Needs ' + RNAME[it.code]);
   const title = it.display + ' — next cycle needs ' + RNAME[it.code] + ' — ' + (it.ownedCode ? ('you have ' + RNAME[it.ownedCode]) : 'not logged yet');
-  return '<div class="rb-cell" data-nk="' + it.nk + '" title="' + title + '">' +
+  return '<div class="rb-cell' + (held ? ' held' : '') + '" data-nk="' + it.nk + '" data-rank="' + it.rank + '" title="' + title + (held ? ' — marked for Cycle ' + nextCycle + ' (tap to unmark)' : ' — tap to mark it for Cycle ' + nextCycle) + '">' +
     '<div class="icon-badge ' + RCLASS[it.code] + '">' + imgTag + '</div>' +
     '<div class="rb-name ' + it.code + '">' + it.display + '</div>' +
-    '<div class="sneak-status' + (covered ? ' have' : '') + '">' + status + '</div>' +
+    '<div class="sneak-status' + (held || covered ? ' have' : '') + '">' + status + '</div>' +
   '</div>';
 }
 function renderSneakPanel(){
@@ -1753,8 +2075,9 @@ function renderSneakPanel(){
   const { nextCycle, items } = getSneakPreview(activeCycle, ownedRank);
   getEl('sneakNextLabel').textContent = 'Next: Cycle ' + nextCycle;
   listEl.innerHTML = items.length
-    ? '<div class="rebirth-grid">' + items.map(sneakCellHtml).join('') + '</div>'
+    ? '<div class="rebirth-grid">' + items.map(it => sneakCellHtml(it, nextCycle)).join('') + '</div>'
     : '<div class="retire-empty">No Mythic droids in Cycle ' + nextCycle + "'s requirements.</div>";
+  listEl.querySelectorAll('.rb-cell[data-nk]').forEach(el => el.addEventListener('click', ()=> toggleHeld(nextCycle, el.dataset.nk, parseInt(el.dataset.rank, 10))));
 }
 function applySneakPanelVisibility(){
   const panel = getEl('sneakPanel');
@@ -1803,7 +2126,9 @@ async function setActiveCycle(c){
   if(mainSel) mainSel.value = String(activeCycle);
   const reqSel = getEl('reqCycleSelect');
   if(reqSel) reqSel.value = String(activeCycle);
+  const applied = await applyHeldMarks(c);
   renderList();
+  if(applied){ renderStats(); showToast('Cycle ' + c + ': logged ' + applied + ' droid' + (applied === 1 ? '' : 's') + ' you marked in Sneak Preview'); }
 }
 document.getElementById('cycleSelect').addEventListener('change', (e)=>{
   setActiveCycle(parseInt(e.target.value, 10));
@@ -1821,6 +2146,9 @@ document.getElementById('resetBtn').addEventListener('click', ()=>{
   if(!confirm('Clear ALL tracked droid progress? This cannot be undone.')) return;
   ownedRank = {};
   storeSet('rebirth-ownedRank-v2', ownedRank);
+  retiredMarks = {}; heldMarks = {};
+  storeSet('rebirth-retired', retiredMarks);
+  storeSet('rebirth-heldMarks', heldMarks);
   renderList(); renderStats();
 });
 document.getElementById('exportBtn').addEventListener('click', ()=>{
@@ -1879,7 +2207,7 @@ function applyBackground(){
   const dimRange = document.getElementById('bgDimRange');
   if(bgImageData){
     layer.style.backgroundImage = `url("${bgImageData}")`;
-    scrim.style.background = `rgba(11,15,13,${bgDim})`;
+    scrim.style.background = `rgba(var(--bg-rgb),${bgDim})`;
     controls.hidden = false;
     bgBtn.classList.add('on');
     bgBtn.textContent = '🖼 Change background';
@@ -1942,12 +2270,43 @@ document.getElementById('bgClearBtn').addEventListener('click', async (e)=>{
 
 document.getElementById('bgDimRange').addEventListener('input', (e)=>{
   bgDim = parseFloat(e.target.value);
-  document.getElementById('bgScrim').style.background = `rgba(11,15,13,${bgDim})`;
+  document.getElementById('bgScrim').style.background = `rgba(var(--bg-rgb),${bgDim})`;
 });
 document.getElementById('bgDimRange').addEventListener('change', async (e)=>{
   bgDim = parseFloat(e.target.value);
   await storeSet('rebirth-bgDim', bgDim);
 });
+
+/* ---------------- 🎨 LOOK (app looks) ----------------
+   APP_LOOKS / applyAppLook() are defined in <head> (so the saved look paints first). */
+(function setupLookPicker(){
+  const grid = getEl('lookGrid'), panel = getEl('lookPanel'), btn = getEl('lookToggle');
+  if(!grid || !panel || !btn) return;
+  let current = appLookFor((()=>{ try{ return localStorage.getItem('rebirth-appLook'); }catch(e){ return null; } })()).key;
+  const btns = APP_LOOKS.map(look => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'look-btn'; b.dataset.look = look.key; b.title = look.name + ': ' + look.note;
+    b.style.setProperty('--sw', 'rgb(' + look.accent + ')');
+    const chip = document.createElement('span'); chip.className = 'look-chip';
+    chip.style.background = 'linear-gradient(135deg, rgb(' + look.bg + ') 0 44%, rgb(' + look.holo + ') 44% 72%, rgb(' + look.accent + ') 72%)';
+    const name = document.createElement('span'); name.textContent = look.name;
+    b.append(chip, name);
+    b.addEventListener('click', ()=>{
+      current = applyAppLook(look.key).key;
+      try{ if(current === 'default') localStorage.removeItem('rebirth-appLook'); else localStorage.setItem('rebirth-appLook', current); }catch(e){}
+      btns.forEach(x => x.classList.toggle('active', x.dataset.look === current));
+      showToast('Look: ' + look.name);
+    });
+    grid.appendChild(b);
+    return b;
+  });
+  btns.forEach(x => x.classList.toggle('active', x.dataset.look === current));
+  btn.addEventListener('click', ()=>{
+    panel.hidden = !panel.hidden;
+    btn.classList.toggle('on', !panel.hidden);
+    if(!panel.hidden) panel.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  });
+})();
 
 /* ---------------- EVENT TIMERS ----------------
    Ported from the Electron overlay's timers.html — pure wall-clock
@@ -1958,11 +2317,14 @@ document.getElementById('bgDimRange').addEventListener('change', async (e)=>{
    while the section is visible. */
 
 function nextStellar(now){
-  // Every hour, on the hour exactly (1:00, 2:00, 3:00, ...).
-  const next = new Date(now);
-  next.setMinutes(0, 0, 0);
-  if(next <= now) next.setHours(next.getHours() + 1);
-  return next;
+  // Every 30 minutes: 5 and 35 minutes after the hour (00:05, 00:35, 01:05, ...), as in the desktop app.
+  const candidates = [];
+  for(let h = 0; h <= 1; h++){
+    const a = new Date(now); a.setHours(a.getHours() + h, 5, 0, 0); candidates.push(a);
+    const b = new Date(now); b.setHours(b.getHours() + h, 35, 0, 0); candidates.push(b);
+  }
+  candidates.sort((a, b) => a - b);
+  return candidates.find(d => d > now);
 }
 
 function nextMythic(now){
@@ -1973,21 +2335,16 @@ function nextMythic(now){
   return next;
 }
 
-function nextGalactic(now){
-  // Every 30 minutes, starting 15 minutes after the hour (:15 and :45).
-  const candidates = [];
-  for(let h = 0; h <= 1; h++){
-    const a = new Date(now); a.setHours(a.getHours() + h, 15, 0, 0); candidates.push(a);
-    const b = new Date(now); b.setHours(b.getHours() + h, 45, 0, 0); candidates.push(b);
-  }
-  candidates.sort((a, b) => a - b);
-  return candidates.find(d => d > now);
+function nextKyber(now){
+  // Every hour, at :15 (1:15, 2:15, 3:15, ...). Replaced the Galactic timer, as in the desktop app.
+  const next = new Date(now);
+  next.setMinutes(15, 0, 0);
+  if(next <= now) next.setHours(next.getHours() + 1);
+  return next;
 }
 
-// Missions run 45 minutes apart, then stay live for a further 5-minute
-// window before the next countdown starts — 50 minutes start-to-start, not
-// 45 (see timers.html in the desktop app for the original discovery notes
-// on this).
+// Missions start every 35 minutes (desktop app timers.html, updated 2026-09-25):
+// a 30-minute countdown, then the mission stays live for 5 minutes.
 const MISSION_CYCLE = ['Stormtrooper', 'Fishing', 'D-0', 'Mining'];
 const MISSION_ICONS = {
   'Stormtrooper': 'mission-icons/stormtrooper.png',
@@ -1995,9 +2352,9 @@ const MISSION_ICONS = {
   'D-0': 'mission-icons/d0.png',
   'Mining': 'mission-icons/mining.png',
 };
-const MISSION_COUNTDOWN_MS = 45 * 60 * 1000;
+const MISSION_COUNTDOWN_MS = 30 * 60 * 1000;
 const MISSION_RUN_DURATION_MS = 5 * 60 * 1000; // each mission stays live/active for 5 minutes before the next countdown starts
-const MISSION_PERIOD_MS = MISSION_COUNTDOWN_MS + MISSION_RUN_DURATION_MS; // 50 minutes, start-to-start
+const MISSION_PERIOD_MS = MISSION_COUNTDOWN_MS + MISSION_RUN_DURATION_MS; // 35 minutes, start-to-start
 
 // Same reference instant as the desktop overlay (a confirmed Stormtrooper
 // occurrence: 2026-09-19 12:10:20 America/New_York — see timers.html for how
@@ -2058,14 +2415,14 @@ function renderTimers(){
 
   const stellarRemaining = nextStellar(now) - now;
   const mythicRemaining = nextMythic(now) - now;
-  const galacticRemaining = nextGalactic(now) - now;
+  const kyberRemaining = nextKyber(now) - now;
 
   getEl('stellarTimerTime').textContent = fmtRemaining(stellarRemaining);
   getEl('mythicTimerTime').textContent = fmtRemaining(mythicRemaining);
-  getEl('galacticTimerTime').textContent = fmtRemaining(galacticRemaining);
+  getEl('kyberTimerTime').textContent = fmtRemaining(kyberRemaining);
   setTimerImminent(getEl('stellarTimerCard'), stellarRemaining);
   setTimerImminent(getEl('mythicTimerCard'), mythicRemaining);
-  setTimerImminent(getEl('galacticTimerCard'), galacticRemaining);
+  setTimerImminent(getEl('kyberTimerCard'), kyberRemaining);
 
   const missionAt = nextMission(now);
   const missionName = missionNameForOccurrence(missionAt);
@@ -2113,6 +2470,185 @@ document.getElementById('missionSyncBtn').addEventListener('click', async ()=>{
   showToast('Mission timer synced');
 });
 
+/* ---------------- 🎯 UP NEXT ----------------
+   The desktop HUD's content on the web: the next 4 rebirths after your current
+   level, each with its credit cost and its 3 droids at the rarity they need. The
+   level is the same one Safe to Retire uses (rebirth-currentLevel). A tab of its own
+   on phones; a toolbar toggle on computers. Past the cycle's last level it previews
+   the next cycle's first ones, like the desktop HUD. */
+const NEED_COLOR = { B:'var(--r-base)', G:'var(--r-gold)', D:'var(--r-diamond)', R:'var(--r-rainbow2)', K:'var(--r-beskar)', X:'var(--r-galactic)', S:'var(--r-stellar)', Y:'var(--r-kyber)' };
+let showUpNext = false;
+function upcomingLevels(cycle, level, count){
+  const out = [];
+  let c = cycle, l = level;
+  for(let guard = 0; out.length < count && guard < 400; guard++){
+    l++;
+    if(l > cycleRealLevelCount(c)){ c = cycleAfter(c); l = 1; }
+    out.push({ cycle: c, level: l });
+  }
+  return out;
+}
+function upNextDroidHtml(u, code, name, slot){
+  if(code === '?') return '<div class="un-droid covered"><div class="un-ic" style="--rc:var(--line)"></div><div class="un-name">???</div><div class="un-need">not revealed</div></div>';
+  const nk = normKey(canonicalName(name));
+  const entry = DROID_INDEX[nk];
+  const rank = rankOf(code);
+  const owned = ownedRank[nk];
+  const covered = owned !== undefined && rank <= owned;
+  const b64 = (typeof ICONS !== 'undefined') ? ICONS[u.cycle + '-' + u.level + '-' + slot] : null;
+  const img = b64 ? '<img src="data:image/webp;base64,' + b64 + '" alt="" loading="lazy">' : '';
+  const title = entry.display + ' — need ' + RNAME[code] + (covered ? ' — already covered' : ' — tap to log') + ' — press and hold for an exact colorway';
+  return '<div class="un-droid' + (covered ? ' covered' : '') + '" data-nk="' + nk + '" data-rank="' + rank + '" title="' + title + '" style="--rc:' + NEED_COLOR[code] + '">' +
+    '<div class="un-ic">' + img + '</div>' +
+    '<div class="un-name">' + entry.display + '</div>' +
+    '<div class="un-need">' + (covered ? '✓ ' : 'need ') + RNAME[code] + '</div>' +
+  '</div>';
+}
+function renderUpNext(){
+  const list = getEl('upNextList');
+  if(!list) return;
+  getEl('upNextLevel').textContent = 'Lvl ' + retireCurrentLevel;
+  getEl('upNextCycleSel').value = String(activeCycle);
+  list.innerHTML = upcomingLevels(activeCycle, retireCurrentLevel, 4).map((u, i) => {
+    const credits = rebirthCreditsFor(u.cycle, u.level);
+    const tag = (i === 0 ? 'NOW · ' : '') + 'Lvl ' + u.level + (u.cycle !== activeCycle ? ' · Cycle ' + u.cycle : '');
+    return '<div class="un-level' + (i === 0 ? ' now' : '') + '">' +
+      '<div class="un-top"><span class="un-tag">' + tag + '</span>' +
+        (credits === null ? '' : '<span class="un-credits" title="Credits needed for Rebirth ' + u.level + '">' + formatCredits(credits) + '</span>') + '</div>' +
+      '<div class="un-trio">' + CYCLES[u.cycle][u.level - 1].map(([code, name], slot) => upNextDroidHtml(u, code, name, slot)).join('') + '</div>' +
+    '</div>';
+  }).join('');
+  list.querySelectorAll('.un-droid[data-nk]').forEach(el => {
+    el.addEventListener('click', ()=> setOwned(el.dataset.nk, parseInt(el.dataset.rank, 10)));
+    el.addEventListener('contextmenu', (e)=>{ e.preventDefault(); openRbContextMenu(el.dataset.nk, e.clientX, e.clientY); });
+    wireLongPress(el, el.dataset.nk);
+  });
+}
+async function setCurrentLevel(v){
+  retireCurrentLevel = Math.max(0, Math.min(cycleRealLevelCount(activeCycle), v));
+  await storeSet('rebirth-currentLevel', retireCurrentLevel);
+  renderRetirePanel();
+  renderUpNext();
+}
+function applyUpNextVisibility(){
+  getEl('upNextCard').classList.toggle('show', showUpNext);
+  getEl('upNextToggle').classList.toggle('on', showUpNext);
+}
+getEl('upNextToggle').addEventListener('click', async ()=>{
+  showUpNext = !showUpNext;
+  applyUpNextVisibility();
+  if(showUpNext) revealPanelIfStacked('upNextCard');
+  await storeSet('rebirth-showUpNext', showUpNext);
+});
+getEl('upNextDec').addEventListener('click', ()=> setCurrentLevel(retireCurrentLevel - 1));
+getEl('upNextInc').addEventListener('click', ()=> setCurrentLevel(retireCurrentLevel + 1));
+getEl('upNextCycleSel').addEventListener('change', (e)=> setActiveCycle(parseInt(e.target.value, 10)));
+
+/* ---------------- RARITY ON EACH DROID: the picture's color, or written under the name ----------------
+   A player's idea (2026-09-29). html.rarity-text is set in <head> from localStorage
+   'rebirth-rarityStyle', so the page never flashes the other style first. */
+(function setupRarityStyle(){
+  const btns = document.querySelectorAll('[data-rarity-style]');
+  function apply(style){
+    document.documentElement.classList.toggle('rarity-text', style === 'text');
+    btns.forEach(b => b.classList.toggle('on', b.dataset.rarityStyle === style));
+  }
+  apply(document.documentElement.classList.contains('rarity-text') ? 'text' : 'color');
+  btns.forEach(b => b.addEventListener('click', ()=>{
+    const style = b.dataset.rarityStyle;
+    apply(style);
+    try{ if(style === 'text') localStorage.setItem('rebirth-rarityStyle', 'text'); else localStorage.removeItem('rebirth-rarityStyle'); }catch(e){}
+    showToast(style === 'text' ? 'Rarity now written under each droid' : 'Rarity now shown as the picture color');
+  }));
+})();
+
+/* ---------------- PHONES: bottom tab bar ----------------
+   ≤700px wide: one view at a time, picked from a tab bar under your thumb; the
+   less-used tools live in a "More" sheet. Wider screens keep the page as it was.
+   Each view lists the elements it shows; everything else is .tab-off. */
+const PHONE_MQ = window.matchMedia('(max-width:700px)');
+const TAB_VIEWS = {
+  upnext: ['upNextCard'],
+  droids: ['legend', 'levelNote', 'cyclePickerRow', '.toolbar', '.content-row', 'quickPanelHome', 'nothingShown'],
+  reqs:   ['.content-row', 'rebirthPanel'],
+  retire: ['.content-row', 'retirePanel'],
+  sneak:  ['.content-row', 'sneakPanel'],
+  timers: ['timersSection'],
+  look:   ['lookPanel'],
+  help:   ['howToUse', 'refCosts']
+};
+const TAB_BAR_FOR = { sneak: 'more', look: 'more', help: 'more' }; // views reached from More
+let phoneTab = 'upnext';
+let desktopTimersState = null; // the timers' own on/off, put back when leaving phone mode
+function viewEl(ref){ return ref.startsWith('.') ? document.querySelector(ref) : getEl(ref); }
+function viewEls(){
+  const all = new Set();
+  Object.values(TAB_VIEWS).forEach(refs => refs.forEach(r => { const el = viewEl(r); if(el) all.add(el); }));
+  return [...all];
+}
+function openMore(){ getEl('moreSheet').classList.add('open'); getEl('moreDim').classList.add('open'); }
+function closeMore(){ getEl('moreSheet').classList.remove('open'); getEl('moreDim').classList.remove('open'); }
+function setTab(tab, quiet){
+  if(!TAB_VIEWS[tab]) tab = 'upnext';
+  phoneTab = tab;
+  document.body.dataset.tab = tab;
+  const on = new Set(TAB_VIEWS[tab].map(viewEl).filter(Boolean));
+  viewEls().forEach(el => { el.classList.toggle('tab-on', on.has(el)); el.classList.toggle('tab-off', !on.has(el)); });
+  const barTab = TAB_BAR_FOR[tab] || tab;
+  document.querySelectorAll('#tabBar [data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab === barTab));
+  if(tab === 'help') getEl('howToUse').classList.add('open');
+  showTimersSection = (tab === 'timers'); // the countdown only ticks while its tab is open
+  applyTimersVisibility();
+  closeMore();
+  if(!quiet){ window.scrollTo(0, 0); storeSet('rebirth-phoneTab', tab); }
+}
+function applyTabMode(){
+  const phone = PHONE_MQ.matches;
+  const was = document.body.classList.contains('tabbed');
+  document.body.classList.toggle('tabbed', phone);
+  if(phone){
+    if(!was) desktopTimersState = showTimersSection;
+    getEl('phoneMaxed').textContent = getEl('overallNum').textContent;
+    setTab(phoneTab, true);
+  } else if(was){
+    viewEls().forEach(el => el.classList.remove('tab-on', 'tab-off'));
+    delete document.body.dataset.tab;
+    showTimersSection = !!desktopTimersState;
+    applyTimersVisibility();
+    closeMore();
+  }
+}
+getEl('tabBar').addEventListener('click', (e)=>{
+  const b = e.target.closest('[data-tab]');
+  if(!b) return;
+  if(b.dataset.tab === 'more'){ if(getEl('moreSheet').classList.contains('open')) closeMore(); else openMore(); }
+  else setTab(b.dataset.tab);
+});
+getEl('moreDim').addEventListener('click', closeMore);
+getEl('moreSheet').addEventListener('click', (e)=>{
+  const b = e.target.closest('[data-more]');
+  if(!b) return;
+  const act = b.dataset.more;
+  closeMore();
+  if(act === 'sneak' || act === 'look' || act === 'help') setTab(act);
+  else if(act === 'rename'){ setTab('droids'); if(!getEl('editToggle').classList.contains('on')) getEl('editToggle').click(); }
+  else if(act === 'bg') getEl('bgBtn').click();
+  else if(act === 'export') getEl('exportBtn').click();
+  else if(act === 'import') getEl('importBtn').click();
+  else if(act === 'reset') getEl('resetBtn').click();
+});
+document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closeMore(); });
+getEl('phoneHelp').addEventListener('click', ()=> setTab('help'));
+new MutationObserver(()=>{ getEl('phoneMaxed').textContent = getEl('overallNum').textContent; })
+  .observe(getEl('overallNum'), { childList: true, characterData: true, subtree: true });
+PHONE_MQ.addEventListener('change', applyTabMode);
+// the cycle-complete prompt's "Sneak Preview" choice opens that tab on phones
+const toggleSneakPanelDesktop = toggleSneakPanel;
+toggleSneakPanel = async function(force){
+  await toggleSneakPanelDesktop(force);
+  if(document.body.classList.contains('tabbed') && showSneakPanel) setTab('sneak');
+};
+
 /* ---------------- INIT ---------------- */
 (async function init(){
   nameMerges = (await storeGet('rebirth-nameMerges')) || {};
@@ -2139,6 +2675,8 @@ document.getElementById('missionSyncBtn').addEventListener('click', async ()=>{
     applyRetireTierChips();
   }
   showSneakPanel = !!(await storeGet('rebirth-showSneakPanel'));
+  { const r = await storeGet('rebirth-retired'); retiredMarks = (r && typeof r === 'object') ? r : {}; }
+  { const h = await storeGet('rebirth-heldMarks'); heldMarks = (h && typeof h === 'object') ? h : {}; }
   applyListVisibility();
   applyReqPanelVisibility();
   applyRetirePanelVisibility();
@@ -2155,6 +2693,10 @@ document.getElementById('missionSyncBtn').addEventListener('click', async ()=>{
   renderLegend();
   renderStats();
   renderList();
+  showUpNext = !!(await storeGet('rebirth-showUpNext'));
+  applyUpNextVisibility();
+  { const t = await storeGet('rebirth-phoneTab'); if(typeof t === 'string' && TAB_VIEWS[t]) phoneTab = t; }
+  applyTabMode();
 })();
 </script>
 </body>

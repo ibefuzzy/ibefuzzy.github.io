@@ -297,3 +297,18 @@ const DROID_RARITY_CLASS = {
   "RIC": "Mythic",
   "LEP": "Mythic"
 };
+
+/* ---------------- rebirth CREDIT COST (v1.15.1) ----------------
+   The credits the game asks for to go through with each rebirth. Index =
+   rebirth level - 1, so REBIRTH_CREDITS[0] is Rebirth 1. Levels 1-35 come from
+   the community "Super Rebirth" chart (Update v1.26, 2026-08-16); 36-40 the
+   user gave separately. Treated as the same in every cycle; rebirthCreditsFor()
+   in requirements.js is the only lookup, so a per-cycle table can slot in there
+   later. The 🎯 Upcoming RB Req's HUD shows each level's cost the way the game
+   writes it (formatCredits(): 10K, 1.36B, 1.19QA). */
+const REBIRTH_CREDITS = [
+  10e3, 150e3, 975e3, 2.95e6, 5.35e6, 9.85e6, 14.5e6, 36e6, 89e6, 220e6,          // 1-10
+  550e6, 1.36e9, 3.4e9, 8.45e9, 21e9, 52e9, 130e9, 325e9, 810e9, 2e12,            // 11-20
+  3e12, 4.5e12, 6e12, 9e12, 13.5e12, 21e12, 32e12, 45e12, 68e12, 100e12,          // 21-30
+  150e12, 230e12, 345e12, 520e12, 778e12, 1.19e15, 2.5e15, 4.5e15, 8e15, 15e15    // 31-40
+];
