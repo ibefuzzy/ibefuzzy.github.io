@@ -52,6 +52,40 @@ a bad live site immediately.
   `memory/encoding_corruption_playbook.md` before doing anything else. It is
   a specific, mechanical diagnosis — not a "clear cache and see" situation.
 
+## Synced from the desktop app (2026-09-29, desktop v1.15.1)
+- **App looks:** `APP_LOOKS` in a `<head>` script of `tracker/index.html` is a hand
+  copy of the desktop app's `requirements.js` APP_LOOKS (13 looks). Keep them in
+  sync. A look only sets `--bg-rgb`, `--accent-rgb`, `--glow2-rgb` and the hex vars
+  (`--panel`, `--line`, `--text`, …); new CSS must use those variables, not the
+  default green literals. The pick is saved in localStorage `rebirth-appLook`;
+  the 🎨 Look toolbar button opens the picker.
+- **Credit costs:** `REBIRTH_CREDITS` at the end of `tracker/droid-data.js` (same
+  block as the desktop app's), shown under each level number in By Rebirth Level
+  (`rebirthCreditsFor` / `formatCredits` in index.html, the game's coin via
+  `--credit-coin`).
+- **Timers** match the desktop app: Stellar :05/:35, Mythic :55, Kyber hourly :15
+  (replaced Galactic), Mission every 35 min from the same epoch.
+- **Kyber** is emerald `#50c878` with the same per-rarity rules as the desktop app;
+  cycle completion counts real slots (`cycleRealSlotCount`, 120 today), not 105.
+- Data scripts are stamped `?v=1.15.1` (validator passes).
+- **Phones (≤700px): bottom tab bar** (`body.tabbed`, set by `applyTabMode()` from a
+  matchMedia): 🎯 Up next / 📋 Droids / 🧬 Reqs / ♻ Retire / ⏱ Timers / ⋯ More (a sheet
+  with Sneak, Look, Background, Rename, Export, Import, How to use, Reset). `TAB_VIEWS`
+  lists each view's elements; `setTab()` marks them `.tab-on`/`.tab-off` (a new view =
+  one entry there). Wider screens keep the old layout untouched. Last tab saved as
+  `rebirth-phoneTab`; the timers only tick while their tab is open.
+- **🎯 Up next** (`#upNextCard`, `renderUpNext()`, re-rendered by `renderList()`): the next
+  4 rebirths after `retireCurrentLevel` (same `rebirth-currentLevel` as Safe to Retire),
+  credit chips, droids; − / + stepper and cycle select. A toolbar toggle on computers
+  (`rebirth-showUpNext`), the home tab on phones.
+- **Rarity on each droid** (🎨 Look → "Picture color" / "Written under the name", a
+  player's idea): `html.rarity-text`, from localStorage `rebirth-rarityStyle`, set in
+  `<head>`. `.rar-label` spans are always rendered and hidden unless that class is on.
+- **Add to Home Screen:** `tracker/manifest.webmanifest` + `tracker/icons/` (icon.svg is
+  the source; the PNGs were rendered from it with sharp in the desktop repo). Deliberately
+  NO service worker: this site's history is stale-cache bugs, and the `?v=` stamps stay
+  the only cache control. The `theme-color` meta follows the chosen look.
+
 ## Testing
 No test suite in this repo, but `scripts/validate-tracker-data.js` (Node,
 no dependencies) checks `droid-data.js`/`icons-data.js` structural integrity
