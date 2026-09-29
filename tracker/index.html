@@ -692,6 +692,13 @@
   body.tabbed .more-sheet.open{display:block;position:fixed;left:0;right:0;bottom:calc(64px + env(safe-area-inset-bottom));z-index:47;
     background:var(--panel2);border-top:1px solid var(--line-bright);border-radius:16px 16px 0 0;padding:10px 14px 14px;box-shadow:0 -12px 30px rgba(0,0,0,.6);}
   .more-grab{width:40px;height:4px;border-radius:2px;background:var(--line-bright);margin:0 auto 12px;}
+  /* 📲 Install: the browser's own install dialog on Android/Chrome; the Share steps on iPhone */
+  .install-btn{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;margin:0 0 10px;padding:12px 14px;border-radius:12px;
+    border:1px solid var(--accent-dim);background:linear-gradient(90deg,rgba(var(--accent-rgb),.16),rgba(var(--accent-rgb),.05));
+    color:var(--accent);font:600 15px 'Inter',sans-serif;text-align:left;cursor:pointer;touch-action:manipulation;}
+  .install-btn small{font-weight:400;font-size:12px;color:var(--text-dim);}
+  .install-btn[hidden], .install-hint[hidden]{display:none;}
+  .install-hint{margin:-4px 2px 10px;padding:10px 12px;border-radius:10px;background:var(--panel);border:1px solid var(--line);font-size:13px;line-height:1.45;color:var(--text);}
   .more-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
   .more-grid button{display:flex;align-items:center;gap:8px;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--panel);
     color:var(--text);font:14px 'Inter',sans-serif;text-align:left;min-height:48px;cursor:pointer;touch-action:manipulation;}
@@ -1012,6 +1019,8 @@
 <div class="more-dim" id="moreDim"></div>
 <div class="more-sheet" id="moreSheet" role="dialog" aria-label="More">
   <div class="more-grab"></div>
+  <button type="button" class="install-btn" id="installBtn">📲 Install as an app<small>Opens full-screen from your home screen, like an app</small></button>
+  <p class="install-hint" id="installHint" hidden></p>
   <div class="more-grid">
     <button type="button" data-more="sneak">🔮 Sneak Preview</button>
     <button type="button" data-more="look">🎨 Look</button>
@@ -2648,6 +2657,36 @@ toggleSneakPanel = async function(force){
   await toggleSneakPanelDesktop(force);
   if(document.body.classList.contains('tabbed') && showSneakPanel) setTab('sneak');
 };
+
+/* ---------------- 📲 INSTALL (Add to Home Screen) ----------------
+   Chrome, Edge and Samsung Internet fire beforeinstallprompt. The page keeps it (so the
+   browser's easy-to-miss install banner doesn't flash by) and shows the browser's own
+   install dialog when the player taps 📲 Install in More. Safari on iPhone/iPad has no
+   such event, so the button shows the Share → Add to Home Screen steps instead. The
+   button hides once the site is running as an installed app. */
+let installPromptEvent = null;
+function runningInstalled(){ return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; }
+function onIOS(){ return /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); }
+function applyInstallButton(){ getEl('installBtn').hidden = runningInstalled(); if(runningInstalled()) getEl('installHint').hidden = true; }
+window.addEventListener('beforeinstallprompt', (e)=>{ e.preventDefault(); installPromptEvent = e; });
+window.addEventListener('appinstalled', ()=>{ installPromptEvent = null; applyInstallButton(); showToast('Installed! Open it from your home screen.'); });
+getEl('installBtn').addEventListener('click', async ()=>{
+  const hint = getEl('installHint');
+  if(installPromptEvent){
+    const ev = installPromptEvent;
+    installPromptEvent = null; // the browser lets each offer be shown once
+    closeMore();
+    ev.prompt();
+    const choice = await ev.userChoice.catch(()=> null);
+    if(choice && choice.outcome !== 'accepted') showToast('No problem, 📲 Install stays in More');
+    return;
+  }
+  hint.textContent = onIOS()
+    ? 'In Safari, tap the Share button (the square with an arrow) at the bottom of the screen, then "Add to Home Screen", then "Add".'
+    : 'Open your browser\'s menu (⋮ or ≡) and choose "Install app" or "Add to Home screen".';
+  hint.hidden = !hint.hidden;
+});
+applyInstallButton();
 
 /* ---------------- INIT ---------------- */
 (async function init(){
