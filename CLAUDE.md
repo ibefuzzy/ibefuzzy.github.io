@@ -85,6 +85,10 @@ a bad live site immediately.
   the source; the PNGs were rendered from it with sharp in the desktop repo). Deliberately
   NO service worker: this site's history is stale-cache bugs, and the `?v=` stamps stay
   the only cache control. The `theme-color` meta follows the chosen look.
+- **📲 Install button** (top of the More sheet): keeps the browser's `beforeinstallprompt`
+  (so its banner doesn't flash by) and calls `prompt()` on tap; on iPhone/iPad or when no
+  offer exists it shows the Share → Add to Home Screen / browser-menu steps instead.
+  Hidden when running installed (`display-mode: standalone`).
 
 ## Testing
 No test suite in this repo, but `scripts/validate-tracker-data.js` (Node,
