@@ -455,11 +455,80 @@
   .cell-flex{display:flex;align-items:center;gap:10px;}
   .icon-badge-sm{flex:0 0 34px;width:34px;height:34px;border-radius:8px;}
   .cell-name{flex:1;min-width:0;font-size:16px;}
+  /* SELL in the old Cycle 5 chart's colours (desktop v1.16.0, sellFlagFor): yellow "SELL" =
+     not needed again this cycle; red / Kyber green show the rebirth that needs it again
+     (21-30 / 31+). .sell-tag sits by the name; .sell-flag hangs off a picture's right side. */
   .sell-tag{
     display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;
-    letter-spacing:.04em;color:rgb(var(--bg-rgb));background:var(--accent);border-radius:4px;
+    letter-spacing:.04em;border-radius:4px;
     padding:2px 6px;margin-left:7px;vertical-align:middle;
   }
+  .sell-flag{
+    position:absolute;z-index:2;left:calc(100% + 1px);bottom:1px;pointer-events:none;white-space:nowrap;
+    font:700 12.5px/1 'Rajdhani',sans-serif;padding:2px 4px 1px 3px;
+    border-radius:0 5px 5px 0;border:1px solid rgba(0,0,0,.9);border-left:0;box-shadow:1px 1px 3px rgba(0,0,0,.8);
+  }
+  .sell-flag.yellow{font-size:8.5px;letter-spacing:.04em;padding:3px 4px 2px 3px;}
+  .sell-tag.yellow,.sell-flag.yellow{background:#f5c518;color:#140f00;}
+  .sell-tag.red,.sell-flag.red{background:#d91f1f;color:#fff;text-shadow:0 0 2px #000,0 1px 1px #000;}
+  .sell-tag.kyber,.sell-flag.kyber{background:var(--r-kyber);color:#03170b;}
+
+  /* ---- 👥 Friends panel (desktop v1.16.0): a friend's progress from a pasted code or a #friend= link ---- */
+  #friendsPanel{flex-basis:340px;}
+  .fr-mine{border:1px solid var(--line);border-radius:8px;padding:9px 10px;margin-bottom:12px;background:rgba(0,0,0,.2);}
+  .fr-mine-top{display:flex;align-items:center;gap:8px;margin-bottom:7px;font-size:12px;color:var(--text-dim);}
+  .fr-mine-top input,.fr-paste input{flex:1;min-width:0;background:rgba(0,0,0,.3);border:1px solid var(--line);color:var(--text);border-radius:6px;padding:7px 8px;font-size:16px;}
+  .fr-mine-top input{font-family:'Rajdhani',sans-serif;font-weight:600;}
+  .fr-code{font:11px 'IBM Plex Mono',monospace;color:var(--text-dim);word-break:break-all;line-height:1.35;
+    background:rgba(0,0,0,.3);border:1px dashed var(--line-bright);border-radius:6px;padding:6px 7px;margin-bottom:7px;user-select:all;}
+  .fr-mine-btns{display:flex;gap:6px;}
+  .fr-mine-btns .btn{flex:1;padding:8px;font-size:13px;}
+  .fr-mine .rebirth-sub{margin:7px 0 0;}
+  .fr-link{border:1px solid var(--accent-dim);background:rgba(var(--accent-rgb),.07);border-radius:9px;padding:9px 10px;margin-bottom:10px;font-size:13px;line-height:1.4;}
+  .fr-link b{color:var(--accent);}
+  .fr-link-btns{display:flex;gap:6px;margin-top:8px;}
+  .fr-link-btns .btn{flex:1;padding:8px;font-size:13px;}
+  .fr-card{border:1px solid var(--line);border-radius:9px;background:rgba(0,0,0,.22);margin-bottom:10px;overflow:hidden;}
+  .fr-row{display:flex;align-items:center;gap:8px;padding:8px 10px;cursor:pointer;}
+  .fr-chev{color:var(--text-dim);font-size:11px;width:10px;}
+  .fr-avatar{width:30px;height:30px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;
+    font:700 15px 'Rajdhani',sans-serif;color:var(--bg);background:var(--accent);}
+  .fr-who{flex:1;min-width:0;line-height:1.2;}
+  .fr-who b{font-family:'Rajdhani',sans-serif;font-size:16px;letter-spacing:.03em;}
+  .fr-who small{display:block;font:10.5px 'IBM Plex Mono',monospace;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .fr-who small.old{color:var(--amber);}
+  .fr-now{display:flex;gap:3px;}
+  .fr-now .icon-badge{flex:0 0 26px;width:26px;height:26px;border-radius:6px;}
+  .fr-now .icon-badge.dim{opacity:.3;}
+  .fr-x{background:none;border:0;color:var(--text-dim);cursor:pointer;font-size:14px;padding:4px 6px;}
+  .fr-tabs{display:flex;gap:4px;padding:6px 8px;border-top:1px solid var(--line);background:rgba(0,0,0,.15);}
+  .fr-tab{flex:1;background:transparent;border:1px solid transparent;border-radius:6px;color:var(--text-dim);
+    font:600 14px 'Rajdhani',sans-serif;letter-spacing:.04em;padding:6px;cursor:pointer;}
+  .fr-tab.on{color:var(--accent);border-color:var(--accent-dim);background:rgba(var(--accent-rgb),.08);}
+  .fr-prog{display:flex;align-items:center;gap:8px;padding:6px 10px;border-top:1px solid var(--line);font:11px 'IBM Plex Mono',monospace;color:var(--text-dim);}
+  .fr-prog b{color:var(--accent);font-weight:600;}
+  .fr-prog .bar{flex:1;margin-top:0;height:5px;}
+  .fr-only{display:flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap;}
+  .fr-only input{accent-color:var(--accent);margin:0;}
+  .fr-card .upnext-list{display:flex;flex-direction:column;gap:6px;padding:8px;border-top:1px solid var(--line);}
+  .fr-card .un-droid{cursor:default;}
+  .fr-rq{padding:4px 8px 8px;border-top:1px solid var(--line);}
+  .fr-rq .rebirth-tier-label{margin:8px 0 5px;}
+  .fr-rq .rebirth-tier-label small{font-size:9.5px;opacity:.8;letter-spacing:.02em;text-transform:none;}
+  .fr-rq-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;}
+  .fr-rq-cell{display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center;min-width:0;padding:3px 1px;}
+  .fr-rq-cell .icon-badge{flex:0 0 38px;width:38px;height:38px;border-radius:8px;}
+  .fr-rq-cell .rb-name{font-size:10px;}
+  .fr-rq-cell.covered{opacity:.35;}
+  .fr-rq-cell.covered .rb-name{text-decoration:line-through;}
+  .fr-empty{font-size:13px;color:var(--text-dim);padding:8px 2px;line-height:1.45;}
+  .fr-bad{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--amber);padding:6px 10px;margin-bottom:10px;border:1px dashed var(--amber);border-radius:8px;}
+  .fr-bad span{flex:1;}
+  .fr-paste{display:flex;gap:6px;margin-top:4px;}
+  .fr-paste input{font-family:'IBM Plex Mono',monospace;font-size:13px;}
+  .fr-paste-msg{font-size:12px;color:var(--amber);min-height:15px;margin-top:4px;}
+  .fr-paste-msg.ok{color:var(--accent);}
+  .tour-btn{margin:0 0 12px;}
   .droid-cell.B{color:var(--r-base);}
   .droid-cell.G{color:var(--r-gold);}
   .droid-cell.D{color:var(--r-diamond);}
@@ -631,12 +700,28 @@
   }
   .un-level.now .un-credits{color:#86ff92;border-color:rgba(134,255,146,.8);}
   .un-credits::before{content:'';flex:none;width:17px;height:17px;background:var(--credit-coin) center/contain no-repeat;filter:drop-shadow(0 1px 1px rgba(0,0,0,.8));}
+  /* Nova Crystals a rebirth gives (desktop v1.16.0, a player's request): violet, left of the credits */
+  .un-chips{display:inline-flex;align-items:center;gap:5px;}
+  .un-crystals{
+    font-family:'Rajdhani',sans-serif;font-style:italic;font-weight:700;font-size:16px;letter-spacing:.01em;line-height:1.25;color:#dcc4ff;
+    text-shadow:-1px -1px 0 #1a0633, 1px -1px 0 #1a0633, -1px 1px 0 #1a0633, 1px 1px 0 #1a0633, 0 2px 3px rgba(0,0,0,.9);
+    display:inline-flex;align-items:center;gap:3px;white-space:nowrap;background:rgba(14,6,26,.72);border:1px solid rgba(181,123,255,.55);
+    border-radius:999px;padding:0 8px 0 3px;box-shadow:0 0 6px -2px rgba(181,123,255,.6);
+  }
+  .un-level.now .un-crystals{color:#ecdcff;border-color:rgba(200,160,255,.85);}
+  .un-crystals::before{content:'';flex:none;width:16px;height:16px;background:var(--nova-crystal) center/contain no-repeat;filter:drop-shadow(0 1px 1px rgba(0,0,0,.8));}
+  .lv-crystals{
+    display:flex;align-items:center;justify-content:flex-end;gap:3px;margin-top:3px;
+    font-family:'Rajdhani',sans-serif;font-style:italic;font-weight:700;font-size:13px;line-height:1;
+    color:#dcc4ff;text-shadow:-1px -1px 0 #1a0633, 1px -1px 0 #1a0633, -1px 1px 0 #1a0633, 1px 1px 0 #1a0633;
+  }
+  .lv-crystals::before{content:'';flex:none;width:14px;height:14px;background:var(--nova-crystal) center/contain no-repeat;}
   .un-trio{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;}
   .un-droid{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0;cursor:pointer;padding:4px 2px;border-radius:8px;
     touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
   .un-droid:active{background:rgba(255,255,255,.05);}
-  .un-ic{width:46px;height:46px;border-radius:8px;border:2px solid var(--rc);background:rgba(255,255,255,.05);overflow:hidden;box-shadow:0 0 6px -2px var(--rc);}
-  .un-ic img{width:100%;height:100%;object-fit:cover;display:block;}
+  .un-ic{position:relative;width:46px;height:46px;border-radius:8px;border:2px solid var(--rc);background:rgba(255,255,255,.05);box-shadow:0 0 6px -2px var(--rc);}
+  .un-ic img{width:100%;height:100%;object-fit:cover;display:block;border-radius:6px;} /* rounds itself: the SELL flag hangs outside .un-ic */
   .un-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
   .un-need{font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--text-dim);white-space:nowrap;}
   .un-droid.covered{opacity:.42;}
@@ -777,6 +862,7 @@
   <div class="ref open" id="howToUse">
     <h2>📖 How to use this</h2>
     <div class="ref-body">
+      <button class="btn tour-btn" id="tourStartBtn" type="button">▶ Take the quick tour</button>
       <ol class="howto-steps">
         <li>
           <p>If you're charting your rebirth cycles — which droid unlocks at which level — switch to the <strong>By Rebirth Level</strong> view in the toolbar below.</p>
@@ -792,7 +878,8 @@
       <div class="howto-subhead">Good to know</div>
       <ul class="howto-tips">
         <li>The <b>A–Z</b> view works the same way — tap a droid's rarity dot to log it, tap your current best again to undo it, or press and hold (right-click) a dot for that same set-exact-rarity menu.</li>
-        <li>A <b>SELL</b> tag next to a name means that's the last time this droid is needed this cycle — safe to fuse or sell once you own it. (It may show up again in a future cycle, but by then you'll need to re-earn it fresh anyway, so there's nothing to hold onto it for now.)</li>
+        <li>SELL flags, in the colors of the old Cycle 5 chart: a yellow <span class="sell-tag yellow" style="margin:0">SELL</span> means that's the last time this droid is needed this cycle, safe to fuse or sell once you own it. A red <span class="sell-tag red" style="margin:0">23</span> or green <span class="sell-tag kyber" style="margin:0">34</span> number means you can sell it now, but that rebirth needs it again at a higher rarity (red: 21–30, green: 31+). No flag: you'll need it again soon.</li>
+        <li><b>👥 Friends</b>: copy your code (or a link) and send it to a friend; paste theirs to see their next rebirths and everything their cycle needs. A code is a snapshot, so ask for a new one when they've moved on.</li>
         <li>A dimmed name in the By Rebirth Level view is already covered by a higher rarity you logged elsewhere — nothing to do there.</li>
         <li><b>🧬 Rebirth Reqs</b> lists everything the selected cycle asks for, low to high, in one panel.</li>
         <li><b>♻ Safe to Retire</b> lists droids you own that the cycle is done asking for, grouped by tier (tap a tier to hide/show it) — enter your current rebirth level in that panel first.</li>
@@ -835,6 +922,7 @@
     <button class="btn" id="retirePanelToggle" title="Show droids you're done needing this cycle — safe to fuse or sell">♻ Safe to Retire</button>
     <button class="btn" id="sneakPanelToggle" title="Show the Mythic droids the next cycle will ask for, at the highest variety it needs">🔮 Sneak Preview</button>
     <button class="btn" id="timersToggle" title="Show live countdowns for the Stellar, Mythic and Kyber blueprint drops and the next mission">⏱ Event Timers</button>
+    <button class="btn" id="friendsPanelToggle" title="Share your progress as a code, and paste friends' codes to see what they need">👥 Friends</button>
     <button class="btn" id="lookToggle" title="Change the colors of this page">🎨 Look</button>
     <button class="btn" id="bgBtn" title="Set a custom background image">🖼 Background</button>
     <div class="bg-controls" id="bgControls" hidden>
@@ -988,6 +1076,29 @@
       <p class="rebirth-sub"><b class="sneak-next" id="sneakNextLabel">Next: Cycle 2</b> — the Mythic droids it will ask for, each at the highest variety it ever needs, highest first. Start hunting these before you get there. Tap one you already have to mark it: it's logged for you when you switch to that cycle.</p>
       <div id="sneakList"></div>
     </div>
+    <!-- 👥 Friends (desktop v1.16.0): share your progress as a code or link, see friends' from theirs (no server) -->
+    <div class="rebirth-panel" id="friendsPanel">
+      <div class="rebirth-panel-head">
+        <h3>👥 Friends</h3>
+        <button class="btn" id="friendsPanelClose" title="Hide this panel">✕</button>
+      </div>
+      <div id="friendLinkBox"></div>
+      <div class="fr-mine">
+        <div class="fr-mine-top"><label for="friendMyName">Your name</label><input id="friendMyName" maxlength="16" placeholder="Name your friends will see"></div>
+        <div class="fr-code" id="friendMyCode" title="Your friend code: your cycle, rebirth and logged droids"></div>
+        <div class="fr-mine-btns">
+          <button class="btn" id="friendCopyCode">📋 Copy my code</button>
+          <button class="btn" id="friendCopyLink">🔗 Copy link</button>
+        </div>
+        <p class="rebirth-sub">A snapshot of right now: send a new one when you've moved on. The link opens it in any browser.</p>
+      </div>
+      <div id="friendsList"></div>
+      <div class="fr-paste">
+        <input id="friendPasteInput" placeholder="Paste a friend's code or link" spellcheck="false" autocapitalize="off" autocomplete="off">
+        <button class="btn" id="friendAddBtn">Add</button>
+      </div>
+      <div class="fr-paste-msg" id="friendPasteMsg"></div>
+    </div>
   </div>
 
   <div class="ref" id="refCosts">
@@ -1022,6 +1133,7 @@
   <button type="button" class="install-btn" id="installBtn">📲 Install as an app<small>Opens full-screen from your home screen, like an app</small></button>
   <p class="install-hint" id="installHint" hidden></p>
   <div class="more-grid">
+    <button type="button" data-more="friends">👥 Friends</button>
     <button type="button" data-more="sneak">🔮 Sneak Preview</button>
     <button type="button" data-more="look">🎨 Look</button>
     <button type="button" data-more="bg">🖼 Background</button>
@@ -1050,8 +1162,9 @@
   </div>
 </div>
 
-<script src="icons-data.js?v=1.15.1"></script>
-<script src="droid-data.js?v=1.15.1"></script>
+<script src="icons-data.js?v=1.16.0"></script>
+<script src="droid-data.js?v=1.16.0"></script>
+<script src="tour.js?v=1.16.0"></script>
 <script>
 /* ---------------- STORAGE ----------------
    No Electron bridge exists in a plain browser, so this always falls
@@ -1129,6 +1242,7 @@ function buildIndex(){
   // keeping stale post-rename entries for the rest of the page's life —
   // mirrors requirements.js's identical comment/fix in the Electron app.
   RARITY_CLASS_BY_NK = null;
+  SELL_NEEDS_CACHE = {}; // sellFlagFor(): keyed by the merged names too
 }
 
 /* ---------------- OWNERSHIP ---------------- */
@@ -1207,6 +1321,146 @@ function cycleRealLevelCount(cycle){
   return CYCLES[cycle].length;
 }
 function cycleRealSlotCount(cycle){ return cycleRealLevelCount(cycle) * 3; }
+
+/* ---------------- SELL FLAGS + FRIEND CODES (copied from the desktop app's requirements.js, v1.16.0) ----------------
+   Keep these identical to the app: a friend code made on the website must read in the
+   app and back (same droid list, same fingerprint), and the SELL colours must agree.
+   sellFlagFor(cycle, level, slot): {kind:'yellow'} = never asked for again this cycle;
+   {kind:'red'|'kyber', next} = not asked for again in this stretch (1-20 / 21-30 / 31+),
+   next asked for at a HIGHER rarity at rebirth `next` (21-30 red, 31+ kyber); else null. */
+function sellStretchOf(level){ return level >= 31 ? 2 : level >= 21 ? 1 : 0; }
+let SELL_NEEDS_CACHE = {}; // cycle -> {nk -> [{level, rank}] ascending}; reset by buildIndex()
+function cycleNeedsByDroid(cycle){
+  if(SELL_NEEDS_CACHE[cycle]) return SELL_NEEDS_CACHE[cycle];
+  const needs = {};
+  const cycleLen = CYCLES[cycle] ? CYCLES[cycle].length : 0;
+  for(let l=1;l<=cycleLen;l++){
+    CYCLES[cycle][l-1].forEach(d=>{
+      if(d[0] === '?') return;
+      const nk = normKey(canonicalName(d[1]));
+      (needs[nk] = needs[nk] || []).push({ level:l, rank:rankOf(d[0]) });
+    });
+  }
+  SELL_NEEDS_CACHE[cycle] = needs;
+  return needs;
+}
+function sellFlagFor(cycle, level, slot){
+  const row = CYCLES[cycle] && CYCLES[cycle][level-1];
+  const d = row && row[slot];
+  if(!d || d[0] === '?') return null;
+  const later = (cycleNeedsByDroid(cycle)[normKey(canonicalName(d[1]))] || []).filter(x => x.level > level);
+  if(!later.length) return { kind:'yellow' };
+  const next = later[0];
+  if(sellStretchOf(next.level) === sellStretchOf(level) || next.rank <= rankOf(d[0])) return null;
+  return { kind: sellStretchOf(next.level) === 1 ? 'red' : 'kyber', next: next.level };
+}
+function sellFlagTitle(flag){
+  if(!flag) return '';
+  return flag.kind === 'yellow' ? 'SELL: not needed again this cycle' : 'can be sold, needed again at Rebirth ' + flag.next;
+}
+function sellFlagHtml(flag){
+  return flag ? '<span class="sell-flag ' + flag.kind + '">' + (flag.kind === 'yellow' ? 'SELL' : flag.next) + '</span>' : '';
+}
+/* Friend codes: "FDTP1." + base64url of [1][fingerprint hi][lo][cycle][rebirth][minutes since
+   2026-01-01, 4 bytes][name length][name UTF-8][each droid's logged rarity, 2 per byte: 0 = none,
+   rank+1][checksum]. Droids by RAW droid-data.js name in first-seen order; the fingerprint hashes
+   that list so a code from other data is refused, not misread. */
+const FRIEND_CODE_PREFIX = 'FDTP1.';
+const FRIEND_LINK_BASE = 'https://ibefuzzy.github.io/tracker/#friend=';
+const FRIEND_EPOCH_MIN = Date.UTC(2026, 0, 1) / 60000;
+const FRIEND_DROIDS = (function(){
+  const out = [], byKey = {};
+  for(let c=1;c<=5;c++) (CYCLES[c] || []).forEach(row => row.forEach(d=>{
+    if(d[0] === '?') return;
+    const k = normKey(d[1]);
+    if(!byKey[k]){ byKey[k] = { key:k, names:[] }; out.push(byKey[k]); }
+    if(byKey[k].names.indexOf(d[1]) === -1) byKey[k].names.push(d[1]);
+  }));
+  return out;
+})();
+const FRIEND_FINGERPRINT = (function(str){
+  let h = 0x811c9dc5;
+  for(let i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+  return (h ^ (h >>> 16)) & 0xffff;
+})(FRIEND_DROIDS.map(d => d.key).join(','));
+function bytesToB64url(bytes){ let s = ''; bytes.forEach(b=>{ s += String.fromCharCode(b); }); return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
+function b64urlToBytes(str){ const b = atob(str.replace(/-/g,'+').replace(/_/g,'/')); return Uint8Array.from(b, ch => ch.charCodeAt(0)); }
+function cleanFriendName(name){ return String(name || '').replace(/[\u0000-\u001f<>&"]/g, '').trim().slice(0, 16); }
+function friendAgeText(time, now){
+  const m = Math.max(0, Math.round(((now || Date.now()) - time) / 60000));
+  if(m < 60) return m + ' min ago';
+  const h = Math.round(m / 60);
+  return h < 24 ? h + 'h ago' : Math.round(h / 24) + 'd ago';
+}
+function friendOwnedFromMine(ownedRank){
+  const out = {};
+  FRIEND_DROIDS.forEach(d=>{
+    d.names.forEach(n=>{
+      const r = ownedRank[normKey(canonicalName(n))];
+      if(r !== undefined && (out[d.key] === undefined || r > out[d.key])) out[d.key] = r;
+    });
+  });
+  return out;
+}
+function friendOwnedRank(rawOwned){
+  const out = {};
+  FRIEND_DROIDS.forEach(d=>{
+    const r = rawOwned[d.key];
+    if(r === undefined) return;
+    d.names.forEach(n=>{
+      const nk = normKey(canonicalName(n));
+      if(out[nk] === undefined || r > out[nk]) out[nk] = r;
+    });
+  });
+  return out;
+}
+function encodeFriendCode(p){
+  let name = cleanFriendName(p.name);
+  let nameBytes = new TextEncoder().encode(name);
+  while(nameBytes.length > 24){ name = name.slice(0, -1); nameBytes = new TextEncoder().encode(name); }
+  const mins = Math.max(0, Math.floor(p.time / 60000 - FRIEND_EPOCH_MIN));
+  const bytes = [1, FRIEND_FINGERPRINT >> 8, FRIEND_FINGERPRINT & 255, p.cycle, p.level,
+    (mins >>> 24) & 255, (mins >>> 16) & 255, (mins >>> 8) & 255, mins & 255, nameBytes.length];
+  nameBytes.forEach(b => bytes.push(b));
+  const nib = k => (p.owned[k] === undefined ? 0 : p.owned[k] + 1);
+  for(let i=0;i<FRIEND_DROIDS.length;i+=2){
+    bytes.push((nib(FRIEND_DROIDS[i].key) << 4) | (i + 1 < FRIEND_DROIDS.length ? nib(FRIEND_DROIDS[i+1].key) : 0));
+  }
+  bytes.push(bytes.reduce((s, x) => (s + x) & 255, 0));
+  return FRIEND_CODE_PREFIX + bytesToB64url(bytes);
+}
+function decodeFriendCode(input){
+  const bad = { error:"That isn't a friend code." };
+  try{
+    let str = String(input || '').trim();
+    const at = str.indexOf('#friend=');
+    if(at !== -1) str = str.slice(at + 8);
+    str = str.replace(/\s+/g, '');
+    if(!str.startsWith(FRIEND_CODE_PREFIX) || str.length > 400) return bad;
+    const b = b64urlToBytes(str.slice(FRIEND_CODE_PREFIX.length));
+    if(b.length < 12 || b[0] !== 1) return bad;
+    if(b.slice(0, -1).reduce((s, x) => (s + x) & 255, 0) !== b[b.length-1]) return { error:'That code is cut off or mistyped. Copy it again.' };
+    const n = b[9];
+    if(10 + n > b.length - 1) return bad;
+    const name = cleanFriendName(new TextDecoder().decode(b.slice(10, 10 + n))) || 'Friend';
+    if(((b[1] << 8) | b[2]) !== FRIEND_FINGERPRINT) return { error:'That code is from a different version of the app or website. One of you needs to update.', name };
+    const cycle = b[3], level = b[4];
+    if(!(cycle >= 1 && cycle <= 5) || level > cycleRealLevelCount(cycle)) return bad;
+    if(b.length !== 10 + n + Math.ceil(FRIEND_DROIDS.length / 2) + 1) return bad;
+    const owned = {};
+    let pos = 10 + n;
+    for(let i=0;i<FRIEND_DROIDS.length;i+=2, pos++){
+      const hi = b[pos] >> 4, lo = b[pos] & 15;
+      if(hi > RARITY_ORDER.length || lo > RARITY_ORDER.length) return bad;
+      if(hi) owned[FRIEND_DROIDS[i].key] = hi - 1;
+      if(lo && i + 1 < FRIEND_DROIDS.length) owned[FRIEND_DROIDS[i+1].key] = lo - 1;
+    }
+    const mins = ((b[5] << 24) | (b[6] << 16) | (b[7] << 8) | b[8]) >>> 0;
+    return { name, cycle, level, owned, time:(mins + FRIEND_EPOCH_MIN) * 60000, code:str };
+  }catch(e){
+    return bad;
+  }
+}
 
 function cycleCoveredCount(cycle){
   let covered = 0;
@@ -1452,29 +1706,25 @@ function renderByAlpha(){
   listEl.innerHTML = keys.map(nk=>droidRowHtml(nk)).join('');
 }
 
-function droidCellHtml(nk, occEntry, lastNeeded){
+function droidCellHtml(nk, occEntry){
   const entry = DROID_INDEX[nk];
   const owned = ownedRank[nk];
   const covered = owned !== undefined && occEntry.rank <= owned;
-  // Cycle-scoped, not cross-cycle: cycles loop forever and clearCycleMarks()
-  // wipes tracked ownership for every droid in a cycle once that cycle resets,
-  // so whether a droid reappears in a later-numbered cycle is irrelevant —
-  // by the time that cycle is reached, this droid will need to be re-logged
-  // from scratch anyway. The real question is only whether THIS cycle's own
-  // table still needs it again. Matches requirements.js's cycleLastNeededLevel
-  // (same test already used correctly by the Safe to Retire list below).
-  const sellable = lastNeeded[nk] === occEntry.level;
+  // Cycle-scoped, not cross-cycle (cycles loop and a cycle's reset wipes its
+  // droids): sellFlagFor() only looks at the rest of THIS cycle's own table.
+  // Yellow is still exactly cycleLastNeededLevel's "last needed here".
+  const flag = sellFlagFor(occEntry.cycle, occEntry.level, occEntry.slot);
   const code = RARITY_ORDER[occEntry.rank];
   const cls = 'droid-cell ' + code + (covered ? ' covered' : '');
   const iconKey = occEntry.cycle + '-' + occEntry.level + '-' + occEntry.slot;
   const src = (typeof ICONS !== 'undefined' && ICONS[iconKey]) ? ('data:image/webp;base64,' + ICONS[iconKey]) : '';
   const imgTag = src ? ('<img src="' + src + '" alt="" loading="lazy">') : '';
   const badgeClass = RCLASS[code];
-  const sellTag = sellable ? '<span class="sell-tag">SELL</span>' : '';
+  const sellTag = flag ? '<span class="sell-tag ' + flag.kind + '">' + (flag.kind === 'yellow' ? 'SELL' : flag.next) + '</span>' : '';
   const titleBits = [entry.display + ' — ' + RNAME[code]];
   titleBits.push(covered ? 'already covered' : 'tap to log');
   titleBits.push('press and hold (or right-click) to see/change the exact colorway on record');
-  if(sellable) titleBits.push('not needed again this cycle');
+  if(flag) titleBits.push(sellFlagTitle(flag));
   return '<td class="' + cls + '" data-nk="' + nk + '" data-rank="' + occEntry.rank + '" title="' + titleBits.join(' — ') + '">' +
     '<div class="cell-flex">' +
       '<div class="icon-badge icon-badge-sm ' + badgeClass + '">' + imgTag + '</div>' +
@@ -1483,6 +1733,14 @@ function droidCellHtml(nk, occEntry, lastNeeded){
   '</td>';
 }
 
+/* Nova Crystals for reaching a rebirth (desktop v1.16.0): REBIRTH_CRYSTALS in droid-data.js; null = none/unknown.
+   The icon is the game's own crystal (the same data URI as the desktop app's requirements.js), set as --nova-crystal. */
+function rebirthCrystalsFor(cycle, level){
+  const n = (typeof REBIRTH_CRYSTALS !== 'undefined') ? REBIRTH_CRYSTALS[level - 1] : undefined;
+  return typeof n === 'number' ? n : null;
+}
+const NOVA_CRYSTAL_URI = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAEQ0lEQVRIx92XfUzUdRzHf4msg/sd/hCEE+S84+RZvDs4HyA0kViCs8yiFcnmZpvUtCANQvABn/Lh1EDkBI9RKCrEw0F/UFrWRKQiTMvNGqPZnG7ZJtMyl8G9+h5s1d/ewR99tve+vz9++70+36f35/OTpP9bKO/0ZEjxvWiKB5kQ4Pq+EfzXgaQ7j1QCPhnfjz84sgYmrxRQvzakAjEWwuNrfh4/cPiONjTbYFLGQyTr2VHgY0JuuLnq7viAzc5hpDwXUqKY2Ws3kbYKoEhC2iT0pouCnofjAI67iBTllhOpbgTpoIBVgu9hMe4ZW+r090e8C/aNOonP7I+RlWIUvY2ArTeQjjMmh5BN7PfUPUhueQ3qV4BqaglTlLfQandi0FexIK6JQHk7k9RFSKpS1EHlqPzFe/IG74DVfiVEhVQTaqxFH74fa0w9i+JPkWt1EqTZgqK1Uf3NbQKUTQL8BhHz7DaPoYGqMrTyXuYv6uYJUxfpUS2sSjrHhsxLFL9yGUt4LakxDRhmOQgM2IRWXer5bDWqEmbK+zAotSxJ7mPD0kFKnvqBQzm/ULfmV1aZzlGU2k32rGYswVXEaXaRHVLnGThAQHWa9zAHHyNpeiuFaVe40QZf7nvIt+IUX9oNndvuUmi9wDO6JsoiOlkgkvQIqvIrJ0i9F2NANQvDTlMwv5+W1UP8OcQ/MeiE08/dYqO1l+W601hkG5Hy5kcHT8u8hsbvAFr/ChKUejJmdLA7dYDBgy7+GwMfQVvubdaZu0nXOogO2I45tvbRwT5BrSjqdvTyccyaE+RHdtOd9xtDZ8aALpdrVNdbXDTk3+GlmC7MoZUsjW94dOjU+Kv4GH4kXOnmWW0H62eeYaX+M67ueMBNh4uhT+H3fhi+B/3Ff1CU9DXLoz/kBVMnWc9/4cH+Kq1olR5xfRqZY20jWmPnxbnnqci7Ts2yKzSvvc65glv0br3HkRUDbEz/ihWJTtKiGjy9QmWolIuo5XoU+RDTxIHJERa5LLqJXIuTtaldlKaf50DOd7ye9jnL57R7Dp2ZX9khZT4QPnsGX9kutFskYcMwwzHqVFnJjawQejmlnZy5nTyd2Myi2A9IEcbhEXhytKip+p+QFPEheZdI4F2KLtwhXFfB3Dg7SxY0kmWpZ1nSSZ5MOEWaUMrsRi94crAAKlVjUHmLeC4lyeQgLMLGYlMt2SkNGBMaMcaewLJ6hHnl3ip9oYeRhOUlvSpOp1yGebadZLODFNMxUi3HMeQ9IDb/L3KbIWW/w4v1VtmJ5F+CJEw+cPoBEmOPYkmwEyf2MMzaQba4x29fG/ZugQ91r9qUvaJhc9dV4dE6O0ZDFUZjPSFRrWS3Q+UNL3cV/7rHvlGwHHKEkOl29NEdKDon8eWMc6sqYG6wb9BRgnWfoIk4i3bz/QlozMWddWvSjD5U+ssT8ycwVpZqkBben0DgBMbfyc2cuAoT4egAAAAASUVORK5CYII=';
+document.documentElement.style.setProperty('--nova-crystal', 'url("' + NOVA_CRYSTAL_URI + '")');
 /* Rebirth credit cost (desktop v1.15.1): REBIRTH_CREDITS in droid-data.js, the same every cycle. */
 function rebirthCreditsFor(cycle, level){
   const n = (typeof REBIRTH_CREDITS !== 'undefined') ? REBIRTH_CREDITS[level - 1] : undefined;
@@ -1501,7 +1759,6 @@ function renderByLevel(){
   const covered = cycleCoveredCount(activeCycle);
   getEl('cycleProgress').textContent = covered + ' / ' + cycleRealSlotCount(activeCycle) + ' covered';
   const q = filterText.trim().toLowerCase();
-  const lastNeeded = cycleLastNeededLevel(activeCycle);
   let rowsHtml = '';
   let anyVisible = false;
   for(let l=1;l<=40;l++){
@@ -1512,11 +1769,13 @@ function renderByLevel(){
     anyVisible = true;
     const cellsHtml = row.map((d,i)=>{
       const occEntry = { cycle:activeCycle, level:l, slot:i, code:d[0], rank:rankOf(d[0]) };
-      return droidCellHtml(nks[i], occEntry, lastNeeded);
+      return droidCellHtml(nks[i], occEntry);
     }).join('');
     const credits = rebirthCreditsFor(activeCycle, l);
     const creditsHtml = credits === null ? '' : '<span class="lv-credits" title="Credits needed for Rebirth ' + l + '">' + formatCredits(credits) + '</span>';
-    rowsHtml += '<tr><td class="lv-num" data-cycle="' + activeCycle + '" data-level="' + l + '" title="Mark all 3 as obtained">' + l + creditsHtml + '</td>' + cellsHtml + '</tr>';
+    const crystals = rebirthCrystalsFor(activeCycle, l);
+    const crystalsHtml = crystals === null ? '' : '<span class="lv-crystals" title="Nova Crystals for reaching Rebirth ' + l + '">+' + crystals + '</span>';
+    rowsHtml += '<tr><td class="lv-num" data-cycle="' + activeCycle + '" data-level="' + l + '" title="Mark all 3 as obtained">' + l + creditsHtml + crystalsHtml + '</td>' + cellsHtml + '</tr>';
   }
 
   const listEl = getEl('dqList');
@@ -1584,6 +1843,7 @@ function renderList(){
   renderRetirePanel();
   renderSneakPanel();
   renderUpNext();
+  renderFriends(); // 👥 your own code changes with your marks/cycle
 }
 
 /* ---------------- RENDER: REBIRTH REQUIREMENTS PANEL ----------------
@@ -1792,18 +2052,19 @@ function retireCellHtml(item){
 let showRetirePanel = false;
 let showReqPanel = false;
 let showSneakPanel = false;
+let showFriendsPanel = false; // 👥 (desktop v1.16.0)
 let listVisible = true; // false = droid list hidden (active sort button pressed again), so a side panel can be the whole page
 let retireCurrentLevel = 0; // 0 = unset; persisted separately from ownedRank, see resetCycleAndAdvance()
 function applyPanelWidths(){
   const wrapEl = getEl('wrapEl');
-  if(wrapEl) wrapEl.classList.toggle('with-rebirth', showReqPanel || showRetirePanel || showSneakPanel);
+  if(wrapEl) wrapEl.classList.toggle('with-rebirth', showReqPanel || showRetirePanel || showSneakPanel || showFriendsPanel);
   applyNothingShown();
 }
 // List toggled off AND every side panel closed would leave an empty page —
 // say how to get a view back instead.
 function applyNothingShown(){
   const el = getEl('nothingShown');
-  if(el) el.classList.toggle('show', !listVisible && !showReqPanel && !showRetirePanel && !showSneakPanel);
+  if(el) el.classList.toggle('show', !listVisible && !showReqPanel && !showRetirePanel && !showSneakPanel && !showFriendsPanel);
 }
 function applyRetirePanelVisibility(){
   const panel = getEl('retirePanel');
@@ -1838,6 +2099,7 @@ document.getElementById('retireLevelInput').addEventListener('input', async (e)=
   await storeSet('rebirth-currentLevel', retireCurrentLevel);
   renderRetirePanel();
   renderUpNext();
+  renderFriends();
 });
 
 function renderRetirePanel(){
@@ -2497,20 +2759,34 @@ function upcomingLevels(cycle, level, count){
   }
   return out;
 }
-function upNextDroidHtml(u, code, name, slot){
+// friend (v1.16.0 👥): draw a friend's card, from their owned ranks, look-only (no data-nk = not tappable)
+function upNextDroidHtml(u, code, name, slot, friendOwned){
   if(code === '?') return '<div class="un-droid covered"><div class="un-ic" style="--rc:var(--line)"></div><div class="un-name">???</div><div class="un-need">not revealed</div></div>';
   const nk = normKey(canonicalName(name));
   const entry = DROID_INDEX[nk];
   const rank = rankOf(code);
-  const owned = ownedRank[nk];
+  const owned = (friendOwned || ownedRank)[nk];
   const covered = owned !== undefined && rank <= owned;
   const b64 = (typeof ICONS !== 'undefined') ? ICONS[u.cycle + '-' + u.level + '-' + slot] : null;
   const img = b64 ? '<img src="data:image/webp;base64,' + b64 + '" alt="" loading="lazy">' : '';
-  const title = entry.display + ' — need ' + RNAME[code] + (covered ? ' — already covered' : ' — tap to log') + ' — press and hold for an exact colorway';
-  return '<div class="un-droid' + (covered ? ' covered' : '') + '" data-nk="' + nk + '" data-rank="' + rank + '" title="' + title + '" style="--rc:' + NEED_COLOR[code] + '">' +
-    '<div class="un-ic">' + img + '</div>' +
+  const flag = sellFlagFor(u.cycle, u.level, slot);
+  const title = entry.display + ' — need ' + RNAME[code] + (friendOwned ? (owned !== undefined ? ' — has ' + RNAME[RARITY_ORDER[owned]] : ' — not logged') : (covered ? ' — already covered' : ' — tap to log') + ' — press and hold for an exact colorway') + (flag ? ' — ' + sellFlagTitle(flag) : '');
+  return '<div class="un-droid' + (covered ? ' covered' : '') + '"' + (friendOwned ? '' : ' data-nk="' + nk + '" data-rank="' + rank + '"') + ' title="' + title + '" style="--rc:' + NEED_COLOR[code] + '">' +
+    '<div class="un-ic">' + img + sellFlagHtml(flag) + '</div>' +
     '<div class="un-name">' + entry.display + '</div>' +
     '<div class="un-need">' + (covered ? '✓ ' : 'need ') + RNAME[code] + '</div>' +
+  '</div>';
+}
+// one rebirth block of Up next (yours, or a friend's with friendOwned)
+function upNextLevelHtml(u, i, cycle, friendOwned){
+  const credits = rebirthCreditsFor(u.cycle, u.level);
+  const crystals = rebirthCrystalsFor(u.cycle, u.level);
+  const tag = (i === 0 ? 'NOW · ' : '') + 'Lvl ' + u.level + (u.cycle !== cycle ? ' · Cycle ' + u.cycle : '');
+  return '<div class="un-level' + (i === 0 ? ' now' : '') + '">' +
+    '<div class="un-top"><span class="un-tag">' + tag + '</span><span class="un-chips">' +
+      (crystals === null ? '' : '<span class="un-crystals" title="Nova Crystals for reaching Rebirth ' + u.level + '">+' + crystals + '</span>') +
+      (credits === null ? '' : '<span class="un-credits" title="Credits needed for Rebirth ' + u.level + '">' + formatCredits(credits) + '</span>') + '</span></div>' +
+    '<div class="un-trio">' + CYCLES[u.cycle][u.level - 1].map(([code, name], slot) => upNextDroidHtml(u, code, name, slot, friendOwned)).join('') + '</div>' +
   '</div>';
 }
 function renderUpNext(){
@@ -2518,15 +2794,7 @@ function renderUpNext(){
   if(!list) return;
   getEl('upNextLevel').textContent = 'Lvl ' + retireCurrentLevel;
   getEl('upNextCycleSel').value = String(activeCycle);
-  list.innerHTML = upcomingLevels(activeCycle, retireCurrentLevel, 4).map((u, i) => {
-    const credits = rebirthCreditsFor(u.cycle, u.level);
-    const tag = (i === 0 ? 'NOW · ' : '') + 'Lvl ' + u.level + (u.cycle !== activeCycle ? ' · Cycle ' + u.cycle : '');
-    return '<div class="un-level' + (i === 0 ? ' now' : '') + '">' +
-      '<div class="un-top"><span class="un-tag">' + tag + '</span>' +
-        (credits === null ? '' : '<span class="un-credits" title="Credits needed for Rebirth ' + u.level + '">' + formatCredits(credits) + '</span>') + '</div>' +
-      '<div class="un-trio">' + CYCLES[u.cycle][u.level - 1].map(([code, name], slot) => upNextDroidHtml(u, code, name, slot)).join('') + '</div>' +
-    '</div>';
-  }).join('');
+  list.innerHTML = upcomingLevels(activeCycle, retireCurrentLevel, 4).map((u, i) => upNextLevelHtml(u, i, activeCycle)).join('');
   list.querySelectorAll('.un-droid[data-nk]').forEach(el => {
     el.addEventListener('click', ()=> setOwned(el.dataset.nk, parseInt(el.dataset.rank, 10)));
     el.addEventListener('contextmenu', (e)=>{ e.preventDefault(); openRbContextMenu(el.dataset.nk, e.clientX, e.clientY); });
@@ -2538,6 +2806,7 @@ async function setCurrentLevel(v){
   await storeSet('rebirth-currentLevel', retireCurrentLevel);
   renderRetirePanel();
   renderUpNext();
+  renderFriends();
 }
 function applyUpNextVisibility(){
   getEl('upNextCard').classList.toggle('show', showUpNext);
@@ -2552,6 +2821,186 @@ getEl('upNextToggle').addEventListener('click', async ()=>{
 getEl('upNextDec').addEventListener('click', ()=> setCurrentLevel(retireCurrentLevel - 1));
 getEl('upNextInc').addEventListener('click', ()=> setCurrentLevel(retireCurrentLevel + 1));
 getEl('upNextCycleSel').addEventListener('change', (e)=> setActiveCycle(parseInt(e.target.value, 10)));
+
+/* ---------------- 👥 FRIENDS (desktop v1.16.0) ----------------
+   Your progress as a short code (or a link: tracker/#friend=CODE, the code after the #
+   never reaches the server) to paste to a friend; paste theirs to see their 🎯 Up next and
+   🧬 Rebirth Reqs. No server: a code is a snapshot, a newer code with the same name
+   replaces the old one. 'rebirth-friends' = the pasted codes (newest first),
+   'rebirth-friendName' = the name your code carries. Never mixed into ownedRank.
+   Opening a #friend= link shows that friend read-only at the top, with "Save to my friends". */
+const FRIENDS_MAX = 30;
+let friendCodes = [];
+let myFriendName = '';
+let linkFriend = null; // decoded #friend= link, until saved or closed
+const friendUi = {};   // code -> {open, tab:'next'|'reqs', only}
+function cleanFriendCodes(list){ return (Array.isArray(list) ? list : []).filter(c => typeof c === 'string' && /^FDTP1\.[A-Za-z0-9_-]+$/.test(c)); }
+function myFriendCode(){
+  return encodeFriendCode({ name: myFriendName || 'Friend', cycle: activeCycle, level: Math.min(retireCurrentLevel, cycleRealLevelCount(activeCycle)), owned: friendOwnedFromMine(ownedRank), time: Date.now() });
+}
+function friendImg(cycle, level, slot){
+  const b64 = (typeof ICONS !== 'undefined') ? ICONS[cycle + '-' + level + '-' + slot] : null;
+  return b64 ? '<img src="data:image/webp;base64,' + b64 + '" alt="" loading="lazy">' : '';
+}
+function friendReqsHtml(owned, ceilings, onlyNeeds){
+  const tiers = {};
+  Object.keys(ceilings).forEach(nk=>{ (tiers[ceilings[nk].rank] = tiers[ceilings[nk].rank] || []).push(nk); });
+  let html = '';
+  for(let rank = RARITY_ORDER.length - 1; rank >= 0; rank--){ // rarest first
+    const nks = tiers[rank];
+    if(!nks) continue;
+    nks.sort((a, b)=> DROID_INDEX[a].display.localeCompare(DROID_INDEX[b].display));
+    const code = RARITY_ORDER[rank];
+    let need = 0;
+    const cells = nks.map(nk=>{
+      const o = owned[nk], covered = o !== undefined && o >= rank, info = ceilings[nk];
+      if(!covered) need++;
+      if(onlyNeeds && covered) return '';
+      return '<div class="fr-rq-cell' + (covered ? ' covered' : '') + '" title="' + DROID_INDEX[nk].display + ': needs ' + RNAME[code] + (o !== undefined ? ', has ' + RNAME[RARITY_ORDER[o]] : '') + '">' +
+        '<div class="icon-badge icon-badge-split"><div class="badge-half badge-half-owned ' + (o !== undefined ? RCLASS[RARITY_ORDER[o]] : 'rarity-unowned') + '"></div>' +
+        '<div class="badge-half badge-half-req ' + RCLASS[code] + '"></div>' + friendImg(info.cycle, info.level, info.slot) + '</div>' +
+        '<div class="rb-name ' + code + '">' + DROID_INDEX[nk].display + '</div></div>';
+    }).join('');
+    if(cells) html += '<div class="rebirth-tier-label ' + code + '">' + RNAME[code] + ' <small>' + need + ' of ' + nks.length + ' to go</small></div><div class="fr-rq-grid">' + cells + '</div>';
+  }
+  return '<div class="fr-rq">' + (html || '<div class="fr-empty">✓ They have everything this cycle needs.</div>') + '</div>';
+}
+function friendCardHtml(f, st, isLink){
+  const owned = friendOwnedRank(f.owned);
+  const ups = upcomingLevels(f.cycle, f.level, 4);
+  const old = Date.now() - f.time > 86400000;
+  const now = ups[0];
+  const nowIcons = CYCLES[now.cycle][now.level - 1].map(([code, name], slot)=>{
+    if(code === '?') return '';
+    const o = owned[normKey(canonicalName(name))];
+    return '<div class="icon-badge ' + RCLASS[code] + (o !== undefined && o >= rankOf(code) ? ' dim' : '') + '">' + friendImg(now.cycle, now.level, slot) + '</div>';
+  }).join('');
+  let body = '';
+  if(st.open){
+    const ceilings = cycleCeilings(f.cycle);
+    const nks = Object.keys(ceilings);
+    const have = nks.filter(nk => owned[nk] !== undefined && owned[nk] >= ceilings[nk].rank).length;
+    body = '<div class="fr-tabs"><button class="fr-tab' + (st.tab === 'next' ? ' on' : '') + '" data-tab="next">🎯 Up next</button>' +
+        '<button class="fr-tab' + (st.tab === 'reqs' ? ' on' : '') + '" data-tab="reqs">🧬 Rebirth Reqs</button></div>' +
+      '<div class="fr-prog"><span>Cycle ' + f.cycle + ': <b>' + have + '/' + nks.length + '</b> droids</span>' +
+        '<div class="bar"><div style="width:' + (nks.length ? have / nks.length * 100 : 0) + '%"></div></div>' +
+        (st.tab === 'reqs' ? '<label class="fr-only"><input type="checkbox" data-only' + (st.only ? ' checked' : '') + '>only needs</label>' : '') + '</div>' +
+      (st.tab === 'reqs' ? friendReqsHtml(owned, ceilings, st.only)
+                         : '<div class="upnext-list">' + ups.map((u, i)=> upNextLevelHtml(u, i, f.cycle, owned)).join('') + '</div>');
+  }
+  return '<div class="fr-card" data-code="' + f.code + '"' + (isLink ? ' data-link' : '') + '>' +
+    '<div class="fr-row" data-toggle><span class="fr-chev">' + (st.open ? '▾' : '▸') + '</span>' +
+      '<div class="fr-avatar">' + f.name.charAt(0).toUpperCase() + '</div>' +
+      '<div class="fr-who"><b>' + f.name + '</b><small>C' + f.cycle + ' · Rebirth ' + f.level + '</small>' +
+        '<small' + (old ? ' class="old"' : '') + '>code from ' + friendAgeText(f.time) + (old ? ' · ask for a new one' : '') + '</small></div>' +
+      '<div class="fr-now">' + nowIcons + '</div>' +
+      (isLink ? '' : '<button class="fr-x" data-remove title="Remove ' + f.name + '">✕</button>') + '</div>' +
+    body + '</div>';
+}
+function renderFriends(){
+  if(!showFriendsPanel && !(document.body.classList.contains('tabbed') && phoneTab === 'friends')) return;
+  getEl('friendMyCode').textContent = myFriendCode();
+  getEl('friendLinkBox').innerHTML = linkFriend
+    ? '<div class="fr-link">Viewing <b>' + linkFriend.name + '</b>\'s progress (read only), from a code made ' + friendAgeText(linkFriend.time) + '.' +
+        '<div class="fr-link-btns"><button class="btn on" id="friendLinkSave">＋ Save to my friends</button><button class="btn" id="friendLinkClose">Close</button></div></div>' +
+      friendCardHtml(linkFriend, friendUi['link:' + linkFriend.code] || (friendUi['link:' + linkFriend.code] = { open:true, tab:'next', only:false }), true)
+    : '';
+  let html = '';
+  friendCodes.forEach(code=>{
+    const f = decodeFriendCode(code);
+    if(f.error){ html += '<div class="fr-bad" data-code="' + code + '">⚠ <span>' + (f.name ? f.name + ': ' : '') + f.error + '</span><button class="fr-x" data-remove title="Remove">✕</button></div>'; return; }
+    html += friendCardHtml(f, friendUi[code] || (friendUi[code] = { open:false, tab:'next', only:false }));
+  });
+  getEl('friendsList').innerHTML = html || (linkFriend ? '' : '<div class="fr-empty">No friends yet. Paste a friend\'s code below, or paste your own to see how it looks.</div>');
+}
+async function saveFriend(f){
+  const same = friendCodes.findIndex(c => decodeFriendCode(c).name === f.name);
+  if(same !== -1){
+    const old = decodeFriendCode(friendCodes[same]);
+    if(!old.error && old.time > f.time) return 'You already have a newer code from ' + f.name + '.';
+    friendCodes.splice(same, 1);
+  }
+  friendCodes.unshift(f.code);
+  friendCodes = friendCodes.slice(0, FRIENDS_MAX);
+  friendUi[f.code] = { open:true, tab:'next', only:false };
+  await storeSet('rebirth-friends', friendCodes);
+  return (same !== -1 ? 'Updated ' : 'Added ') + f.name + '.';
+}
+function closeFriendLink(){
+  linkFriend = null;
+  if(location.hash.indexOf('#friend=') === 0) history.replaceState(null, '', location.pathname + location.search);
+}
+async function addFriendCode(){
+  const input = getEl('friendPasteInput'), msg = getEl('friendPasteMsg');
+  const f = decodeFriendCode(input.value);
+  msg.classList.remove('ok');
+  if(f.error){ msg.textContent = f.error; return; }
+  const result = await saveFriend(f);
+  msg.textContent = result;
+  if(/^(Added|Updated)/.test(result)){ msg.classList.add('ok'); input.value = ''; }
+  renderFriends();
+}
+function copyMyFriendCode(asLink){
+  const code = myFriendCode();
+  const text = asLink ? FRIEND_LINK_BASE + code : code;
+  const fallback = ()=>{
+    const el = getEl('friendMyCode');
+    el.textContent = text;
+    const range = document.createRange(); range.selectNodeContents(el);
+    const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+    showToast('Copy it from the highlighted box');
+  };
+  const done = ()=> showToast(asLink ? 'Link copied: it opens your progress in any browser' : 'Your friend code is copied: paste it to a friend');
+  if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback);
+  else fallback();
+}
+function applyFriendsPanelVisibility(){
+  getEl('friendsPanel').classList.toggle('show', showFriendsPanel);
+  getEl('friendsPanelToggle').classList.toggle('on', showFriendsPanel);
+  applyPanelWidths();
+}
+async function toggleFriendsPanel(force){
+  showFriendsPanel = (force !== undefined) ? force : !showFriendsPanel;
+  applyFriendsPanelVisibility();
+  if(showFriendsPanel && force === undefined) revealPanelIfStacked('friendsPanel');
+  renderFriends();
+  await storeSet('rebirth-showFriendsPanel', showFriendsPanel);
+}
+getEl('friendsPanelToggle').addEventListener('click', ()=> toggleFriendsPanel());
+getEl('friendsPanelClose').addEventListener('click', ()=>{ if(document.body.classList.contains('tabbed')) setTab('upnext'); else toggleFriendsPanel(false); });
+getEl('friendCopyCode').addEventListener('click', ()=> copyMyFriendCode(false));
+getEl('friendCopyLink').addEventListener('click', ()=> copyMyFriendCode(true));
+getEl('friendAddBtn').addEventListener('click', addFriendCode);
+getEl('friendPasteInput').addEventListener('keydown', e=>{ if(e.key === 'Enter') addFriendCode(); });
+getEl('friendMyName').addEventListener('input', e=>{ myFriendName = cleanFriendName(e.target.value); getEl('friendMyCode').textContent = myFriendCode(); });
+getEl('friendMyName').addEventListener('change', ()=> storeSet('rebirth-friendName', myFriendName));
+getEl('friendsPanel').addEventListener('click', async e=>{
+  if(e.target.closest('#friendLinkSave')){
+    const f = linkFriend; closeFriendLink();
+    showToast(await saveFriend(f));
+    renderFriends(); return;
+  }
+  if(e.target.closest('#friendLinkClose')){ closeFriendLink(); renderFriends(); return; }
+  const card = e.target.closest('[data-code]');
+  if(!card) return;
+  const code = card.dataset.code, isLink = card.hasAttribute('data-link');
+  if(e.target.closest('[data-remove]')){
+    friendCodes = friendCodes.filter(c => c !== code);
+    await storeSet('rebirth-friends', friendCodes);
+    renderFriends(); return;
+  }
+  const st = friendUi[isLink ? 'link:' + code : code];
+  if(!st) return;
+  const tab = e.target.closest('[data-tab]');
+  if(tab){ st.tab = tab.dataset.tab; renderFriends(); return; }
+  if(e.target.closest('[data-toggle]')){ st.open = !st.open; renderFriends(); }
+});
+getEl('friendsPanel').addEventListener('change', e=>{
+  if(!e.target.matches('[data-only]')) return;
+  const card = e.target.closest('[data-code]');
+  const st = friendUi[(card.hasAttribute('data-link') ? 'link:' : '') + card.dataset.code];
+  if(st){ st.only = e.target.checked; renderFriends(); }
+});
 
 /* ---------------- RARITY ON EACH DROID: the picture's color, or written under the name ----------------
    A player's idea (2026-09-29). html.rarity-text is set in <head> from localStorage
@@ -2582,11 +3031,12 @@ const TAB_VIEWS = {
   reqs:   ['.content-row', 'rebirthPanel'],
   retire: ['.content-row', 'retirePanel'],
   sneak:  ['.content-row', 'sneakPanel'],
+  friends: ['.content-row', 'friendsPanel'],
   timers: ['timersSection'],
   look:   ['lookPanel'],
   help:   ['howToUse', 'refCosts']
 };
-const TAB_BAR_FOR = { sneak: 'more', look: 'more', help: 'more' }; // views reached from More
+const TAB_BAR_FOR = { sneak: 'more', friends: 'more', look: 'more', help: 'more' }; // views reached from More
 let phoneTab = 'upnext';
 let desktopTimersState = null; // the timers' own on/off, put back when leaving phone mode
 function viewEl(ref){ return ref.startsWith('.') ? document.querySelector(ref) : getEl(ref); }
@@ -2606,6 +3056,7 @@ function setTab(tab, quiet){
   const barTab = TAB_BAR_FOR[tab] || tab;
   document.querySelectorAll('#tabBar [data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab === barTab));
   if(tab === 'help') getEl('howToUse').classList.add('open');
+  if(tab === 'friends') renderFriends();
   showTimersSection = (tab === 'timers'); // the countdown only ticks while its tab is open
   applyTimersVisibility();
   closeMore();
@@ -2639,7 +3090,7 @@ getEl('moreSheet').addEventListener('click', (e)=>{
   if(!b) return;
   const act = b.dataset.more;
   closeMore();
-  if(act === 'sneak' || act === 'look' || act === 'help') setTab(act);
+  if(act === 'sneak' || act === 'look' || act === 'help' || act === 'friends') setTab(act);
   else if(act === 'rename'){ setTab('droids'); if(!getEl('editToggle').classList.contains('on')) getEl('editToggle').click(); }
   else if(act === 'bg') getEl('bgBtn').click();
   else if(act === 'export') getEl('exportBtn').click();
@@ -2688,6 +3139,74 @@ getEl('installBtn').addEventListener('click', async ()=>{
 });
 applyInstallButton();
 
+/* ---------------- TUTORIAL (desktop v1.16.0; engine = tour.js, identical to the app's) ----------------
+   First visit: a welcome card with "Show me around" / "Skip, I'll figure it out", then the
+   steps for this screen (computer or phone). Returning visitors get only steps newer than
+   the tour they saw ('rebirth-tourVersion'; visitors from before the tour existed count as
+   1.15.1). ▶ Take the quick tour (📖 How to use) replays it; ?tour in the URL shows it as
+   a first visit (for checking it). ADDING A FEATURE: add a step with since:'<version>' to
+   the right list(s) and bump TOUR_VERSION. */
+const TOUR_VERSION = '1.16.0';
+const SELL_TOUR_BODY = `<p>Droid pictures in Up next, and names in By Rebirth Level, get a flag:</p>
+  <p><span class="sell-tag yellow" style="margin:0 6px 0 0">SELL</span> never needed again this cycle.</p>
+  <p><span class="sell-tag red" style="margin:0 6px 0 0">23</span> you can sell it now; Rebirth 23 needs it again, at a higher rarity (red = 21–30).</p>
+  <p><span class="sell-tag kyber" style="margin:0 6px 0 0">34</span> the same, needed again at Rebirth 31 or later. No flag: you'll need it again soon.</p>`;
+const FRIENDS_TOUR_BODY = `<p>Type your name, then <b>📋 Copy my code</b> (or <b>🔗 Copy link</b>) and send it to a friend. Paste theirs to see their next rebirths
+  and everything their cycle needs. A code is a snapshot; ask for a new one when they've moved on. No one to try it with? Paste your own.</p>`;
+const TOUR_STEPS_COMPUTER = [
+  { since:'1.0.0', target:'#sortToggleWrap', title:'Log the droids you own',
+    body:`<p><b>A–Z</b> lists every droid: click its rarity dots to log the best one you have. <b>By Rebirth Level</b> shows the 3 droids each rebirth
+      needs: click one to log it. Right-click (or press and hold) for an exact rarity.</p>` },
+  { since:'1.0.0', target:'#upNextToggle', title:'🎯 Up next',
+    body:`<p>Shows your next 4 rebirths with their droids, credit costs and Nova Crystal rewards. Set <b>− / +</b> to the rebirth you've just done and it follows you.</p>` },
+  { since:'1.16.0', title:'SELL flags: what you can let go', body: SELL_TOUR_BODY },
+  { since:'1.0.0', target:'#reqPanelToggle', title:'Panels beside your list',
+    body:`<p><b>🧬 Rebirth Reqs</b>: everything this cycle needs. <b>♻ Safe to Retire</b>: droids you can let go of. <b>🔮 Sneak Preview</b>: next cycle's
+      toughest droids, to hold on to. <b>⏱ Event Timers</b>: Stellar, Mythic, Kyber and mission countdowns.</p>` },
+  { since:'1.16.0', target:'#friendsPanelToggle', title:'👥 Friends: see what your friends need', body: FRIENDS_TOUR_BODY },
+  { since:'1.0.0', target:'#exportBtn', title:'Keep your progress safe',
+    body:`<p>Progress saves in this browser only. <b>Export</b> a backup before clearing browser data or switching devices, then <b>Import</b> it there.
+      <b>🎨 Look</b> changes the colors.</p>` },
+  { since:'1.0.0', target:'#tourStartBtn', title:"You're all set",
+    body:`<p>Replay this tour any time from <b>📖 How to use</b>. On Windows, the desktop app adds lists on top of the game while you play.</p>` }
+];
+const TOUR_STEPS_PHONE = [
+  { since:'1.0.0', target:'#tabBar [data-tab="upnext"]', before:()=> setTab('upnext', true), title:'🎯 Up next',
+    body:`<p>Your next 4 rebirths, with their droids, credit costs and Nova Crystal rewards. Set <b>− / +</b> to the rebirth you've just done. Tap a droid to log it.</p>` },
+  { since:'1.0.0', target:'#tabBar [data-tab="droids"]', title:'📋 Droids',
+    body:`<p>Every droid. Tap its rarity dots to log the best one you have, or switch to <b>By Rebirth Level</b>. Press and hold for an exact rarity.</p>` },
+  { since:'1.16.0', title:'SELL flags: what you can let go', body: SELL_TOUR_BODY },
+  { since:'1.0.0', target:'#tabBar [data-tab="reqs"]', title:'🧬 Reqs, ♻ Retire, ⏱ Timers',
+    body:`<p><b>Reqs</b>: everything this cycle needs. <b>Retire</b>: what you can let go of. <b>Timers</b>: Stellar, Mythic, Kyber and mission countdowns.</p>` },
+  { since:'1.16.0', target:'#tabBar [data-tab="more"]', title:'👥 Friends (in ⋯ More)', body: FRIENDS_TOUR_BODY },
+  { since:'1.0.0', target:'#tabBar [data-tab="more"]', title:'📲 Put it on your home screen',
+    body:`<p>In <b>⋯ More</b>, <b>📲 Install as an app</b> opens this full-screen from your home screen, like an app. <b>Export</b> there backs up your progress
+      (it's saved on this phone only).</p>` },
+  { since:'1.0.0', target:'#phoneHelp', title:"You're all set",
+    body:`<p>Tap <b>❔</b> any time for how-to and to replay this tour.</p>` }
+];
+function startWebTour(replay){
+  const phone = document.body.classList.contains('tabbed');
+  let seen = null;
+  try{
+    seen = localStorage.getItem('rebirth-tourVersion');
+    // a visitor from before the tour existed (has progress or settings saved) gets only "What's new"
+    if(!seen && Object.keys(localStorage).some(k => k.startsWith('rebirth-'))) seen = '1.15.1';
+  }catch(e){}
+  if(new URLSearchParams(location.search).has('tour')) seen = null;
+  FDT_TOUR.run({
+    steps: phone ? TOUR_STEPS_PHONE : TOUR_STEPS_COMPUTER,
+    seenVersion: seen, version: TOUR_VERSION, replay,
+    welcome: {
+      title: 'Welcome to the Droid Tycoon tracker',
+      body: '<p>It keeps track of the droids you own and shows what each rebirth needs.</p><p>Want a quick look around first?</p>',
+      replayNote: phone ? 'You can take the tour any time from the ❔ button.' : 'You can take the tour any time from 📖 How to use.'
+    },
+    onDone: ()=>{ try{ localStorage.setItem('rebirth-tourVersion', TOUR_VERSION); }catch(e){} }
+  });
+}
+getEl('tourStartBtn').addEventListener('click', ()=> startWebTour(true));
+
 /* ---------------- INIT ---------------- */
 (async function init(){
   nameMerges = (await storeGet('rebirth-nameMerges')) || {};
@@ -2735,7 +3254,21 @@ applyInstallButton();
   showUpNext = !!(await storeGet('rebirth-showUpNext'));
   applyUpNextVisibility();
   { const t = await storeGet('rebirth-phoneTab'); if(typeof t === 'string' && TAB_VIEWS[t]) phoneTab = t; }
+  // 👥 Friends (desktop v1.16.0), and a #friend= link opened from a friend
+  friendCodes = cleanFriendCodes(await storeGet('rebirth-friends'));
+  myFriendName = cleanFriendName(await storeGet('rebirth-friendName'));
+  getEl('friendMyName').value = myFriendName;
+  showFriendsPanel = !!(await storeGet('rebirth-showFriendsPanel'));
+  if(location.hash.indexOf('#friend=') === 0){
+    const f = decodeFriendCode(location.hash);
+    if(f.error) showToast(f.error); else { linkFriend = f; showFriendsPanel = true; phoneTab = 'friends'; }
+  }
+  applyFriendsPanelVisibility();
   applyTabMode();
+  renderFriends();
+  if(linkFriend && !document.body.classList.contains('tabbed')) revealPanelIfStacked('friendsPanel');
+  // the tutorial: never on top of a friend's link (they came to see that)
+  if(!linkFriend) setTimeout(()=> startWebTour(false), 500);
 })();
 </script>
 </body>
