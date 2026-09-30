@@ -90,6 +90,18 @@ a bad live site immediately.
   offer exists it shows the Share → Add to Home Screen / browser-menu steps instead.
   Hidden when running installed (`display-mode: standalone`).
 
+## Synced from the desktop app v1.16.0 (2026-09-30)
+- **SELL flags** (`sellFlagFor`, copied from the app's requirements.js): By Rebirth Level's tag and a
+  side flag on Up next pictures. Yellow SELL / red number (21-30) / green number (31+).
+- **👥 Friends** (`#friendsPanel`, toolbar button; on phones ⋯ More → 👥 Friends = tab `friends`):
+  friend codes identical to the app's (same `FRIEND_DROIDS` order + fingerprint, so codes work both
+  ways; check the fingerprint matches the app if droid-data.js changes). `tracker/#friend=CODE`
+  opens that friend read-only with "Save to my friends" (and no tutorial on top).
+- **Tutorial**: `tracker/tour.js` is byte-identical to the app's tour.js (`?v=` stamped). Steps are
+  `TOUR_STEPS_COMPUTER` / `TOUR_STEPS_PHONE` in index.html; `TOUR_VERSION` + localStorage
+  `rebirth-tourVersion`; `?tour` in the URL shows it as a first visit; ▶ Take the quick tour in
+  📖 How to use replays it.
+
 ## Testing
 No test suite in this repo, but `scripts/validate-tracker-data.js` (Node,
 no dependencies) checks `droid-data.js`/`icons-data.js` structural integrity
