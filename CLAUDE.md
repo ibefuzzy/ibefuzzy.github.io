@@ -9,7 +9,18 @@ about a minute. There is no staging branch and no build step — a bad push is
 a bad live site immediately.
 
 ## Layout
-- `index.html` — landing page.
+- `index.html` — landing page (redesigned 2026-10-01, the app's "holo console" look: corner-bracket
+  panels, Rajdhani + IBM Plex Mono like the tracker). **No number on it is typed in:** the stats strip
+  and the "what it does" sentence are filled from `tracker/droid-data.js` by an inline script (cycles,
+  real levels = first slot not '?', droids, `RARITY_ORDER`), and the version in the badge / download
+  button comes from GitHub's `releases/latest` (silent if unreachable). It loads
+  `tracker/droid-data.js?v=X`: **keep that `?v=` equal to the one on `tracker/index.html`'s tags** (the
+  validator checks it, Check 3b). Downloads: Windows `.exe` only (no Mac/Linux build has ever been
+  published, though package.json has those targets), everyone else goes to the web tracker.
+  Don't advertise a feature on this page until its release is published.
+- `assets/overlay-*.webp` — the four overlay pictures on the landing page: the REAL overlay pages
+  (Fuzzy-Droid-Tracker repo) rendered in headless Chromium with a mock `overlayAPI` and fake progress
+  (cycle 1, rebirth 22) on a game-like backdrop. Re-render them if an overlay's look changes.
 - `tracker/index.html` — the whole web tracker app: one file, inline
   `<style>`/`<script>`, no build tooling.
 - `tracker/droid-data.js`, `tracker/icons-data.js` — data files loaded via

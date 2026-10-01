@@ -117,6 +117,21 @@ if (!iconsVerMatch || !droidVerMatch) {
     ok(`both data scripts are stamped ?v=${iconsVer}`);
   }
 
+  // Check 3b: the landing page (root index.html) loads droid-data.js too, for its stats, and must carry
+  // the same ?v= as the tracker so a bump of one can't leave the other serving a stale copy.
+  const landingPath = path.join(ROOT, 'index.html');
+  if (fs.existsSync(landingPath)) {
+    const landing = fs.readFileSync(landingPath, 'utf8');
+    const lm = landing.match(/droid-data\.js\?v=([\w.]+)/);
+    if (/droid-data\.js/.test(landing) && !lm) {
+      fail(`index.html (landing page) loads droid-data.js without a ?v= stamp - use ?v=${droidVer}`);
+    } else if (lm && lm[1] !== droidVer) {
+      fail(`index.html (landing page) stamps droid-data.js ?v=${lm[1]} but tracker/index.html is ?v=${droidVer} - bump both`);
+    } else if (lm) {
+      ok(`landing page index.html stamps droid-data.js ?v=${lm[1]}, same as the tracker`);
+    }
+  }
+
   const hash = crypto.createHash('sha256').update(iconsCode).update(droidCode).digest('hex');
   let manifest = null;
   try { manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8')); } catch (e) { /* first run */ }
