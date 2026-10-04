@@ -687,6 +687,11 @@
   .upnext-stepper button:active{background:var(--panel2);}
   .upnext-stepper span{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:14px;color:var(--accent);min-width:62px;text-align:center;}
   .upnext-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:9px;}
+  .un-cyc{display:inline-flex;align-items:center;gap:3px;}
+  .un-cyc button{width:30px;height:30px;border-radius:7px;border:1px solid var(--line);background:var(--panel);color:var(--text);font-size:17px;line-height:1;cursor:pointer;touch-action:manipulation;}
+  .un-cyc button:active{background:var(--panel2);}
+  .un-ready{display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid rgba(var(--accent-rgb),.35);border-left:3px solid var(--accent);border-radius:10px;background:var(--panel);padding:6px 10px;}
+  .un-ready-tag{font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:800;letter-spacing:.06em;color:#0b0f0d;background:var(--accent);border-radius:999px;padding:2px 9px;white-space:nowrap;}
   .un-level{border:1px solid var(--line);border-left:3px solid rgba(255,255,255,.25);border-radius:10px;background:var(--panel);padding:8px 10px 9px;}
   .un-level.now{border-left-color:var(--accent);box-shadow:0 0 0 1px rgba(var(--accent-rgb),.3) inset;background:linear-gradient(90deg,rgba(var(--accent-rgb),.08),transparent 60%),var(--panel);}
   .un-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px;}
@@ -811,7 +816,11 @@
     {"key":"tatooine","name":"Tatooine","note":"desert dusk, twin-sun orange","bg":"20,13,8","panel":"#21160d","panel2":"#291c11","line":"#463322","lineBright":"#634933","text":"#f6eadb","textDim":"#b39d81","accent":"255,226,154","accentDim":"#7a6232","holo":"233,173,119","glow":"255,160,70","hi":"255,225,190","surface":"28,17,9","glow2":"255,190,90"},
     {"key":"deathstar","name":"Death Star","note":"steel grey, superlaser green","bg":"10,13,17","panel":"#11161c","panel2":"#151b23","line":"#25303c","lineBright":"#364555","text":"#dfe6ee","textDim":"#8b99a8","accent":"125,255,90","accentDim":"#3a6b2a","holo":"177,193,207","glow":"110,140,170","hi":"210,220,232","surface":"10,14,19","glow2":"125,255,90"},
     {"key":"senate","name":"Galactic Senate","note":"violet and gold","bg":"11,9,19","panel":"#141128","panel2":"#191530","line":"#2e2850","lineBright":"#443b72","text":"#e8e4f6","textDim":"#9c95b8","accent":"240,200,110","accentDim":"#6b5a2e","holo":"194,183,255","glow":"155,140,255","hi":"222,215,255","surface":"14,11,28","glow2":"155,140,255"},
-    {"key":"tradefed","name":"Trade Federation","note":"bronze and brass","bg":"16,12,8","panel":"#1b150d","panel2":"#221a11","line":"#3d3021","lineBright":"#584631","text":"#f0e6d8","textDim":"#aa9b84","accent":"255,207,106","accentDim":"#76602f","holo":"226,187,130","glow":"201,151,90","hi":"245,225,195","surface":"22,16,9","glow2":"201,151,90"}
+    {"key":"tradefed","name":"Trade Federation","note":"bronze and brass","bg":"16,12,8","panel":"#1b150d","panel2":"#221a11","line":"#3d3021","lineBright":"#584631","text":"#f0e6d8","textDim":"#aa9b84","accent":"255,207,106","accentDim":"#76602f","holo":"226,187,130","glow":"201,151,90","hi":"245,225,195","surface":"22,16,9","glow2":"201,151,90"},
+    // desktop v1.18.0: spooky season
+{"key":"forceghost","name":"Force Ghost","note":"cold spectral blue-white","bg":"6,12,17","panel":"#0b161e","panel2":"#0f1d27","line":"#1f3644","lineBright":"#32566b","text":"#e4f6fb","textDim":"#8fb0bd","accent":"159,232,255","accentDim":"#2c6478","holo":"170,236,255","glow":"110,205,240","hi":"230,250,255","surface":"7,16,22","glow2":"120,210,245"},
+    {"key":"harvest","name":"Sith Harvest","note":"pumpkin orange on night purple","bg":"12,7,16","panel":"#170d1f","panel2":"#1d1128","line":"#3a2347","lineBright":"#593570","text":"#f5e8f2","textDim":"#a98fa8","accent":"255,138,31","accentDim":"#7a4210","holo":"255,176,102","glow":"255,138,31","hi":"255,214,170","surface":"14,8,20","glow2":"178,80,220"},
+    {"key":"nightsister","name":"Nightsister","note":"toxic green, witch violet","bg":"6,11,8","panel":"#0c160f","panel2":"#101d14","line":"#233a28","lineBright":"#36593d","text":"#e3f5e2","textDim":"#8eaa8e","accent":"125,255,58","accentDim":"#32701c","holo":"216,172,255","glow":"150,90,230","hi":"225,200,255","surface":"9,10,18","glow2":"125,255,58"}
   ];
   // look field -> CSS variable (the web page has no holo console, so only these apply)
   const APP_LOOK_VARS = { bg: '--bg-rgb', accent: '--accent-rgb', glow2: '--glow2-rgb', panel: '--panel', panel2: '--panel2',
@@ -1001,9 +1010,10 @@
   <div class="upnext" id="upNextCard">
     <div class="upnext-head">
       <span class="upnext-title">🎯 Up next
+        <span class="un-cyc"><button type="button" id="upNextCyclePrev" aria-label="Previous cycle" title="Previous cycle">‹</button>
         <select id="upNextCycleSel" aria-label="Cycle">
           <option value="1">Cycle 1</option><option value="2">Cycle 2</option><option value="3">Cycle 3</option><option value="4">Cycle 4</option><option value="5">Cycle 5</option>
-        </select>
+        </select><button type="button" id="upNextCycleNext" aria-label="Next cycle" title="Next cycle">›</button></span>
       </span>
       <span class="upnext-stepper" title="Your current rebirth level: the last rebirth you've done">
         <button type="button" id="upNextDec" aria-label="Lower rebirth level">−</button><span id="upNextLevel">Lvl 0</span><button type="button" id="upNextInc" aria-label="Raise rebirth level">+</button>
@@ -2422,8 +2432,31 @@ document.getElementById('resetBtn').addEventListener('click', ()=>{
   storeSet('rebirth-heldMarks', heldMarks);
   renderList(); renderStats();
 });
+/* desktop v1.18.1: the export also carries Sneak Preview marks and Safe to Retire marks; an import
+   checks the file first (a wrong file used to replace all progress with nothing) and keeps the
+   current marks when the file has none (an export from before). Same as the app's
+   isValidImportPayload / cleanCycleMarks (requirements.js). */
+function isValidImportPayload(parsed){
+  const isObj = v => v !== null && typeof v === 'object' && !Array.isArray(v);
+  if(!isObj(parsed) || !isObj(parsed.ownedRank)) return false;
+  return !Object.values(parsed.ownedRank).some(r => !Number.isInteger(r) || r < 0 || r >= RARITY_ORDER.length);
+}
+function cleanCycleMarks(marks){
+  const isObj = v => v !== null && typeof v === 'object' && !Array.isArray(v);
+  if(!isObj(marks)) return null;
+  const out = {};
+  for(const [c, perDroid] of Object.entries(marks)){
+    if(!/^[1-5]$/.test(c) || !isObj(perDroid)) continue;
+    const clean = {};
+    for(const [nk, r] of Object.entries(perDroid)){
+      if(typeof nk === 'string' && nk && Number.isInteger(r) && r >= 0 && r < RARITY_ORDER.length) clean[nk] = r;
+    }
+    if(Object.keys(clean).length) out[c] = clean;
+  }
+  return out;
+}
 document.getElementById('exportBtn').addEventListener('click', ()=>{
-  const payload = { v:2, ownedRank:ownedRank, nameMerges:nameMerges, displayOverrides:displayOverrides };
+  const payload = { v:2, ownedRank:ownedRank, nameMerges:nameMerges, displayOverrides:displayOverrides, heldMarks:heldMarks, retired:retiredMarks };
   const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a'); a.href = url; a.download = 'droid-tycoon-progress.json'; a.click();
@@ -2438,14 +2471,21 @@ document.getElementById('importFile').addEventListener('change', (e)=>{
   reader.onload = async () => {
     try{
       const parsed = JSON.parse(reader.result);
-      ownedRank = parsed.ownedRank || {};
-      nameMerges = parsed.nameMerges || {};
-      displayOverrides = parsed.displayOverrides || {};
+      if(!isValidImportPayload(parsed)){ alert("That doesn't look like a Droid Tracker export — nothing was changed."); return; }
+      const isObj = v => v && typeof v === 'object' && !Array.isArray(v);
+      if(!confirm('Replace your current progress (' + Object.keys(ownedRank).length + ' droids logged) with this file (' + Object.keys(parsed.ownedRank).length + ' droids)?')) return;
+      ownedRank = parsed.ownedRank;
+      nameMerges = isObj(parsed.nameMerges) ? parsed.nameMerges : {};
+      displayOverrides = isObj(parsed.displayOverrides) ? parsed.displayOverrides : {};
       await storeSet('rebirth-ownedRank-v2', ownedRank);
       await storeSet('rebirth-nameMerges', nameMerges);
       await storeSet('rebirth-displayOverrides', displayOverrides);
+      const held = cleanCycleMarks(parsed.heldMarks), retired = cleanCycleMarks(parsed.retired);
+      if(held){ heldMarks = held; await storeSet('rebirth-heldMarks', heldMarks); }
+      if(retired){ retiredMarks = retired; await storeSet('rebirth-retired', retiredMarks); }
       buildIndex();
       renderList(); renderStats();
+      renderRetirePanel(); renderUpNext();
     }catch(err){ alert('Could not read that file.'); }
   };
   reader.readAsText(file);
@@ -2749,6 +2789,26 @@ document.getElementById('missionSyncBtn').addEventListener('click', async ()=>{
    the next cycle's first ones, like the desktop HUD. */
 const NEED_COLOR = { B:'var(--r-base)', G:'var(--r-gold)', D:'var(--r-diamond)', R:'var(--r-rainbow2)', K:'var(--r-beskar)', X:'var(--r-galactic)', S:'var(--r-stellar)', Y:'var(--r-kyber)' };
 let showUpNext = false;
+/* desktop v1.18.1 ("🎯 Next Droids Needed"): Up next starts at the first line after the rebirth
+   level that isn't fully marked, never past one still missing a droid (rb25 done + rb15 not =
+   stays on 15), capped at the cycle's last line. The lines it skips are ready to rebirth: one
+   ✓ READY strip with the next rebirth's credit cost. Same rule as requirements.js nextNeededLevel. */
+function lineDone(cycle, level, owned){
+  return CYCLES[cycle][level - 1].every(([code, name]) => code !== '?' && (owned[normKey(canonicalName(name))] ?? -1) >= rankOf(code));
+}
+function nextNeededLevel(cycle, level, owned){
+  const start = Math.max(0, level) + 1, last = cycleRealLevelCount(cycle);
+  if(start > last) return start;
+  for(let l = start; l <= last; l++) if(!lineDone(cycle, l, owned)) return l;
+  return last;
+}
+function upNextReadyHtml(cycle, from, to){
+  if(to < from) return '';
+  const range = from === to ? String(from) : (from + '–' + to);
+  const credits = rebirthCreditsFor(cycle, from);
+  return '<div class="un-ready" title="Every droid for Rebirth ' + range + ' is logged: ready when you have the credits"><span class="un-ready-tag">✓ READY · RB ' + range + '</span>' +
+    (credits === null ? '' : '<span class="un-credits" title="Credits needed for Rebirth ' + from + '">' + formatCredits(credits) + '</span>') + '</div>';
+}
 function upcomingLevels(cycle, level, count){
   const out = [];
   let c = cycle, l = level;
@@ -2794,7 +2854,9 @@ function renderUpNext(){
   if(!list) return;
   getEl('upNextLevel').textContent = 'Lvl ' + retireCurrentLevel;
   getEl('upNextCycleSel').value = String(activeCycle);
-  list.innerHTML = upcomingLevels(activeCycle, retireCurrentLevel, 4).map((u, i) => upNextLevelHtml(u, i, activeCycle)).join('');
+  const top = nextNeededLevel(activeCycle, retireCurrentLevel, ownedRank);
+  list.innerHTML = upNextReadyHtml(activeCycle, retireCurrentLevel + 1, top - 1) +
+    upcomingLevels(activeCycle, top - 1, 4).map((u, i) => upNextLevelHtml(u, i, activeCycle)).join('');
   list.querySelectorAll('.un-droid[data-nk]').forEach(el => {
     el.addEventListener('click', ()=> setOwned(el.dataset.nk, parseInt(el.dataset.rank, 10)));
     el.addEventListener('contextmenu', (e)=>{ e.preventDefault(); openRbContextMenu(el.dataset.nk, e.clientX, e.clientY); });
@@ -2821,6 +2883,9 @@ getEl('upNextToggle').addEventListener('click', async ()=>{
 getEl('upNextDec').addEventListener('click', ()=> setCurrentLevel(retireCurrentLevel - 1));
 getEl('upNextInc').addEventListener('click', ()=> setCurrentLevel(retireCurrentLevel + 1));
 getEl('upNextCycleSel').addEventListener('change', (e)=> setActiveCycle(parseInt(e.target.value, 10)));
+// desktop v1.18.1: one cycle down / up (wraps 1 ↔ 5), like the app's cycle keys; nothing is cleared
+getEl('upNextCyclePrev').addEventListener('click', ()=> setActiveCycle(activeCycle <= 1 ? 5 : activeCycle - 1));
+getEl('upNextCycleNext').addEventListener('click', ()=> setActiveCycle(cycleAfter(activeCycle)));
 
 /* ---------------- 👥 FRIENDS (desktop v1.16.0) ----------------
    Your progress as a short code (or a link: tracker/#friend=CODE, the code after the #
@@ -2867,7 +2932,7 @@ function friendReqsHtml(owned, ceilings, onlyNeeds){
 }
 function friendCardHtml(f, st, isLink){
   const owned = friendOwnedRank(f.owned);
-  const ups = upcomingLevels(f.cycle, f.level, 4);
+  const ups = upcomingLevels(f.cycle, nextNeededLevel(f.cycle, f.level, owned) - 1, 4); // desktop v1.18.1
   const old = Date.now() - f.time > 86400000;
   const now = ups[0];
   const nowIcons = CYCLES[now.cycle][now.level - 1].map(([code, name], slot)=>{
@@ -3146,7 +3211,10 @@ applyInstallButton();
    1.15.1). ▶ Take the quick tour (📖 How to use) replays it; ?tour in the URL shows it as
    a first visit (for checking it). ADDING A FEATURE: add a step with since:'<version>' to
    the right list(s) and bump TOUR_VERSION. */
-const TOUR_VERSION = '1.16.0';
+const TOUR_VERSION = '1.18.1';
+const UPNEXT_1181_BODY = `<p><b>🎯 Up next</b> now moves on as you log: once every droid of a rebirth is logged, it shows the next one you still need
+  (never skipping one that's missing a droid). Rebirths you're ready for show as <b>✓ READY</b> with their credit cost. <b>‹ ›</b> switch cycle.</p>
+  <p>Also new: <b>Export</b> keeps your Sneak Preview and Safe to Retire marks, and 3 spooky looks in <b>🎨 Look</b>.</p>`;
 const SELL_TOUR_BODY = `<p>Droid pictures in Up next, and names in By Rebirth Level, get a flag:</p>
   <p><span class="sell-tag yellow" style="margin:0 6px 0 0">SELL</span> never needed again this cycle.</p>
   <p><span class="sell-tag red" style="margin:0 6px 0 0">23</span> you can sell it now; Rebirth 23 needs it again, at a higher rarity (red = 21–30).</p>
@@ -3160,6 +3228,7 @@ const TOUR_STEPS_COMPUTER = [
   { since:'1.0.0', target:'#upNextToggle', title:'🎯 Up next',
     body:`<p>Shows your next 4 rebirths with their droids, credit costs and Nova Crystal rewards. Set <b>− / +</b> to the rebirth you've just done and it follows you.</p>` },
   { since:'1.16.0', title:'SELL flags: what you can let go', body: SELL_TOUR_BODY },
+  { since:'1.18.1', target:'#upNextToggle', title:'🎯 Up next moves on by itself', body: UPNEXT_1181_BODY },
   { since:'1.0.0', target:'#reqPanelToggle', title:'Panels beside your list',
     body:`<p><b>🧬 Rebirth Reqs</b>: everything this cycle needs. <b>♻ Safe to Retire</b>: droids you can let go of. <b>🔮 Sneak Preview</b>: next cycle's
       toughest droids, to hold on to. <b>⏱ Event Timers</b>: Stellar, Mythic, Kyber and mission countdowns.</p>` },
@@ -3176,6 +3245,7 @@ const TOUR_STEPS_PHONE = [
   { since:'1.0.0', target:'#tabBar [data-tab="droids"]', title:'📋 Droids',
     body:`<p>Every droid. Tap its rarity dots to log the best one you have, or switch to <b>By Rebirth Level</b>. Press and hold for an exact rarity.</p>` },
   { since:'1.16.0', title:'SELL flags: what you can let go', body: SELL_TOUR_BODY },
+  { since:'1.18.1', target:'#tabBar [data-tab="upnext"]', before:()=> setTab('upnext', true), title:'🎯 Up next moves on by itself', body: UPNEXT_1181_BODY },
   { since:'1.0.0', target:'#tabBar [data-tab="reqs"]', title:'🧬 Reqs, ♻ Retire, ⏱ Timers',
     body:`<p><b>Reqs</b>: everything this cycle needs. <b>Retire</b>: what you can let go of. <b>Timers</b>: Stellar, Mythic, Kyber and mission countdowns.</p>` },
   { since:'1.16.0', target:'#tabBar [data-tab="more"]', title:'👥 Friends (in ⋯ More)', body: FRIENDS_TOUR_BODY },

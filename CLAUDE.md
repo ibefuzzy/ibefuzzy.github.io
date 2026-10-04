@@ -106,6 +106,16 @@ a bad live site immediately.
   offer exists it shows the Share → Add to Home Screen / browser-menu steps instead.
   Hidden when running installed (`display-mode: standalone`).
 
+## Synced from the desktop app v1.18.1 (2026-10-04)
+- **🎯 Up next moves on as you log** (`nextNeededLevel`/`lineDone`, the app's requirements.js rule): it starts at the first
+  line after the rebirth level that isn't fully logged, never past one still missing a droid, capped at the cycle's last
+  line; skipped lines show as one `.un-ready` strip (✓ READY · RB 21–22 + the next rebirth's credits). A friend's card
+  follows the same rule. **‹ ›** next to its cycle select switch cycle (wraps), nothing cleared.
+- **Export/Import** carry `heldMarks` + `retired` (`cleanCycleMarks`), and Import checks the file first
+  (`isValidImportPayload`; a wrong file used to wipe progress) and asks before replacing. Old exports still import.
+- The 3 spooky looks (forceghost / harvest / nightsister) are in APP_LOOKS. Tour step `since:'1.18.1'` on both lists,
+  TOUR_VERSION 1.18.1. (The app's cycle/finish/undo/level hotkeys are app-only.)
+
 ## Synced from the desktop app v1.16.0 (2026-09-30)
 - **SELL flags** (`sellFlagFor`, copied from the app's requirements.js): By Rebirth Level's tag and a
   side flag on Up next pictures. Yellow SELL / red number (21-30) / green number (31+).
