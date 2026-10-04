@@ -78,7 +78,12 @@ a bad live site immediately.
   (replaced Galactic), Mission every 35 min from the same epoch.
 - **Kyber** is emerald `#50c878` with the same per-rarity rules as the desktop app;
   cycle completion counts real slots (`cycleRealSlotCount`, 120 today), not 105.
-- Data scripts are stamped `?v=1.15.1` (validator passes).
+- Data scripts are stamped `?v=1.18.0` (validator passes).
+- **Droid pictures = the desktop app's** (2026-10-04, desktop v1.18.0): `tracker/icons-data.js` `ICONS`
+  is exactly the app's `card-icons-data.js` `CARD_ICONS`, all 600 slots. This fixed LO (its 1-8-1 and
+  2-34-1 showed the neighbouring Hov-R / RIC; LO had only old crops) and replaced the 75 Kyber pictures
+  with the clean cut-outs the app has had since v1.11.0. When the app's pictures change, copy
+  CARD_ICONS over (same keys, keep the one `const ICONS = {` object) and bump the stamps.
 - **Phones (≤700px): bottom tab bar** (`body.tabbed`, set by `applyTabMode()` from a
   matchMedia): 🎯 Up next / 📋 Droids / 🧬 Reqs / ♻ Retire / ⏱ Timers / ⋯ More (a sheet
   with Sneak, Look, Background, Rename, Export, Import, How to use, Reset). `TAB_VIEWS`
