@@ -1,4 +1,4 @@
 {
-  "version": "1.18.1",
-  "note": "The HUD now moves on as you mark, new cycle and rebirth hotkeys (finish a cycle in-game), and Read Rebirth Screen reads ranks correctly."
+  "version": "1.19.0",
+  "note": "🌐 Live Friends: friends update by themselves (opt-in), plus a safer Electron 44."
 }
