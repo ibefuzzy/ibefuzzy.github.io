@@ -524,6 +524,24 @@
   .fr-empty{font-size:13px;color:var(--text-dim);padding:8px 2px;line-height:1.45;}
   .fr-bad{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--amber);padding:6px 10px;margin-bottom:10px;border:1px dashed var(--amber);border-radius:8px;}
   .fr-bad span{flex:1;}
+  /* 🌐 Live (desktop v1.19.0): the switch line above your code, and live friends' status */
+  .fr-live-row{display:flex;align-items:center;gap:8px;margin:0 0 8px;font:600 14px 'Rajdhani',sans-serif;letter-spacing:.04em;cursor:pointer;user-select:none;}
+  .fr-live-row:focus-visible{outline:1px solid var(--accent);outline-offset:2px;border-radius:4px;}
+  .fr-sw{position:relative;width:34px;height:18px;border-radius:999px;background:rgba(0,0,0,.35);border:1px solid var(--line-bright);flex:none;}
+  .fr-sw::after{content:'';position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:var(--text-dim);transition:left .15s;}
+  .fr-live-row.on .fr-sw{background:rgba(var(--accent-rgb),.25);border-color:var(--accent-dim);}
+  .fr-live-row.on .fr-sw::after{left:18px;background:var(--accent);box-shadow:0 0 6px var(--accent);}
+  .fr-live-st{flex:1;font:10.5px 'IBM Plex Mono',monospace;color:var(--text-dim);letter-spacing:0;text-align:right;}
+  .fr-live-st.ok{color:var(--accent);}
+  .fr-live-st.warn{color:var(--amber);}
+  .fr-code.live{color:var(--accent);border-color:var(--accent-dim);font-size:13px;letter-spacing:.04em;text-align:center;}
+  .fr-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent);margin-right:5px;vertical-align:1px;animation:frPulse 2s infinite;}
+  .fr-dot.grey{background:var(--text-dim);box-shadow:none;animation:none;}
+  .fr-dot.amber{background:var(--amber);box-shadow:0 0 6px var(--amber);animation:none;}
+  @keyframes frPulse{0%,100%{opacity:1}50%{opacity:.35}}
+  .fr-who small.live{color:var(--accent);}
+  .fr-who small.warn{color:var(--amber);}
+  .fr-avatar.live{box-shadow:0 0 0 2px var(--bg),0 0 0 3.5px var(--accent);}
   .fr-paste{display:flex;gap:6px;margin-top:4px;}
   .fr-paste input{font-family:'IBM Plex Mono',monospace;font-size:13px;}
   .fr-paste-msg{font-size:12px;color:var(--amber);min-height:15px;margin-top:4px;}
@@ -1095,16 +1113,20 @@
       <div id="friendLinkBox"></div>
       <div class="fr-mine">
         <div class="fr-mine-top"><label for="friendMyName">Your name</label><input id="friendMyName" maxlength="16" placeholder="Name your friends will see"></div>
+        <!-- 🌐 Live (desktop v1.19.0): off by default; on = your code saves itself to the Friends server -->
+        <div class="fr-live-row" id="friendLiveRow" role="switch" aria-checked="false" tabindex="0"
+          title="On: your friend code saves itself to the Friends server when it changes, and friends who add your live code stay up to date. Off: nothing is sent, and your saved code is deleted.">
+          <span class="fr-sw"></span>🌐 Live<span class="fr-live-st" id="friendLiveStatus"></span></div>
         <div class="fr-code" id="friendMyCode" title="Your friend code: your cycle, rebirth and logged droids"></div>
         <div class="fr-mine-btns">
           <button class="btn" id="friendCopyCode">📋 Copy my code</button>
           <button class="btn" id="friendCopyLink">🔗 Copy link</button>
         </div>
-        <p class="rebirth-sub">A snapshot of right now: send a new one when you've moved on. The link opens it in any browser.</p>
+        <p class="rebirth-sub" id="friendMineNote">A snapshot of right now: send a new one when you've moved on. The link opens it in any browser.</p>
       </div>
       <div id="friendsList"></div>
       <div class="fr-paste">
-        <input id="friendPasteInput" placeholder="Paste a friend's code or link" spellcheck="false" autocapitalize="off" autocomplete="off">
+        <input id="friendPasteInput" placeholder="Paste a friend's code, live code or link" spellcheck="false" autocapitalize="off" autocomplete="off">
         <button class="btn" id="friendAddBtn">Add</button>
       </div>
       <div class="fr-paste-msg" id="friendPasteMsg"></div>
@@ -1189,6 +1211,7 @@ async function storeGet(key){
 async function storeSet(key,value){
   try{
     localStorage.setItem(key, JSON.stringify(value));
+    liveOnStoreSet(key); // 🌐 Live (desktop v1.19.0): your code changed -> save it (debounced)
     return true;
   }catch(e){ console.error("storage failed", e); return false; }
 }
@@ -2900,8 +2923,9 @@ let myFriendName = '';
 let linkFriend = null; // decoded #friend= link, until saved or closed
 const friendUi = {};   // code -> {open, tab:'next'|'reqs', only}
 function cleanFriendCodes(list){ return (Array.isArray(list) ? list : []).filter(c => typeof c === 'string' && /^FDTP1\.[A-Za-z0-9_-]+$/.test(c)); }
-function myFriendCode(){
-  return encodeFriendCode({ name: myFriendName || 'Friend', cycle: activeCycle, level: Math.min(retireCurrentLevel, cycleRealLevelCount(activeCycle)), owned: friendOwnedFromMine(ownedRank), time: Date.now() });
+// time 0 = the "has anything changed?" fingerprint 🌐 Live compares (desktop v1.19.0)
+function myFriendCode(time){
+  return encodeFriendCode({ name: myFriendName || 'Friend', cycle: activeCycle, level: Math.min(retireCurrentLevel, cycleRealLevelCount(activeCycle)), owned: friendOwnedFromMine(ownedRank), time: time === undefined ? Date.now() : time });
 }
 function friendImg(cycle, level, slot){
   const b64 = (typeof ICONS !== 'undefined') ? ICONS[cycle + '-' + level + '-' + slot] : null;
@@ -2930,7 +2954,7 @@ function friendReqsHtml(owned, ceilings, onlyNeeds){
   }
   return '<div class="fr-rq">' + (html || '<div class="fr-empty">✓ They have everything this cycle needs.</div>') + '</div>';
 }
-function friendCardHtml(f, st, isLink){
+function friendCardHtml(f, st, isLink, live){
   const owned = friendOwnedRank(f.owned);
   const ups = upcomingLevels(f.cycle, nextNeededLevel(f.cycle, f.level, owned) - 1, 4); // desktop v1.18.1
   const old = Date.now() - f.time > 86400000;
@@ -2953,30 +2977,43 @@ function friendCardHtml(f, st, isLink){
       (st.tab === 'reqs' ? friendReqsHtml(owned, ceilings, st.only)
                          : '<div class="upnext-list">' + ups.map((u, i)=> upNextLevelHtml(u, i, f.cycle, owned)).join('') + '</div>');
   }
-  return '<div class="fr-card" data-code="' + f.code + '"' + (isLink ? ' data-link' : '') + '>' +
+  // 🌐 a live friend's card is keyed "live:<id>" and says how fresh it is instead of the code's age
+  const status = live
+    ? (liveOffline() ?'<small class="warn"><span class="fr-dot amber"></span>offline · from ' + liveAgo(live.updatedAt) + '</small>'
+      : live.state === 'gone' ? '<small><span class="fr-dot grey"></span>last seen ' + liveAgo(live.updatedAt) + '</small>'
+      : '<small class="live"><span class="fr-dot"></span>live · ' + liveAgo(live.updatedAt) + '</small>')
+    : '<small' + (old ? ' class="old"' : '') + '>code from ' + friendAgeText(f.time) + (old ? ' · ask for a new one' : '') + '</small>';
+  return '<div class="fr-card" data-code="' + (live ? 'live:' + live.id : f.code) + '"' + (isLink ? ' data-link' : '') + '>' +
     '<div class="fr-row" data-toggle><span class="fr-chev">' + (st.open ? '▾' : '▸') + '</span>' +
-      '<div class="fr-avatar">' + f.name.charAt(0).toUpperCase() + '</div>' +
-      '<div class="fr-who"><b>' + f.name + '</b><small>C' + f.cycle + ' · Rebirth ' + f.level + '</small>' +
-        '<small' + (old ? ' class="old"' : '') + '>code from ' + friendAgeText(f.time) + (old ? ' · ask for a new one' : '') + '</small></div>' +
+      '<div class="fr-avatar' + (live && live.state === 'ok' && !liveOffline() ? ' live' : '') + '">' + f.name.charAt(0).toUpperCase() + '</div>' +
+      '<div class="fr-who"><b>' + f.name + '</b><small>C' + f.cycle + ' · Rebirth ' + f.level + '</small>' + status + '</div>' +
       '<div class="fr-now">' + nowIcons + '</div>' +
       (isLink ? '' : '<button class="fr-x" data-remove title="Remove ' + f.name + '">✕</button>') + '</div>' +
     body + '</div>';
 }
 function renderFriends(){
+  liveUpdatePolling(); // 🌐 (desktop v1.19.0): read live friends only while this shows
   if(!showFriendsPanel && !(document.body.classList.contains('tabbed') && phoneTab === 'friends')) return;
-  getEl('friendMyCode').textContent = myFriendCode();
+  renderLiveMine();
+  const linkLiveName = linkLive && linkLive.code && !decodeFriendCode(linkLive.code).error ? decodeFriendCode(linkLive.code).name : null;
   getEl('friendLinkBox').innerHTML = linkFriend
     ? '<div class="fr-link">Viewing <b>' + linkFriend.name + '</b>\'s progress (read only), from a code made ' + friendAgeText(linkFriend.time) + '.' +
         '<div class="fr-link-btns"><button class="btn on" id="friendLinkSave">＋ Save to my friends</button><button class="btn" id="friendLinkClose">Close</button></div></div>' +
       friendCardHtml(linkFriend, friendUi['link:' + linkFriend.code] || (friendUi['link:' + linkFriend.code] = { open:true, tab:'next', only:false }), true)
+    : linkLive
+    ? '<div class="fr-link"><span class="fr-dot' + (linkLive.state === 'ok' ? '' : ' grey') + '"></span>' +
+        (linkLiveName ? 'Watching <b>' + linkLiveName + '</b> live (read only)' + (linkLive.updatedAt ? ' · updated ' + liveAgo(linkLive.updatedAt) : '') + '.' : 'A live friend link.') +
+        '<div class="fr-link-btns"><button class="btn on" id="friendLinkSave">＋ Save to my friends</button><button class="btn" id="friendLinkClose">Close</button></div></div>' +
+      liveCardOrNote(linkLive, true)
     : '';
   let html = '';
+  liveFriends.forEach(e=>{ html += liveCardOrNote(e, false); });
   friendCodes.forEach(code=>{
     const f = decodeFriendCode(code);
     if(f.error){ html += '<div class="fr-bad" data-code="' + code + '">⚠ <span>' + (f.name ? f.name + ': ' : '') + f.error + '</span><button class="fr-x" data-remove title="Remove">✕</button></div>'; return; }
     html += friendCardHtml(f, friendUi[code] || (friendUi[code] = { open:false, tab:'next', only:false }));
   });
-  getEl('friendsList').innerHTML = html || (linkFriend ? '' : '<div class="fr-empty">No friends yet. Paste a friend\'s code below, or paste your own to see how it looks.</div>');
+  getEl('friendsList').innerHTML = html || (linkFriend || linkLive ? '' :'<div class="fr-empty">No friends yet. Paste a friend\'s code below, or paste your own to see how it looks.</div>');
 }
 async function saveFriend(f){
   const same = friendCodes.findIndex(c => decodeFriendCode(c).name === f.name);
@@ -2992,13 +3029,22 @@ async function saveFriend(f){
   return (same !== -1 ? 'Updated ' : 'Added ') + f.name + '.';
 }
 function closeFriendLink(){
-  linkFriend = null;
-  if(location.hash.indexOf('#friend=') === 0) history.replaceState(null, '', location.pathname + location.search);
+  linkFriend = null; linkLive = null;
+  if(location.hash.indexOf('#friend=') === 0 || location.hash.indexOf('#live=') === 0) history.replaceState(null, '', location.pathname + location.search);
 }
 async function addFriendCode(){
   const input = getEl('friendPasteInput'), msg = getEl('friendPasteMsg');
-  const f = decodeFriendCode(input.value);
   msg.classList.remove('ok');
+  const liveId = parseLiveCode(input.value); // 🌐 a live code or #live= link
+  if(liveId){
+    const known = await addLiveFriend(liveId);
+    input.value = '';
+    msg.textContent = known ? 'You already have that live friend.' : 'Added a live friend: they update by themselves.';
+    msg.classList.add('ok');
+    renderFriends();
+    return;
+  }
+  const f = decodeFriendCode(input.value);
   if(f.error){ msg.textContent = f.error; return; }
   const result = await saveFriend(f);
   msg.textContent = result;
@@ -3006,8 +3052,9 @@ async function addFriendCode(){
   renderFriends();
 }
 function copyMyFriendCode(asLink){
-  const code = myFriendCode();
-  const text = asLink ? FRIEND_LINK_BASE + code : code;
+  const liveId = liveOn ? liveIdentity().id : null; // 🌐 the live code / link while Live is on
+  const code = liveId ? LIVE_CODE_PREFIX + liveId : myFriendCode();
+  const text = asLink ? (liveId ? LIVE_LINK_BASE + liveId : FRIEND_LINK_BASE + code) : code;
   const fallback = ()=>{
     const el = getEl('friendMyCode');
     el.textContent = text;
@@ -3015,10 +3062,259 @@ function copyMyFriendCode(asLink){
     const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
     showToast('Copy it from the highlighted box');
   };
-  const done = ()=> showToast(asLink ? 'Link copied: it opens your progress in any browser' : 'Your friend code is copied: paste it to a friend');
+  const done = ()=> showToast(liveId
+    ? (asLink ? 'Live link copied: it shows your progress in any browser, kept up to date' : 'Your live code is copied: give it to a friend once')
+    : (asLink ? 'Link copied: it opens your progress in any browser' : 'Your friend code is copied: paste it to a friend'));
   if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback);
   else fallback();
 }
+/* ---------------- 🌐 LIVE FRIENDS (desktop v1.19.0) ----------------
+   The same Friends server and rules as the app (its live-sync.js + main.js): while 🌐 Live is
+   on ('rebirth-liveOn', off by default) your friend code is saved under a random share ID,
+   only when it changed, at most every 2 min (and once a day, so it doesn't expire). The secret
+   key lives in this browser only ('fdt-liveIdentity', not a rebirth- key: never exported).
+   Live friends ('rebirth-liveFriends', same shape as the app) are read about every 90 s while
+   👥 Friends is showing and the page is visible. A #live= link shows that friend read-only. */
+const LIVE_SERVER = 'https://fdt-live.ibefuzzy.workers.dev'; // the Worker (worker/live-friends-worker.mjs) on Cloudflare
+const LIVE_CODE_PREFIX = 'FDTL1.';
+const LIVE_LINK_BASE = 'https://ibefuzzy.github.io/tracker/#live=';
+const LIVE_ID_RE = /^[A-Za-z0-9]{12}$/;
+const LIVE_FRIENDS_MAX = 30;
+const LIVE_SAVE_GAP_MS = 2 * 60 * 1000, LIVE_SETTLE_MS = 8 * 1000, LIVE_POLL_MS = 90 * 1000, LIVE_KEEPALIVE_MS = 24 * 3600 * 1000;
+const LIVE_SOURCE_KEYS = new Set(['rebirth-ownedRank-v2', 'rebirth-activeCycle', 'rebirth-currentLevel', 'rebirth-friendName', 'rebirth-nameMerges']);
+function parseLiveCode(input){
+  let str = String(input || '').trim();
+  const at = str.indexOf('#live=');
+  if(at !== -1) str = str.slice(at + 6);
+  else if(str.startsWith(LIVE_CODE_PREFIX)) str = str.slice(LIVE_CODE_PREFIX.length);
+  else return null;
+  str = str.replace(/\s+/g, '');
+  return LIVE_ID_RE.test(str) ? str : null;
+}
+function cleanLiveFriends(list){
+  const seen = new Set(), out = [];
+  (Array.isArray(list) ? list : []).forEach(e=>{
+    if(!e || typeof e !== 'object' || typeof e.id !== 'string' || !LIVE_ID_RE.test(e.id) || seen.has(e.id) || out.length >= LIVE_FRIENDS_MAX) return;
+    seen.add(e.id);
+    const code = (typeof e.code === 'string' && e.code.length <= 200 && /^FDTP1\.[A-Za-z0-9_-]+$/.test(e.code)) ? e.code : null;
+    const updatedAt = (typeof e.updatedAt === 'number' && isFinite(e.updatedAt)) ? e.updatedAt : null;
+    out.push({ id: e.id, code, updatedAt, state: ['new', 'ok', 'gone'].includes(e.state) ? e.state : 'new' });
+  });
+  return out;
+}
+let liveOn = false, liveFriends = [], linkLive = null; // linkLive = the #live= friend being viewed {id, code, updatedAt, state}
+const live = { timer:null, saving:false, state:'ok', savedAt:0, retryAt:0, newIdTries:0, pollTimer:null, polledAt:0, polling:false, unchanged:0, offline:false };
+function liveRead(key){ try{ return JSON.parse(localStorage.getItem(key)); }catch(e){ return null; } }
+function liveWrite(key, v){ try{ if(v === null) localStorage.removeItem(key); else localStorage.setItem(key, JSON.stringify(v)); }catch(e){} }
+function liveRandom(n){ return crypto.getRandomValues(new Uint8Array(n)); }
+function liveIdentity(){
+  let idn = liveRead('fdt-liveIdentity');
+  if(!(idn && LIVE_ID_RE.test(idn.id) && /^[A-Za-z0-9_-]{43}$/.test(idn.key))){
+    const B62 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let id = '';
+    while(id.length < 12) liveRandom(16).forEach(b=>{ if(b < 248 && id.length < 12) id += B62[b % 62]; });
+    idn = { id, key: bytesToB64url(liveRandom(32)) };
+    liveWrite('fdt-liveIdentity', idn);
+  }
+  return idn;
+}
+function liveAgo(t){ return Date.now() - t < 60000 ? 'just now' : friendAgeText(t); }
+function liveOffline(){ return live.offline; }
+// a fetch answer's text, read only up to `max` bytes; '' when longer or unreadable (the app's live-sync.js readCapped)
+async function liveReadCapped(res, max){
+  try{
+    if(!res.body || !res.body.getReader){ const t = await res.text(); return t.length <= max ? t : ''; }
+    const reader = res.body.getReader(), parts = [];
+    let n = 0;
+    for(;;){
+      const { done, value } = await reader.read();
+      if(done) break;
+      n += value.length;
+      if(n > max){ reader.cancel().catch(()=>{}); return ''; }
+      parts.push(value);
+    }
+    const all = new Uint8Array(n);
+    let at = 0;
+    parts.forEach(p => { all.set(p, at); at += p.length; });
+    return new TextDecoder().decode(all);
+  }catch(e){ return ''; }
+}
+async function liveRequest(method, p, opts){
+  if(!LIVE_SERVER) return { status: 0 };
+  const ctl = new AbortController();
+  const timer = setTimeout(()=> ctl.abort(), 10000);
+  try{
+    const headers = {};
+    if(opts && opts.key) headers.Authorization = 'Bearer ' + opts.key;
+    if(opts && opts.body !== undefined) headers['Content-Type'] = 'text/plain;charset=utf-8';
+    // never follow a redirect (the key must only ever go to LIVE_SERVER), no cookies, read at most 16 KB
+    const res = await fetch(LIVE_SERVER + p, { method, headers, body: opts && opts.body, signal: ctl.signal, cache:'no-store', credentials:'omit', redirect:'error' });
+    return { status: res.status, text: await liveReadCapped(res, 16384), retryAfter: res.headers.get('Retry-After') };
+  }catch(e){ return { status: 0 }; }
+  finally{ clearTimeout(timer); }
+}
+function liveOnStoreSet(key){
+  try{ if(LIVE_SOURCE_KEYS.has(key)) liveSchedule(); }catch(e){ /* still starting up */ }
+}
+function liveSchedule(force){
+  if(!liveOn || !LIVE_SERVER || live.timer || live.saving) return;
+  const saved = liveRead('fdt-liveSaved'); // {content, at}: what this browser last saved
+  if(!force && saved && saved.content === myFriendCode(0) && Date.now() - saved.at < LIVE_KEEPALIVE_MS) return;
+  const now = Date.now();
+  let at = now + LIVE_SETTLE_MS;
+  if(saved && saved.at) at = Math.max(at, saved.at + LIVE_SAVE_GAP_MS);
+  if(live.retryAt) at = Math.max(at, live.retryAt);
+  live.timer = setTimeout(liveSaveNow, Math.max(0, at - now));
+}
+async function liveSaveNow(){
+  live.timer = null;
+  if(!liveOn) return;
+  const content = myFriendCode(0), idn = liveIdentity(), sentAt = Date.now();
+  live.saving = true; live.state = 'saving'; renderLiveMine();
+  const r = await liveRequest('PUT', '/p/' + idn.id, { key: idn.key, body: myFriendCode(sentAt) });
+  live.saving = false;
+  if(!liveOn) return;
+  live.retryAt = 0;
+  if(r.status === 200){ liveWrite('fdt-liveSaved', { content, at: sentAt }); live.savedAt = sentAt; live.state = 'ok'; live.newIdTries = 0; }
+  else if(r.status === 429){ live.state = 'saving'; live.retryAt = Date.now() + Math.min(3600e3, Math.max(30e3, ((Number(r.retryAfter) || 60) + 1) * 1000)); }
+  else if(r.status === 503){ live.state = 'busy'; live.retryAt = Date.now() + 3600e3; }
+  else if(r.status === 403 && live.newIdTries < 2){ live.newIdTries++; liveWrite('fdt-liveIdentity', null); liveIdentity(); live.state = 'saving'; }
+  else if(r.status === 0 || r.status >= 500){ live.state = 'offline'; live.retryAt = Date.now() + 5 * 60e3; }
+  else live.state = 'error';
+  renderLiveMine();
+  if(live.state !== 'error'){ if(live.state !== 'ok') liveWrite('fdt-liveSaved', null); liveSchedule(); }
+}
+async function setLiveOn(on){
+  liveOn = on;
+  await storeSet('rebirth-liveOn', on);
+  if(on){ live.newIdTries = 0; liveIdentity(); liveWrite('fdt-liveSaved', null); liveSchedule(true); showToast('🌐 Live on: your friend code saves itself to the Friends server when it changes'); }
+  else {
+    if(live.timer){ clearTimeout(live.timer); live.timer = null; }
+    liveWrite('fdt-liveSaved', null); live.savedAt = 0; live.retryAt = 0;
+    const idn = liveRead('fdt-liveIdentity');
+    if(idn && idn.id && idn.key){
+      const r = await liveRequest('DELETE', '/p/' + idn.id, { key: idn.key });
+      if(!liveOn) liveWrite('fdt-liveIdentity', { id: idn.id, key: idn.key, deletePending: r.status !== 200 });
+    }
+  }
+  renderFriends();
+}
+function liveStatusText(){
+  if(!liveOn) return { text:'off: snapshot codes', cls:'' };
+  if(!LIVE_SERVER) return { text:'not available yet', cls:'warn' };
+  if(live.state === 'ok' && live.savedAt) return { text:'saved ' + liveAgo(live.savedAt), cls:'ok', dot:true };
+  if(live.state === 'ok'){ const s = liveRead('fdt-liveSaved'); if(s && s.at) return { text:'saved ' + liveAgo(s.at), cls:'ok', dot:true }; }
+  if(live.state === 'offline') return { text:'offline · will retry', cls:'warn' };
+  if(live.state === 'busy') return { text:'server busy · will retry', cls:'warn' };
+  if(live.state === 'error') return { text:'couldn\'t save', cls:'warn' };
+  return { text:'saving…', cls:'ok' };
+}
+function renderLiveMine(){
+  const row = getEl('friendLiveRow');
+  row.classList.toggle('on', liveOn);
+  row.setAttribute('aria-checked', liveOn ? 'true' : 'false');
+  const st = liveStatusText(), stEl = getEl('friendLiveStatus');
+  stEl.className = 'fr-live-st' + (st.cls ? ' ' + st.cls : '');
+  stEl.innerHTML = (st.dot ? '<span class="fr-dot"></span>' : '') + st.text;
+  getEl('friendMyCode').classList.toggle('live', liveOn);
+  getEl('friendMyCode').textContent = liveOn ? LIVE_CODE_PREFIX + liveIdentity().id : myFriendCode();
+  getEl('friendCopyCode').textContent = liveOn ? '📋 Copy my live code' : '📋 Copy my code';
+  getEl('friendMineNote').textContent = liveOn
+    ? 'Give it once: friends who add it stay up to date. Switching off stops sharing and deletes your saved code.'
+    : 'A snapshot of right now: send a new one when you\'ve moved on. The link opens it in any browser.';
+}
+// reading friends: only while 👥 Friends shows and the page is visible
+function friendsShowing(){ return (showFriendsPanel || (document.body.classList.contains('tabbed') && phoneTab === 'friends')) && !document.hidden; }
+// every 90 s; every 5 min once 4 checks in a row changed nothing (a page left open all day), back to
+// 90 s on any change, a new friend or coming back to the page (the app's live-sync.js pollDelay)
+const LIVE_POLL_SLOW_MS = 5 * 60 * 1000, LIVE_POLL_SLOW_AFTER = 4;
+function liveWantPolling(){ return !!LIVE_SERVER && friendsShowing() && (liveFriends.length > 0 || !!linkLive); }
+function livePollSoon(ms){
+  if(live.pollTimer) clearTimeout(live.pollTimer);
+  const handle = setTimeout(async ()=>{
+    await liveFetchFriends();
+    if(live.pollTimer !== handle) return; // stopped or restarted meanwhile
+    live.pollTimer = null;
+    if(liveWantPolling()) livePollSoon(live.unchanged >= LIVE_POLL_SLOW_AFTER ? LIVE_POLL_SLOW_MS : LIVE_POLL_MS);
+  }, ms);
+  live.pollTimer = handle;
+}
+function liveUpdatePolling(){
+  if(liveWantPolling()){
+    if(!live.pollTimer) livePollSoon(Date.now() - live.polledAt > 15000 ? 0 : (live.unchanged >= LIVE_POLL_SLOW_AFTER ? LIVE_POLL_SLOW_MS : LIVE_POLL_MS));
+  } else if(live.pollTimer){ clearTimeout(live.pollTimer); live.pollTimer = null; }
+}
+function liveWakePolling(){
+  live.unchanged = 0;
+  if(!liveWantPolling()){ liveUpdatePolling(); return; }
+  const since = Date.now() - live.polledAt;
+  livePollSoon(since > 15000 ? 0 : LIVE_POLL_MS - since);
+}
+async function liveFetchFriends(){
+  // the server takes at most 30 IDs: an opened #live= link first, then your saved live friends
+  const ids = [...new Set((linkLive ? [linkLive.id] : []).concat(liveFriends.map(e => e.id)))].slice(0, LIVE_FRIENDS_MAX);
+  if(live.polling || !ids.length || !LIVE_SERVER) return;
+  live.polling = true; live.polledAt = Date.now();
+  const r = await liveRequest('GET', '/p?ids=' + ids.join(','));
+  live.polling = false;
+  let found = null;
+  if(r.status === 200 && r.text.length <= 16384){
+    try{
+      const j = JSON.parse(r.text);
+      if(j && j.friends && typeof j.friends === 'object'){
+        found = {};
+        ids.forEach(id=>{
+          const f = Object.prototype.hasOwnProperty.call(j.friends, id) ? j.friends[id] : null;
+          if(f && typeof f.code === 'string' && f.code.length <= 200 && /^FDTP1\.[A-Za-z0-9_-]+$/.test(f.code) && typeof f.updatedAt === 'number') found[id] = { code: f.code, updatedAt: f.updatedAt };
+        });
+      }
+    }catch(e){ found = null; }
+  }
+  live.offline = !found;
+  if(!found){ live.unchanged++; renderFriends(); return; }
+  const merge = e => ids.includes(e.id) ? (found[e.id] ? { ...e, code: found[e.id].code, updatedAt: found[e.id].updatedAt, state:'ok' } : { ...e, state:'gone' }) : e;
+  const before = JSON.stringify([liveFriends, linkLive]);
+  liveFriends = liveFriends.map(merge);
+  if(linkLive) linkLive = merge(linkLive);
+  const changed = JSON.stringify([liveFriends, linkLive]) !== before;
+  live.unchanged = changed ? 0 : live.unchanged + 1;  // quiet friends -> check less often
+  if(changed){ await storeSet('rebirth-liveFriends', liveFriends); dropSnapshotsOfLiveFriends(); }
+  renderFriends();
+}
+// a friend you now follow live doesn't also need their old pasted snapshot (same name)
+function dropSnapshotsOfLiveFriends(){
+  const liveNames = new Set(liveFriends.map(e => e.code && decodeFriendCode(e.code)).filter(f => f && !f.error).map(f => f.name));
+  const kept = friendCodes.filter(c => { const f = decodeFriendCode(c); return f.error || !liveNames.has(f.name); });
+  if(kept.length !== friendCodes.length){ friendCodes = kept; storeSet('rebirth-friends', friendCodes); }
+}
+async function addLiveFriend(id, entry){
+  const old = liveFriends.find(e => e.id === id);
+  liveFriends = [old || entry || { id, code:null, updatedAt:null, state:'new' }, ...liveFriends.filter(e => e.id !== id)].slice(0, LIVE_FRIENDS_MAX);
+  friendUi['live:' + id] = { open:true, tab:'next', only:false };
+  await storeSet('rebirth-liveFriends', liveFriends);
+  dropSnapshotsOfLiveFriends();
+  live.polledAt = 0;
+  live.unchanged = 0;
+  if(liveWantPolling()) livePollSoon(0); else liveFetchFriends();
+  return !!old;
+}
+function liveCardOrNote(e, isLink){
+  const key = (isLink ? 'link:live:' : 'live:') + e.id;
+  const f = e.code ? decodeFriendCode(e.code) : null;
+  if(!f || f.error){
+    const why = f && f.error ? (f.name ? f.name + ': ' : '') + f.error
+      : e.state === 'gone' ? 'Live friend ' + e.id + ' isn\'t sharing right now (Live switched off, or not played for 2 weeks).'
+      : 'Loading live friend ' + e.id + '…';
+    return '<div class="fr-bad" data-code="live:' + e.id + '"' + (isLink ? ' data-link' : '') + '>' + (e.state === 'new' && !f ? '🌐' : '⚠') + ' <span>' + why + '</span>' +
+      (isLink ? '' : '<button class="fr-x" data-remove title="Remove">✕</button>') + '</div>';
+  }
+  return friendCardHtml(f, friendUi[key] || (friendUi[key] = { open:isLink, tab:'next', only:false }), isLink, e);
+}
+document.addEventListener('visibilitychange', ()=>{ if(document.hidden) liveUpdatePolling(); else liveWakePolling(); });
+getEl('friendLiveRow').addEventListener('click', ()=> setLiveOn(!liveOn));
+getEl('friendLiveRow').addEventListener('keydown', e=>{ if(e.key === ' ' || e.key === 'Enter'){ e.preventDefault(); setLiveOn(!liveOn); } });
+setInterval(()=>{ if(friendsShowing() && (liveOn || liveFriends.length || linkLive)) renderFriends(); }, 60000); // "3 min ago" texts
+
 function applyFriendsPanelVisibility(){
   getEl('friendsPanel').classList.toggle('show', showFriendsPanel);
   getEl('friendsPanelToggle').classList.toggle('on', showFriendsPanel);
@@ -3028,6 +3324,7 @@ async function toggleFriendsPanel(force){
   showFriendsPanel = (force !== undefined) ? force : !showFriendsPanel;
   applyFriendsPanelVisibility();
   if(showFriendsPanel && force === undefined) revealPanelIfStacked('friendsPanel');
+  if(showFriendsPanel) liveWakePolling(); // 🌐 opening the panel checks live friends now
   renderFriends();
   await storeSet('rebirth-showFriendsPanel', showFriendsPanel);
 }
@@ -3037,10 +3334,11 @@ getEl('friendCopyCode').addEventListener('click', ()=> copyMyFriendCode(false));
 getEl('friendCopyLink').addEventListener('click', ()=> copyMyFriendCode(true));
 getEl('friendAddBtn').addEventListener('click', addFriendCode);
 getEl('friendPasteInput').addEventListener('keydown', e=>{ if(e.key === 'Enter') addFriendCode(); });
-getEl('friendMyName').addEventListener('input', e=>{ myFriendName = cleanFriendName(e.target.value); getEl('friendMyCode').textContent = myFriendCode(); });
+getEl('friendMyName').addEventListener('input', e=>{ myFriendName = cleanFriendName(e.target.value); renderLiveMine(); });
 getEl('friendMyName').addEventListener('change', ()=> storeSet('rebirth-friendName', myFriendName));
 getEl('friendsPanel').addEventListener('click', async e=>{
   if(e.target.closest('#friendLinkSave')){
+    if(linkLive){ const e2 = linkLive; closeFriendLink(); await addLiveFriend(e2.id, e2); showToast('Saved: they update by themselves'); renderFriends(); return; }
     const f = linkFriend; closeFriendLink();
     showToast(await saveFriend(f));
     renderFriends(); return;
@@ -3050,6 +3348,7 @@ getEl('friendsPanel').addEventListener('click', async e=>{
   if(!card) return;
   const code = card.dataset.code, isLink = card.hasAttribute('data-link');
   if(e.target.closest('[data-remove]')){
+    if(code.startsWith('live:')){ liveFriends = liveFriends.filter(x => x.id !== code.slice(5)); await storeSet('rebirth-liveFriends', liveFriends); renderFriends(); return; }
     friendCodes = friendCodes.filter(c => c !== code);
     await storeSet('rebirth-friends', friendCodes);
     renderFriends(); return;
@@ -3122,6 +3421,7 @@ function setTab(tab, quiet){
   document.querySelectorAll('#tabBar [data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab === barTab));
   if(tab === 'help') getEl('howToUse').classList.add('open');
   if(tab === 'friends') renderFriends();
+  if(tab === 'friends') liveWakePolling(); else liveUpdatePolling(); // 🌐 reading live friends only on that tab
   showTimersSection = (tab === 'timers'); // the countdown only ticks while its tab is open
   applyTimersVisibility();
   closeMore();
@@ -3211,7 +3511,10 @@ applyInstallButton();
    1.15.1). ▶ Take the quick tour (📖 How to use) replays it; ?tour in the URL shows it as
    a first visit (for checking it). ADDING A FEATURE: add a step with since:'<version>' to
    the right list(s) and bump TOUR_VERSION. */
-const TOUR_VERSION = '1.18.1';
+const TOUR_VERSION = '1.19.0';
+const LIVE_TOUR_BODY = `<p>Switch on <b>🌐 Live</b> in 👥 Friends and your code keeps itself up to date: give friends your short <b>live code</b> once, and they follow
+  your progress by themselves. Paste a friend's live code (or open their live link) to follow them.</p>
+  <p>It's <b>off</b> until you switch it on. Only your friend code is saved, when it changes; switching off deletes it.</p>`;
 const UPNEXT_1181_BODY = `<p><b>🎯 Up next</b> now moves on as you log: once every droid of a rebirth is logged, it shows the next one you still need
   (never skipping one that's missing a droid). Rebirths you're ready for show as <b>✓ READY</b> with their credit cost. <b>‹ ›</b> switch cycle.</p>
   <p>Also new: <b>Export</b> keeps your Sneak Preview and Safe to Retire marks, and 3 spooky looks in <b>🎨 Look</b>.</p>`;
@@ -3233,6 +3536,7 @@ const TOUR_STEPS_COMPUTER = [
     body:`<p><b>🧬 Rebirth Reqs</b>: everything this cycle needs. <b>♻ Safe to Retire</b>: droids you can let go of. <b>🔮 Sneak Preview</b>: next cycle's
       toughest droids, to hold on to. <b>⏱ Event Timers</b>: Stellar, Mythic, Kyber and mission countdowns.</p>` },
   { since:'1.16.0', target:'#friendsPanelToggle', title:'👥 Friends: see what your friends need', body: FRIENDS_TOUR_BODY },
+  { since:'1.19.0', target:'#friendsPanelToggle', title:'🌐 Live Friends', body: LIVE_TOUR_BODY },
   { since:'1.0.0', target:'#exportBtn', title:'Keep your progress safe',
     body:`<p>Progress saves in this browser only. <b>Export</b> a backup before clearing browser data or switching devices, then <b>Import</b> it there.
       <b>🎨 Look</b> changes the colors.</p>` },
@@ -3249,6 +3553,7 @@ const TOUR_STEPS_PHONE = [
   { since:'1.0.0', target:'#tabBar [data-tab="reqs"]', title:'🧬 Reqs, ♻ Retire, ⏱ Timers',
     body:`<p><b>Reqs</b>: everything this cycle needs. <b>Retire</b>: what you can let go of. <b>Timers</b>: Stellar, Mythic, Kyber and mission countdowns.</p>` },
   { since:'1.16.0', target:'#tabBar [data-tab="more"]', title:'👥 Friends (in ⋯ More)', body: FRIENDS_TOUR_BODY },
+  { since:'1.19.0', target:'#tabBar [data-tab="more"]', title:'🌐 Live Friends (in ⋯ More → 👥 Friends)', body: LIVE_TOUR_BODY },
   { since:'1.0.0', target:'#tabBar [data-tab="more"]', title:'📲 Put it on your home screen',
     body:`<p>In <b>⋯ More</b>, <b>📲 Install as an app</b> opens this full-screen from your home screen, like an app. <b>Export</b> there backs up your progress
       (it's saved on this phone only).</p>` },
@@ -3333,12 +3638,22 @@ getEl('tourStartBtn').addEventListener('click', ()=> startWebTour(true));
     const f = decodeFriendCode(location.hash);
     if(f.error) showToast(f.error); else { linkFriend = f; showFriendsPanel = true; phoneTab = 'friends'; }
   }
+  // 🌐 Live (desktop v1.19.0): your switch, your live friends, and a #live= link opened from a friend
+  liveOn = (await storeGet('rebirth-liveOn')) === true;
+  liveFriends = cleanLiveFriends(await storeGet('rebirth-liveFriends'));
+  if(location.hash.indexOf('#live=') === 0){
+    const id = parseLiveCode(location.hash);
+    if(!id) showToast('That live link is cut off. Ask for it again.');
+    else { linkLive = liveFriends.find(e => e.id === id) || { id, code:null, updatedAt:null, state:'new' }; showFriendsPanel = true; phoneTab = 'friends'; }
+  }
+  if(liveOn) liveSchedule();
+  else { const idn = liveRead('fdt-liveIdentity'); if(idn && idn.deletePending) setLiveOn(false); } // finish a delete that failed offline
   applyFriendsPanelVisibility();
   applyTabMode();
   renderFriends();
-  if(linkFriend && !document.body.classList.contains('tabbed')) revealPanelIfStacked('friendsPanel');
+  if((linkFriend || linkLive) && !document.body.classList.contains('tabbed')) revealPanelIfStacked('friendsPanel');
   // the tutorial: never on top of a friend's link (they came to see that)
-  if(!linkFriend) setTimeout(()=> startWebTour(false), 500);
+  if(!linkFriend && !linkLive) setTimeout(()=> startWebTour(false), 500);
 })();
 </script>
 </body>
