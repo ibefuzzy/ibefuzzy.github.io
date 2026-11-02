@@ -78,7 +78,7 @@ a bad live site immediately.
   (replaced Galactic), Mission every 35 min from the same epoch.
 - **Kyber** is emerald `#50c878` with the same per-rarity rules as the desktop app;
   cycle completion counts real slots (`cycleRealSlotCount`, 120 today), not 105.
-- Data scripts are stamped `?v=1.18.0` (validator passes).
+- Data scripts are stamped `?v=1.21.0` (validator passes).
 - **Droid pictures = the desktop app's** (2026-10-04, desktop v1.18.0): `tracker/icons-data.js` `ICONS`
   is exactly the app's `card-icons-data.js` `CARD_ICONS`, all 600 slots. This fixed LO (its 1-8-1 and
   2-34-1 showed the neighbouring Hov-R / RIC; LO had only old crops) and replaced the 75 Kyber pictures
@@ -106,6 +106,14 @@ a bad live site immediately.
   offer exists it shows the Share → Add to Home Screen / browser-menu steps instead.
   Hidden when running installed (`display-mode: standalone`).
 
+## Cycle 6 is on the website ahead of the desktop app (website 1.21.0, 2026-11-01)
+- The website has 6 cycles while the desktop app is still v1.20.0 with 5. Don't bump `version.json` for this:
+  that's what tells app players to update.
+- Friend codes stay compatible through `FRIEND_DROIDS_V5` / `FRIEND_FINGERPRINT_V5` in tracker/index.html: the site
+  reads old 62-droid codes and writes that format unless a player is on Cycle 6 or has logged a new droid. Remove
+  this once the app has Cycle 6 and players have had time to update.
+- `memory/cycle-6-web-handoff.md` lists what changed, where the 58 new pictures came from, and what to check against
+  the local folders. Read it first when the main PC is back. Fallback: branch `backup/before-cycle-6`.
 ## Synced from the desktop app v1.18.1 (2026-10-04)
 - **🎯 Up next moves on as you log** (`nextNeededLevel`/`lineDone`, the app's requirements.js rule): it starts at the first
   line after the rebirth level that isn't fully logged, never past one still missing a droid, capped at the cycle's last

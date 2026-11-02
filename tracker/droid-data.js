@@ -215,6 +215,51 @@ const CYCLES = {
 [["Y","LO"],["Y","Trak-R"],["Y","Mecha Droid"]],
 [["Y","Cyclo-Grav"],["Y","Opti-Strk"],["Y","RIC"]],
 [["Y","Loadlifter"],["Y","LEP"],["Y","RIC-1200"]],
+],
+// Cycle 6 (Path 6, added with the Iconic Gonk weekend, 2026-10-10): DubTrackr Droidex (game
+// 1.36.0) slot order, cross-checked level by level against tycoon-tools.com (same 120 droids
+// and tiers, 2026-10-25). Seven droids are new: EG-58, EGL, KT, MPH, JO9-4MN, PLNK, ECG.
+6:[
+[["B","Gonk"],["B","Mouse"],["B","ID10"]],
+[["B","Pit"],["B","EG-58"],["B","2BB"]],
+[["B","R3"],["B","R4"],["B","Roll-R"]],
+[["G","EG-58"],["G","R9"],["G","B1 Security"]],
+[["G","Gonk"],["G","R5"],["G","Vect-Arm"]],
+[["B","EGL"],["D","EG-58"],["D","2BB"]],
+[["B","KT"],["D","R4"],["D","R9"]],
+[["B","MPH"],["D","B1 Security"],["D","Nav-Ex"]],
+[["D","Gonk"],["G","EGL"],["G","Strike-Orb"]],
+[["B","Groundmech"],["B","Trak-R"],["B","Amp Walker"]],
+[["B","B2 Super"],["B","Haul-R"],["B","R2"]],
+[["R","Gonk"],["G","Groundmech"],["G","Trak-R"]],
+[["G","KT"],["G","MPH"],["B","Proto Roller"]],
+[["D","EGL"],["G","B2 Super"],["B","B2-RP"]],
+[["B","JO9-4MN"],["D","KT"],["D","MPH"]],
+[["B","PLNK"],["B","BB9"],["G","R7"]],
+[["R","EGL"],["G","JO9-4MN"],["B","Mecha Droid"]],
+[["R","KT"],["R","MPH"],["G","PLNK"]],
+[["D","JO9-4MN"],["G","Proto Roller"],["D","R7"]],
+[["R","PLNK"],["R","Mecha Droid"],["R","B2-RP"]],
+[["K","Gonk"],["K","EGL"],["K","Haul-R"]],
+[["K","KT"],["K","Groundmech"],["K","R2"]],
+[["K","MPH"],["K","JO9-4MN"],["K","BB9"]],
+[["K","PLNK"],["K","Proto Roller"],["B","ECG"]],
+[["K","R7"],["B","IG"],["B","Loadlifter"]],
+[["G","Mo-Trak"],["G","ECG"],["D","Drft-R"]],
+[["R","Cyclens"],["R","Snow Mouse"],["K","Tri-Tek"]],
+[["X","EGL"],["X","JO9-4MN"],["X","BB9"]],
+[["X","KT"],["X","PLNK"],["K","IG"]],
+[["X","MPH"],["X","B2-RP"],["X","Drft-R"]],
+[["S","EGL"],["K","EG-58"],["K","Snow Mouse"]],
+[["X","ECG"],["X","Trak-R"],["K","Cyclens"]],
+[["S","KT"],["X","Cyclo-Grav"],["X","Tri-Tek"]],
+[["S","MPH"],["S","Haul-R"],["X","IG"]],
+[["S","JO9-4MN"],["S","PLNK"],["S","ECG"]],
+[["Y","Gonk"],["Y","EG-58"],["Y","Roll-R"]],
+[["Y","EGL"],["Y","R2"],["Y","B2 Super"]],
+[["Y","KT"],["Y","MPH"],["Y","Snow Mouse"]],
+[["Y","JO9-4MN"],["Y","Cyclo-Grav"],["Y","Tri-Tek"]],
+[["Y","PLNK"],["Y","ECG"],["Y","Drft-R"]],
 ]
 };
 
@@ -295,7 +340,12 @@ const DROID_RARITY_CLASS = {
   "KX": "Mythic",
   "Tri-Tek": "Mythic",
   "RIC": "Mythic",
-  "LEP": "Mythic"
+  "LEP": "Mythic",
+  // The seven droids new in Cycle 6 (same as the desktop app's v1.21.0 table).
+  "EG-58": "Rare",
+  "EGL": "Epic", "KT": "Epic", "MPH": "Epic",
+  "JO9-4MN": "Legendary", "PLNK": "Legendary",
+  "ECG": "Mythic"
 };
 
 /* ---------------- rebirth CREDIT COST (v1.15.1) ----------------

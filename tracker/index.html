@@ -931,7 +931,7 @@
       <option value="2">Cycle 2</option>
       <option value="3">Cycle 3</option>
       <option value="4">Cycle 4</option>
-      <option value="5">Cycle 5</option>
+      <option value="5">Cycle 5</option><option value="6">Cycle 6</option>
     </select>
     <span class="cycle-progress-label" id="cycleProgress"></span>
   </div>
@@ -1030,7 +1030,7 @@
       <span class="upnext-title">🎯 Up next
         <span class="un-cyc"><button type="button" id="upNextCyclePrev" aria-label="Previous cycle" title="Previous cycle">‹</button>
         <select id="upNextCycleSel" aria-label="Cycle">
-          <option value="1">Cycle 1</option><option value="2">Cycle 2</option><option value="3">Cycle 3</option><option value="4">Cycle 4</option><option value="5">Cycle 5</option>
+          <option value="1">Cycle 1</option><option value="2">Cycle 2</option><option value="3">Cycle 3</option><option value="4">Cycle 4</option><option value="5">Cycle 5</option><option value="6">Cycle 6</option>
         </select><button type="button" id="upNextCycleNext" aria-label="Next cycle" title="Next cycle">›</button></span>
       </span>
       <span class="upnext-stepper" title="Your current rebirth level: the last rebirth you've done">
@@ -1060,7 +1060,7 @@
           <option value="2">Cycle 2</option>
           <option value="3">Cycle 3</option>
           <option value="4">Cycle 4</option>
-          <option value="5">Cycle 5</option>
+          <option value="5">Cycle 5</option><option value="6">Cycle 6</option>
         </select>
       </div>
       <p class="rebirth-sub">Every droid this cycle calls for, grouped low to high (Base → Stellar) — the highest variety needed per droid. Tap one to log it (marks every lower variety of that droid in the list on the left too).</p>
@@ -1078,7 +1078,7 @@
           <option value="2">Cycle 2</option>
           <option value="3">Cycle 3</option>
           <option value="4">Cycle 4</option>
-          <option value="5">Cycle 5</option>
+          <option value="5">Cycle 5</option><option value="6">Cycle 6</option>
         </select>
       </div>
       <div class="retire-level-row">
@@ -1194,10 +1194,14 @@
   </div>
 </div>
 
-<script src="icons-data.js?v=1.18.0"></script>
-<script src="droid-data.js?v=1.18.0"></script>
+<script src="icons-data.js?v=1.21.0"></script>
+<script src="droid-data.js?v=1.21.0"></script>
 <script src="tour.js?v=1.16.0"></script>
 <script>
+/* The cycle count comes from the data (same helpers as the desktop app's requirements.js, v1.21.0). */
+function cycleTotal(){ return Object.keys(CYCLES).length; }
+function isCycleKey(c){ const n = Number(c); return /^[1-9][0-9]*$/.test(String(c)) && n >= 1 && n <= cycleTotal(); }
+
 /* ---------------- STORAGE ----------------
    No Electron bridge exists in a plain browser, so this always falls
    through to plain localStorage — same storeGet/storeSet contract as the
@@ -1236,7 +1240,7 @@ let RAW_GROUPS = {};   // normKey -> {names:{rawName:count}, entries:[...]}  (ke
 
 function buildIndex(){
   const groups = {};
-  for(let c=1;c<=5;c++){
+  for(let c=1;c<=cycleTotal();c++){
     for(let l=1;l<=40;l++){
       const row = CYCLES[c][l-1];
       row.forEach((d,i)=>{
@@ -1307,7 +1311,7 @@ async function setOwned(nk, rank){
     // Never silently downgrade from a plain tap (a stray tap on an
     // already-covered cell shouldn't erase real progress) — but don't leave
     // the tap looking like it just did nothing, either. A droid can recur
-    // at many rarities across 5 cycles, so "something higher" is often
+    // at many rarities across every cycle, so "something higher" is often
     // logged nowhere near the cell just tapped. Point at the fix instead of
     // failing silently.
     const entry = DROID_INDEX[nk];
@@ -1343,7 +1347,7 @@ async function markRowObtained(row, opts){
    required rarity or better. Once a mark-increasing action pushes that from
    something less than 105 up to exactly 105, offer to clear this cycle's
    droids and roll over to the next one — never on an unmark, and never
-   again just from re-rendering an already-105 cycle. Cycles wrap 5 -> 1. */
+   again just from re-rendering an already-105 cycle. Cycles wrap the last -> 1. */
 /* Real (non-placeholder) levels and droid slots in a cycle, as in the desktop app's
    requirements.js: a "?" row is a placeholder for a level the game hasn't revealed yet. */
 function cycleRealLevelCount(cycle){
@@ -1403,7 +1407,7 @@ const FRIEND_LINK_BASE = 'https://ibefuzzy.github.io/tracker/#friend=';
 const FRIEND_EPOCH_MIN = Date.UTC(2026, 0, 1) / 60000;
 const FRIEND_DROIDS = (function(){
   const out = [], byKey = {};
-  for(let c=1;c<=5;c++) (CYCLES[c] || []).forEach(row => row.forEach(d=>{
+  for(let c=1;c<=cycleTotal();c++) (CYCLES[c] || []).forEach(row => row.forEach(d=>{
     if(d[0] === '?') return;
     const k = normKey(d[1]);
     if(!byKey[k]){ byKey[k] = { key:k, names:[] }; out.push(byKey[k]); }
@@ -1411,11 +1415,22 @@ const FRIEND_DROIDS = (function(){
   }));
   return out;
 })();
-const FRIEND_FINGERPRINT = (function(str){
+function friendFingerprintOf(str){
   let h = 0x811c9dc5;
   for(let i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
   return (h ^ (h >>> 16)) & 0xffff;
-})(FRIEND_DROIDS.map(d => d.key).join(','));
+}
+const FRIEND_FINGERPRINT = friendFingerprintOf(FRIEND_DROIDS.map(d => d.key).join(','));
+/* Cycle 6 (website 1.21.0): the desktop app v1.20.0 still has 5 cycles and 62 droids, and first-seen order keeps those
+   62 first, so that shorter list is a prefix of FRIEND_DROIDS. Old codes stay readable, and a player with nothing
+   Cycle 6 in their code still writes the old format, so friend codes keep working with that app both ways.
+   Remove once the app has Cycle 6 and players have had time to update. */
+const FRIEND_DROIDS_V5 = FRIEND_DROIDS.slice(0, (function(){
+  const seen = new Set();
+  for(let c=1;c<=5;c++) (CYCLES[c] || []).forEach(row => row.forEach(d=>{ if(d[0] !== '?') seen.add(normKey(d[1])); }));
+  return seen.size;
+})());
+const FRIEND_FINGERPRINT_V5 = friendFingerprintOf(FRIEND_DROIDS_V5.map(d => d.key).join(','));
 function bytesToB64url(bytes){ let s = ''; bytes.forEach(b=>{ s += String.fromCharCode(b); }); return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
 function b64urlToBytes(str){ const b = atob(str.replace(/-/g,'+').replace(/_/g,'/')); return Uint8Array.from(b, ch => ch.charCodeAt(0)); }
 function cleanFriendName(name){ return String(name || '').replace(/[\u0000-\u001f<>&"]/g, '').trim().slice(0, 16); }
@@ -1452,12 +1467,14 @@ function encodeFriendCode(p){
   let nameBytes = new TextEncoder().encode(name);
   while(nameBytes.length > 24){ name = name.slice(0, -1); nameBytes = new TextEncoder().encode(name); }
   const mins = Math.max(0, Math.floor(p.time / 60000 - FRIEND_EPOCH_MIN));
-  const bytes = [1, FRIEND_FINGERPRINT >> 8, FRIEND_FINGERPRINT & 255, p.cycle, p.level,
+  const v5 = p.cycle <= 5 && FRIEND_DROIDS.slice(FRIEND_DROIDS_V5.length).every(d => p.owned[d.key] === undefined);
+  const list = v5 ? FRIEND_DROIDS_V5 : FRIEND_DROIDS, print = v5 ? FRIEND_FINGERPRINT_V5 : FRIEND_FINGERPRINT;
+  const bytes = [1, print >> 8, print & 255, p.cycle, p.level,
     (mins >>> 24) & 255, (mins >>> 16) & 255, (mins >>> 8) & 255, mins & 255, nameBytes.length];
   nameBytes.forEach(b => bytes.push(b));
   const nib = k => (p.owned[k] === undefined ? 0 : p.owned[k] + 1);
-  for(let i=0;i<FRIEND_DROIDS.length;i+=2){
-    bytes.push((nib(FRIEND_DROIDS[i].key) << 4) | (i + 1 < FRIEND_DROIDS.length ? nib(FRIEND_DROIDS[i+1].key) : 0));
+  for(let i=0;i<list.length;i+=2){
+    bytes.push((nib(list[i].key) << 4) | (i + 1 < list.length ? nib(list[i+1].key) : 0));
   }
   bytes.push(bytes.reduce((s, x) => (s + x) & 255, 0));
   return FRIEND_CODE_PREFIX + bytesToB64url(bytes);
@@ -1476,17 +1493,19 @@ function decodeFriendCode(input){
     const n = b[9];
     if(10 + n > b.length - 1) return bad;
     const name = cleanFriendName(new TextDecoder().decode(b.slice(10, 10 + n))) || 'Friend';
-    if(((b[1] << 8) | b[2]) !== FRIEND_FINGERPRINT) return { error:'That code is from a different version of the app or website. One of you needs to update.', name };
+    const print = (b[1] << 8) | b[2];
+    const list = print === FRIEND_FINGERPRINT ? FRIEND_DROIDS : print === FRIEND_FINGERPRINT_V5 ? FRIEND_DROIDS_V5 : null;
+    if(!list) return { error:'That code is from a different version of the app or website. One of you needs to update.', name };
     const cycle = b[3], level = b[4];
-    if(!(cycle >= 1 && cycle <= 5) || level > cycleRealLevelCount(cycle)) return bad;
-    if(b.length !== 10 + n + Math.ceil(FRIEND_DROIDS.length / 2) + 1) return bad;
+    if(!isCycleKey(cycle) || level > cycleRealLevelCount(cycle)) return bad;
+    if(b.length !== 10 + n + Math.ceil(list.length / 2) + 1) return bad;
     const owned = {};
     let pos = 10 + n;
-    for(let i=0;i<FRIEND_DROIDS.length;i+=2, pos++){
+    for(let i=0;i<list.length;i+=2, pos++){
       const hi = b[pos] >> 4, lo = b[pos] & 15;
       if(hi > RARITY_ORDER.length || lo > RARITY_ORDER.length) return bad;
-      if(hi) owned[FRIEND_DROIDS[i].key] = hi - 1;
-      if(lo && i + 1 < FRIEND_DROIDS.length) owned[FRIEND_DROIDS[i+1].key] = lo - 1;
+      if(hi) owned[list[i].key] = hi - 1;
+      if(lo && i + 1 < list.length) owned[list[i+1].key] = lo - 1;
     }
     const mins = ((b[5] << 24) | (b[6] << 16) | (b[7] << 8) | b[8]) >>> 0;
     return { name, cycle, level, owned, time:(mins + FRIEND_EPOCH_MIN) * 60000, code:str };
@@ -1516,7 +1535,7 @@ function cycleDroidKeys(cycle){
   return keys;
 }
 
-function cycleAfter(cycle){ return (cycle >= 5) ? 1 : cycle + 1; }
+function cycleAfter(cycle){ return (cycle >= cycleTotal()) ? 1 : cycle + 1; }
 
 async function clearCycleMarks(cycle){
   cycleDroidKeys(cycle).forEach(nk=>{ delete ownedRank[nk]; });
@@ -1605,7 +1624,7 @@ async function migrate(){
   const legacyOwned = (await storeGet('rebirth-owned')) || {};
   const legacyOverrides = (await storeGet('rebirth-overrides')) || {};
   const rank = {};
-  for(let c=1;c<=5;c++){
+  for(let c=1;c<=cycleTotal();c++){
     for(let l=1;l<=40;l++){
       const row = CYCLES[c][l-1];
       row.forEach((d,i)=>{
@@ -2207,7 +2226,7 @@ qsa('#retireTiers .retire-tier').forEach(b=>{
    quick "claim the top tier or undo" behavior, right-click opens a menu of
    all 7 colorways so you can log — or clear — exactly what you have for
    that droid, no matter which specific cell you clicked from. That matters
-   because a droid can recur at many rarities across all 5 cycles, and
+   because a droid can recur at many rarities across all cycles, and
    setOwned() never lets a plain tap downgrade a tier logged elsewhere.
    wireLongPress() below is the touch equivalent, added for the web
    tracker — a ~500ms press-and-hold opens this same menu. */
@@ -2469,7 +2488,7 @@ function cleanCycleMarks(marks){
   if(!isObj(marks)) return null;
   const out = {};
   for(const [c, perDroid] of Object.entries(marks)){
-    if(!/^[1-5]$/.test(c) || !isObj(perDroid)) continue;
+    if(!isCycleKey(c) || !isObj(perDroid)) continue;
     const clean = {};
     for(const [nk, r] of Object.entries(perDroid)){
       if(typeof nk === 'string' && nk && Number.isInteger(r) && r >= 0 && r < RARITY_ORDER.length) clean[nk] = r;
@@ -2907,7 +2926,7 @@ getEl('upNextDec').addEventListener('click', ()=> setCurrentLevel(retireCurrentL
 getEl('upNextInc').addEventListener('click', ()=> setCurrentLevel(retireCurrentLevel + 1));
 getEl('upNextCycleSel').addEventListener('change', (e)=> setActiveCycle(parseInt(e.target.value, 10)));
 // desktop v1.18.1: one cycle down / up (wraps 1 ↔ 5), like the app's cycle keys; nothing is cleared
-getEl('upNextCyclePrev').addEventListener('click', ()=> setActiveCycle(activeCycle <= 1 ? 5 : activeCycle - 1));
+getEl('upNextCyclePrev').addEventListener('click', ()=> setActiveCycle(activeCycle <= 1 ? cycleTotal() : activeCycle - 1));
 getEl('upNextCycleNext').addEventListener('click', ()=> setActiveCycle(cycleAfter(activeCycle)));
 
 /* ---------------- 👥 FRIENDS (desktop v1.16.0) ----------------
@@ -3511,7 +3530,9 @@ applyInstallButton();
    1.15.1). ▶ Take the quick tour (📖 How to use) replays it; ?tour in the URL shows it as
    a first visit (for checking it). ADDING A FEATURE: add a step with since:'<version>' to
    the right list(s) and bump TOUR_VERSION. */
-const TOUR_VERSION = '1.19.0';
+const TOUR_VERSION = '1.21.0';
+const CYCLE6_TOUR_BODY = `<p><b>Cycle 6</b> is here: 40 rebirths and 7 new droids (EG-58, EGL, KT, MPH, JO9-4MN, PLNK, ECG). Pick it in the cycle menu. Everything you've logged carries over.</p>
+  <p>The desktop app gets Cycle 6 in a later update. Until then, a friend on the app can't read your code once you're on Cycle 6 or have logged a new droid. Otherwise friend codes work as before.</p>`;
 const LIVE_TOUR_BODY = `<p>Switch on <b>🌐 Live</b> in 👥 Friends and your code keeps itself up to date: give friends your short <b>live code</b> once, and they follow
   your progress by themselves. Paste a friend's live code (or open their live link) to follow them.</p>
   <p>It's <b>off</b> until you switch it on. Only your friend code is saved, when it changes; switching off deletes it.</p>`;
@@ -3530,6 +3551,7 @@ const TOUR_STEPS_COMPUTER = [
       needs: click one to log it. Right-click (or press and hold) for an exact rarity.</p>` },
   { since:'1.0.0', target:'#upNextToggle', title:'🎯 Up next',
     body:`<p>Shows your next 4 rebirths with their droids, credit costs and Nova Crystal rewards. Set <b>− / +</b> to the rebirth you've just done and it follows you.</p>` },
+  { since:'1.21.0', title:'Cycle 6 is here', body: CYCLE6_TOUR_BODY },
   { since:'1.16.0', title:'SELL flags: what you can let go', body: SELL_TOUR_BODY },
   { since:'1.18.1', target:'#upNextToggle', title:'🎯 Up next moves on by itself', body: UPNEXT_1181_BODY },
   { since:'1.0.0', target:'#reqPanelToggle', title:'Panels beside your list',
@@ -3548,6 +3570,7 @@ const TOUR_STEPS_PHONE = [
     body:`<p>Your next 4 rebirths, with their droids, credit costs and Nova Crystal rewards. Set <b>− / +</b> to the rebirth you've just done. Tap a droid to log it.</p>` },
   { since:'1.0.0', target:'#tabBar [data-tab="droids"]', title:'📋 Droids',
     body:`<p>Every droid. Tap its rarity dots to log the best one you have, or switch to <b>By Rebirth Level</b>. Press and hold for an exact rarity.</p>` },
+  { since:'1.21.0', title:'Cycle 6 is here', body: CYCLE6_TOUR_BODY },
   { since:'1.16.0', title:'SELL flags: what you can let go', body: SELL_TOUR_BODY },
   { since:'1.18.1', target:'#tabBar [data-tab="upnext"]', before:()=> setTab('upnext', true), title:'🎯 Up next moves on by itself', body: UPNEXT_1181_BODY },
   { since:'1.0.0', target:'#tabBar [data-tab="reqs"]', title:'🧬 Reqs, ♻ Retire, ⏱ Timers',
@@ -3589,7 +3612,7 @@ getEl('tourStartBtn').addEventListener('click', ()=> startWebTour(true));
   sortMode = (await storeGet('rebirth-sortMode')) || 'alpha';
   {
     const loadedCycle = await storeGet('rebirth-activeCycle');
-    activeCycle = (Number.isInteger(loadedCycle) && loadedCycle >= 1 && loadedCycle <= 5) ? loadedCycle : 1;
+    activeCycle = (Number.isInteger(loadedCycle) && loadedCycle >= 1 && loadedCycle <= cycleTotal()) ? loadedCycle : 1;
   }
   bgImageData = await storeGet('rebirth-bgImage');
   bgDim = (await storeGet('rebirth-bgDim'));
